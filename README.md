@@ -13,6 +13,9 @@ ve not düşer. Ortak veri Firebase'de tutulur, uygulama GitHub Pages'te yaşar.
 - **GitHub Pages** — saf statik barındırma (`main` / root).
 - **Barkod tarama** — mobil kamerayla ISBN okuma (önce tarayıcının yerleşik
   BarcodeDetector'ı, yoksa ZXing); kitap bilgisi Open Library'den doldurulur.
+- **Kapak bulma** — tek tuşla kapaksız kitaplar Open Library'de aranır;
+  bulunanlar mevcut halleriyle yan yana gösterilir, onaylananlar kaydedilir
+  (yalnızca düzenleyiciler).
 
 ## Roller
 

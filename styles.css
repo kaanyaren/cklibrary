@@ -508,3 +508,23 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; margin: 0; letter
   border: 1px dashed var(--ink-faint); border-radius: var(--r);
   color: var(--ink-soft); font-weight: 500;
 }
+
+/* ── KAPAK ÖNERİLERİ ────────────────────────────────── */
+.covers-body { display: grid; gap: .7rem; }
+.cover-row {
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto;
+  gap: .7rem; align-items: center;
+  border: 1px solid var(--line); border-radius: var(--r);
+  padding: .55rem; background: var(--paper);
+}
+.cover-info { min-width: 0; }
+.cover-title { margin: 0; font-family: var(--font-serif); font-size: 1.02rem; line-height: 1.25; }
+.cover-creators { margin: .15rem 0 0; font-size: .85rem; color: var(--ink-faint); }
+.cover-check input { width: 1.5rem; height: 1.5rem; accent-color: var(--accent); cursor: pointer; }
+.covers-actions { align-items: center; justify-content: space-between; }
+.cover-all {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .85rem; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-soft); cursor: pointer;
+}
+.cover-all input { width: 1.3rem; height: 1.3rem; accent-color: var(--accent); cursor: pointer; }

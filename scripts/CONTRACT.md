@@ -50,6 +50,7 @@ item_type: string
 added_at: string          // ISO date from CSV 'added'
 created_at: string        // ISO timestamp
 created_by: string        // name (kaan/ceyda/lena)
+cover_url: string         // onaylı kapak; yoksa ISBN'den üretilir, o da yoksa harf-kapak
 ```
 
 `books/{bookId}/ratings/{uid}`   // uid = signed-in user's uid

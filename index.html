@@ -78,6 +78,7 @@
         <button type="button" class="chip" data-filter="mine">Eklediklerim</button>
       </div>
       <button type="button" id="add-book" class="btn btn-primary add-btn">Kitap ekle</button>
+      <button type="button" id="find-covers" class="btn btn-ghost" hidden>Kapakları bul</button>
     </section>
 
     <p id="shelf-status" class="shelf-status" aria-live="polite"></p>
@@ -161,6 +162,22 @@
         <video id="scan-video" playsinline muted></video>
       </div>
       <p id="scan-status" class="scan-status" role="status">Kamera açılıyor…</p>
+    </div>
+  </dialog>
+
+  <!-- ───────────── KAPAK ÖNERİLERİ ───────────── -->
+  <dialog id="covers-dialog" class="sheet" aria-labelledby="covers-title">
+    <div class="scan-body">
+      <div class="detail-top">
+        <h2 id="covers-title" class="sheet-title">Kapak önerileri</h2>
+        <button type="button" class="detail-close" data-close-covers>Kapat</button>
+      </div>
+      <p id="covers-status" class="scan-status" role="status">Hazırlanıyor…</p>
+      <div id="covers-body" class="covers-body"></div>
+      <div class="form-actions covers-actions">
+        <label class="cover-all"><input type="checkbox" id="covers-select-all" checked disabled /> Tümünü seç</label>
+        <button type="button" id="covers-apply" class="btn btn-primary" disabled>Seçilenleri uygula (0)</button>
+      </div>
     </div>
   </dialog>
 
