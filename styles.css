@@ -531,3 +531,12 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; margin: 0; letter
   color: var(--ink-soft); cursor: pointer;
 }
 .cover-all input { width: 1.3rem; height: 1.3rem; accent-color: var(--accent); cursor: pointer; }
+
+/* ── OKUNDU DAMGASI ─────────────────────────────────── */
+.read-stamp {
+  font-size: .68rem; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent-deep);
+  border: 1px solid var(--accent); border-radius: 2px;
+  padding: .1rem .4rem; white-space: nowrap;
+}

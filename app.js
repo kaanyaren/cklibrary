@@ -28,6 +28,7 @@ const state = {
   books: [],           // [{ id, ...data }]
   ratings: new Map(),  // bookId -> Map(uid -> { value, name, updatedAt })
   notes: new Map(),    // bookId -> [{ id, text, uid, name, createdAt }]
+  reads: new Map(),    // bookId -> Map(uid -> { read, name, updatedAt })
   activity: [],        // [{ id, ... }] en yeni önce
   query: "",
   filter: "all",
@@ -113,6 +114,8 @@ function coverNode(book) {
 const getBook = (id) => state.books.find((b) => b.id === id);
 const ratingsOf = (id) => state.ratings.get(id) || new Map();
 const notesOf = (id) => state.notes.get(id) || [];
+const readsOf = (id) => state.reads.get(id) || new Map();
+const myRead = (id) => readsOf(id).get(state.user.uid)?.read === true;
 const activityOf = (id) => state.activity.filter((a) => a.bookId === id);
 
 function averageOf(id) {
@@ -192,6 +195,7 @@ onAuthStateChanged(auth, async (user) => {
     state.books = [];
     state.ratings = new Map();
     state.notes = new Map();
+    state.reads = new Map();
     state.activity = [];
     if (detailDialog.open) detailDialog.close();
     if (formDialog.open) formDialog.close();
@@ -227,10 +231,11 @@ onAuthStateChanged(auth, async (user) => {
 async function loadAll() {
   shelfError.hidden = true;
   try {
-    const [booksSnap, ratingsSnap, notesSnap, activitySnap] = await Promise.all([
+    const [booksSnap, ratingsSnap, notesSnap, readsSnap, activitySnap] = await Promise.all([
       getDocs(collection(db, "books")),
       getDocs(collectionGroup(db, "ratings")),
       getDocs(collectionGroup(db, "notes")),
+      getDocs(collectionGroup(db, "reads")),
       getDocs(collection(db, "activity")),
     ]);
 
@@ -251,6 +256,13 @@ async function loadAll() {
     }
     for (const arr of state.notes.values()) {
       arr.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+    }
+
+    state.reads = new Map();
+    for (const d of readsSnap.docs) {
+      const bookId = d.ref.parent.parent.id;
+      if (!state.reads.has(bookId)) state.reads.set(bookId, new Map());
+      state.reads.get(bookId).set(d.id, d.data());
     }
 
     state.activity = activitySnap.docs
@@ -289,6 +301,8 @@ function visibleBooks() {
       if (state.filter === "rated" && r === 0) return false;
       if (state.filter === "unrated" && r > 0) return false;
       if (state.filter === "mine" && b.created_by !== state.user.name) return false;
+      if (state.filter === "read" && !myRead(b.id)) return false;
+      if (state.filter === "unread" && myRead(b.id)) return false;
       if (!q) return true;
       const hay = trLower([b.title, b.creators, b.publisher].filter(Boolean).join(" "));
       return hay.includes(q);
@@ -343,7 +357,8 @@ function bookCard(b) {
         el("div", { class: "score" },
           avgNode,
           el("span", { class: "score-of", text: "/10" }),
-          el("span", { class: "score-count", text: count ? `${count} oy` : "oy yok" })),
+          el("span", { class: "score-count", text: count ? `${count} oy` : "oy yok" }),
+          myRead(b.id) ? el("span", { class: "read-stamp", text: "okundu" }) : null),
         breakdown)));
 
   const open = () => openDetail(b.id);
@@ -435,6 +450,15 @@ function renderDetail(bookId) {
         ? `Şu anki puanın: ${myRating}/10 · değiştirmek için başka bir sayıya dokun.`
         : "1–10 arası bir sayıya dokun." })));
 
+  const iRead = readsOf(bookId).get(state.user.uid)?.read === true;
+  detailBody.append(
+    el("section", { class: "section" },
+      el("h3", { class: "section-title", text: "Okuma durumu" }),
+      el("p", { class: "rate-help", text: iRead ? "Bu kitabı okudun." : "Bu kitabı henüz okumadın." }),
+      el("button", { class: "btn btn-ghost", type: "button",
+                     text: iRead ? "Okumadı olarak işaretle" : "Okudum olarak işaretle",
+                     onclick: () => submitRead(bookId, !iRead) })));
+
   // Notlar
   const notes = notesOf(bookId);
   const noteList = el("ul", { class: "note-list" });
@@ -520,6 +544,20 @@ async function submitRating(bookId, value) {
   if (!state.ratings.has(bookId)) state.ratings.set(bookId, new Map());
   state.ratings.get(bookId).set(state.user.uid, { value, name: state.user.name, updatedAt });
   await logActivity(b, "rate", prev ? `${prev} → ${value}` : `${value}`);
+  renderDetail(bookId);
+  renderShelf();
+}
+
+async function submitRead(bookId, read) {
+  const updatedAt = new Date().toISOString();
+  try {
+    await setDoc(doc(db, "books", bookId, "reads", state.user.uid),
+      { read, name: state.user.name, updatedAt });
+  } catch (err) {
+    alertWriteError(err); return;
+  }
+  if (!state.reads.has(bookId)) state.reads.set(bookId, new Map());
+  state.reads.get(bookId).set(state.user.uid, { read, name: state.user.name, updatedAt });
   renderDetail(bookId);
   renderShelf();
 }

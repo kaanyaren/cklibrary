@@ -16,6 +16,8 @@ ve not düşer. Ortak veri Firebase'de tutulur, uygulama GitHub Pages'te yaşar.
 - **Kapak bulma** — tek tuşla kapaksız kitaplar Open Library'de aranır;
   bulunanlar mevcut halleriyle yan yana gösterilir, onaylananlar kaydedilir
   (yalnızca düzenleyiciler).
+- **Okuma durumu** — her kullanıcı kitapları okundu/okunmadı işaretler;
+  liste "Okuduklarım / Okumadıklarım" filtreleriyle süzülür.
 
 ## Roller
 

@@ -60,6 +60,13 @@ name: string        // kaan|ceyda|lena
 updatedAt: string   // ISO
 ```
 
+`books/{bookId}/reads/{uid}`   // okundu işareti; uid = signed-in user's uid
+```
+read: bool
+name: string        // kaan|ceyda|lena
+updatedAt: string   // ISO
+```
+
 `books/{bookId}/notes/{autoId}`
 ```
 text: string

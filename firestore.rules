@@ -38,6 +38,12 @@ service cloud.firestore {
       allow delete: if isEditor() || resource.data.uid == request.auth.uid;
     }
 
+    match /{path=**}/reads/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == uid
+                   && request.resource.data.read is bool;
+    }
+
     match /activity/{docId} {
       allow read: if signedIn();
       allow create: if signedIn();
