@@ -640,6 +640,141 @@ function alertWriteError(err) {
   shelfError.textContent = msg;
 }
 
+// ── Barkod tarama (ISBN) ───────────────────────────────────────
+// Önce tarayıcının yerleşik BarcodeDetector'ı, yoksa ZXing (CDN, tembel yüklenir).
+// Okunan ISBN Open Library'de aranır, bulunan bilgi forma doldurulur.
+const scanBtn = $("scan-btn");
+const scanDialog = $("scan-dialog");
+const scanVideo = $("scan-video");
+const scanStatus = $("scan-status");
+const formNote = $("form-note");
+let scanStream = null, scanTimer = 0, scanReader = null, scanDone = false;
+
+function showFormNote(msg) { formNote.textContent = msg; formNote.hidden = false; }
+function clearFormNote() { formNote.hidden = true; formNote.textContent = ""; }
+
+scanBtn.addEventListener("click", () => { clearFormNote(); formError.hidden = true; openScanner(); });
+document.querySelectorAll("[data-close-scan]").forEach((b) =>
+  b.addEventListener("click", () => scanDialog.close()));
+
+function stopStream() {
+  if (scanStream) { scanStream.getTracks().forEach((t) => t.stop()); scanStream = null; }
+  if (scanVideo.srcObject) scanVideo.srcObject = null;
+}
+function stopScanner() {
+  scanDone = true;
+  clearTimeout(scanTimer);
+  try { scanReader?.reset(); } catch { /* yoksay */ }
+  scanReader = null;
+  stopStream();
+}
+scanDialog.addEventListener("close", stopScanner);
+
+async function openScanner() {
+  scanDone = false;
+  scanStatus.textContent = "Kamera açılıyor…";
+  scanDialog.showModal();
+  try {
+    scanStream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } }, audio: false,
+      }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 15000)),
+    ]);
+  } catch {
+    scanStatus.textContent = "Kameraya erişilemedi. İzni verdiğinden ve HTTPS üzerinden girdiğinden emin ol.";
+    return;
+  }
+  scanVideo.srcObject = scanStream;
+  try { await scanVideo.play(); } catch { /* oynatılamazsa da devam */ }
+  scanStatus.textContent = "Barkodu çerçevenin içine tut…";
+  if ("BarcodeDetector" in window) startNativeScan();
+  else {
+    try { await startZxingScan(); }
+    catch {
+      scanStatus.textContent = "Bu tarayıcıda otomatik tarama yok. ISBN'yi elle yazabilirsin.";
+    }
+  }
+}
+
+async function startNativeScan() {
+  let detector;
+  try {
+    detector = new BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e"] });
+  } catch {
+    return startZxingScan();
+  }
+  const tick = async () => {
+    if (scanDone || !scanDialog.open) return;
+    try {
+      const codes = await detector.detect(scanVideo);
+      if (codes.length) return handleBarcode(codes[0].rawValue);
+    } catch { /* bir kareyi atla */ }
+    scanTimer = setTimeout(tick, 300);
+  };
+  tick();
+}
+
+async function startZxingScan() {
+  const ZX = await import("https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm");
+  stopStream(); // ZXing kendi akışını açar
+  scanReader = new ZX.BrowserMultiFormatReader(new Map([
+    [ZX.DecodeHintType.POSSIBLE_FORMATS,
+     [ZX.BarcodeFormat.EAN_13, ZX.BarcodeFormat.EAN_8, ZX.BarcodeFormat.UPC_A]],
+  ]));
+  scanStatus.textContent = "Barkodu çerçevenin içine tut…";
+  await scanReader.decodeFromConstraints(
+    { video: { facingMode: { ideal: "environment" } }, audio: false },
+    scanVideo,
+    (result) => {
+      if (scanDone || !scanDialog.open || !result) return;
+      handleBarcode(result.getText());
+    });
+}
+
+async function lookupIsbn(isbn) {
+  const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
+  if (!res.ok) return null;
+  const rec = (await res.json())[`ISBN:${isbn}`];
+  if (!rec) return null;
+  return {
+    title: rec.title || "",
+    creators: (rec.authors || []).map((a) => a.name).filter(Boolean).join(", "),
+    publisher: rec.publishers?.[0]?.name || "",
+    publish_date: (String(rec.publish_date || "").match(/\d{4}/) || [""])[0],
+    pages: Number.isInteger(rec.number_of_pages) ? rec.number_of_pages : null,
+  };
+}
+
+async function handleBarcode(raw) {
+  if (scanDone) return;
+  scanDone = true;
+  stopScanner();
+  scanDialog.close();
+  const digits = String(raw || "").replace(/\D/g, "");
+  if (digits.length !== 10 && digits.length !== 13) {
+    showFormError("Barkod okunamadı. Tekrar dene veya bilgileri elle yaz.");
+    return;
+  }
+  if (digits.length === 13) $("f-isbn13").value = digits;
+  else $("f-isbn10").value = digits;
+
+  showFormNote("Kitap bilgileri getiriliyor…");
+  let info = null;
+  try { info = await lookupIsbn(digits); } catch { info = null; }
+  if (!info || !info.title) {
+    formError.hidden = true;
+    showFormNote("Bu ISBN kayıtlarda bulunamadı. Bilgileri elle yazabilirsin.");
+    return;
+  }
+  $("f-title").value = info.title;
+  $("f-creators").value = info.creators;
+  $("f-publisher").value = info.publisher;
+  $("f-date").value = info.publish_date;
+  $("f-pages").value = info.pages ?? "";
+  showFormNote(`“${info.title}” bulundu — kontrol edip Kaydet'e bas.`);
+}
+
 // ── Arama & filtre ─────────────────────────────────────────────
 searchInput.addEventListener("input", () => { state.query = searchInput.value; renderShelf(); });
 filterButtons.forEach((btn) => btn.addEventListener("click", () => {
@@ -651,3 +786,4 @@ filterButtons.forEach((btn) => btn.addEventListener("click", () => {
 // Arka plana dokununca kapat
 detailDialog.addEventListener("click", (e) => { if (e.target === detailDialog) detailDialog.close(); });
 formDialog.addEventListener("click", (e) => { if (e.target === formDialog) formDialog.close(); });
+scanDialog.addEventListener("click", (e) => { if (e.target === scanDialog) scanDialog.close(); });

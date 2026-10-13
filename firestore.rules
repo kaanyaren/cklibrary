@@ -12,26 +12,30 @@ service cloud.firestore {
         request.auth.token.email in ['kaanyaren@gmail.com', 'ceyda.d@gmail.com'];
     }
 
+    function validRating() {
+      return request.resource.data.value is int &&
+        request.resource.data.value >= 1 &&
+        request.resource.data.value <= 10;
+    }
+
     match /books/{bookId} {
       allow read: if signedIn();
       allow create: if signedIn();
       allow update, delete: if isEditor();
+    }
 
-      match /ratings/{uid} {
-        allow read: if signedIn();
-        allow write: if signedIn() &&
-          request.auth.uid == uid &&
-          request.resource.data.value is int &&
-          request.resource.data.value >= 1 &&
-          request.resource.data.value <= 10;
-      }
+    // NOT: puan/not koleksiyonlari collectionGroup ile okunur.
+    // Grup sorgulari ic ice match ile yetkilendirilemez; {path=**} kalibi sart.
+    match /{path=**}/ratings/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == uid && validRating();
+    }
 
-      match /notes/{noteId} {
-        allow read: if signedIn();
-        allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
-        allow update: if false;
-        allow delete: if isEditor() || resource.data.uid == request.auth.uid;
-      }
+    match /{path=**}/notes/{noteId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow update: if false;
+      allow delete: if isEditor() || resource.data.uid == request.auth.uid;
     }
 
     match /activity/{docId} {

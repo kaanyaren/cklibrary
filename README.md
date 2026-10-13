@@ -11,6 +11,8 @@ ve not düşer. Ortak veri Firebase'de tutulur, uygulama GitHub Pages'te yaşar.
 - **Vanilla JavaScript** — Firebase modular SDK v11, gstatic CDN üzerinden.
   Build adımı yok, npm bağımlılığı yok.
 - **GitHub Pages** — saf statik barındırma (`main` / root).
+- **Barkod tarama** — mobil kamerayla ISBN okuma (önce tarayıcının yerleşik
+  BarcodeDetector'ı, yoksa ZXing); kitap bilgisi Open Library'den doldurulur.
 
 ## Roller
 

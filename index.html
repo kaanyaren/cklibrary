@@ -95,6 +95,9 @@
     <form id="book-form" class="book-form" novalidate>
       <h2 id="form-title" class="sheet-title">Kitap ekle</h2>
 
+      <button type="button" id="scan-btn" class="btn btn-ghost btn-block">Barkod tara</button>
+      <p id="form-note" class="form-note" role="status" hidden></p>
+
       <label class="field">
         <span class="field-label">Başlık <em class="req">zorunlu</em></span>
         <input id="f-title" name="title" type="text" required autocomplete="off" />
@@ -145,6 +148,20 @@
         <button type="submit" id="form-submit" class="btn btn-primary">Kaydet</button>
       </div>
     </form>
+  </dialog>
+
+  <!-- ───────────── BARKOD TARAMA ───────────── -->
+  <dialog id="scan-dialog" class="sheet sheet-scan" aria-labelledby="scan-title">
+    <div class="scan-body">
+      <div class="detail-top">
+        <h2 id="scan-title" class="sheet-title">Barkod tara</h2>
+        <button type="button" class="detail-close" data-close-scan>Kapat</button>
+      </div>
+      <div class="scan-frame">
+        <video id="scan-video" playsinline muted></video>
+      </div>
+      <p id="scan-status" class="scan-status" role="status">Kamera açılıyor…</p>
+    </div>
   </dialog>
 
   <script type="module" src="app.js"></script>
