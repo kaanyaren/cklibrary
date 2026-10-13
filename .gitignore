@@ -1,0 +1,17 @@
+# SECURITY: Firebase service account key — NEVER commit
+cklibrary-cb9b1-firebase-adminsdk-*.json
+
+# Local scripts data (user list / seeds with secrets)
+scripts/users.json
+
+# Dependencies
+node_modules/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Environment
+.env*
