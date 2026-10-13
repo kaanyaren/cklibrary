@@ -173,6 +173,8 @@ function loginErrorMessage(err) {
       return "Çok fazla deneme. Biraz bekleyip tekrar dene.";
     case "auth/network-request-failed":
       return "Bağlantı kurulamadı. İnternetini kontrol et.";
+    case "auth/unauthorized-domain":
+      return "Bu adres girişe yetkili değil. Kaan'a bildir.";
     case "auth/invalid-api-key":
     case "auth/api-key-not-valid":
       return "Firebase yapılandırması geçersiz.";
