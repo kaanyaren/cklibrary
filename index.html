@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <meta name="description" content="CK Kütüphanesi — aile kitaplığının ortak fiş kataloğu." />
+  <title>CK Kütüphanesi</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <noscript>
+    <p class="noscript">CK Kütüphanesi'nin çalışması için JavaScript gerekli.</p>
+  </noscript>
+
+  <!-- ───────────── GİRİŞ ───────────── -->
+  <main id="login-view" class="login" hidden>
+    <div class="login-panel">
+      <h1 class="wordmark">CK Kütüphanesi</h1>
+      <p class="login-sub">Aile kitaplığının ortak kataloğu. Kim giriş yapıyor?</p>
+
+      <div class="who" role="radiogroup" aria-label="Kullanıcı seçimi">
+        <button type="button" class="who-btn" data-email="ceyda.d@gmail.com" aria-pressed="false">
+          <span class="who-name">ceyda</span>
+          <span class="who-role">düzenleyici</span>
+        </button>
+        <button type="button" class="who-btn" data-email="kaanyaren@gmail.com" aria-pressed="false">
+          <span class="who-name">kaan</span>
+          <span class="who-role">düzenleyici</span>
+        </button>
+        <button type="button" class="who-btn" data-email="lenayaren@gmail.com" aria-pressed="false">
+          <span class="who-name">lena</span>
+          <span class="who-role">ekleyici</span>
+        </button>
+      </div>
+
+      <form id="login-form" class="login-form" novalidate>
+        <label class="field">
+          <span class="field-label">Şifre</span>
+          <input id="password" type="password" name="password" autocomplete="current-password"
+                 placeholder="••••••••" required />
+        </label>
+        <button type="submit" id="login-submit" class="btn btn-primary btn-block">Giriş yap</button>
+        <p id="login-error" class="form-error" role="alert" aria-live="assertive" hidden></p>
+      </form>
+    </div>
+  </main>
+
+  <!-- ───────────── UYGULAMA ───────────── -->
+  <div id="app-view" hidden>
+    <header class="topbar">
+      <h1 class="wordmark wordmark-sm">CK Kütüphanesi</h1>
+      <div class="topbar-right">
+        <p class="user-chip">
+          <span id="user-name" class="user-name"></span>
+          <span id="user-role" class="user-role"></span>
+        </p>
+        <button type="button" id="logout" class="btn btn-ghost">Çıkış</button>
+      </div>
+    </header>
+
+    <section class="toolbar" aria-label="Arama ve filtreler">
+      <div class="search-wrap">
+        <label class="visually-hidden" for="search">Ara</label>
+        <input id="search" type="search" class="search" placeholder="Başlık, yazar veya yayınevi ara…"
+               autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="filters" role="group" aria-label="Filtreler">
+        <button type="button" class="chip is-active" data-filter="all">Tümü</button>
+        <button type="button" class="chip" data-filter="rated">Puanlanan</button>
+        <button type="button" class="chip" data-filter="unrated">Puanlanmayan</button>
+        <button type="button" class="chip" data-filter="mine">Eklediklerim</button>
+      </div>
+      <button type="button" id="add-book" class="btn btn-primary add-btn">Kitap ekle</button>
+    </section>
+
+    <p id="shelf-status" class="shelf-status" aria-live="polite"></p>
+    <main id="shelf" class="shelf" aria-label="Kitap listesi"></main>
+    <p id="shelf-error" class="load-error" role="alert" hidden></p>
+  </div>
+
+  <!-- ───────────── DETAY ───────────── -->
+  <dialog id="detail-dialog" class="sheet" aria-labelledby="detail-title">
+    <div id="detail-body" class="detail-body"></div>
+  </dialog>
+
+  <!-- ───────────── EKLE / DÜZENLE ───────────── -->
+  <dialog id="form-dialog" class="sheet sheet-form" aria-labelledby="form-title">
+    <form id="book-form" class="book-form" novalidate>
+      <h2 id="form-title" class="sheet-title">Kitap ekle</h2>
+
+      <label class="field">
+        <span class="field-label">Başlık <em class="req">zorunlu</em></span>
+        <input id="f-title" name="title" type="text" required autocomplete="off" />
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">Yazar / katkıda bulunanlar</span>
+          <input id="f-creators" name="creators" type="text" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span class="field-label">Yayınevi</span>
+          <input id="f-publisher" name="publisher" type="text" autocomplete="off" />
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">Yayın tarihi</span>
+          <input id="f-date" name="publish_date" type="text" placeholder="2019" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span class="field-label">Sayfa</span>
+          <input id="f-pages" name="pages" type="number" min="0" step="1" inputmode="numeric" />
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">ISBN-13</span>
+          <input id="f-isbn13" name="isbn13" type="text" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span class="field-label">ISBN-10</span>
+          <input id="f-isbn10" name="isbn10" type="text" autocomplete="off" />
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field-label">Açıklama</span>
+        <textarea id="f-description" name="description" rows="3"></textarea>
+      </label>
+
+      <p id="form-error" class="form-error" role="alert" hidden></p>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" data-close-form>Vazgeç</button>
+        <button type="submit" id="form-submit" class="btn btn-primary">Kaydet</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

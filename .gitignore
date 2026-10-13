@@ -4,6 +4,11 @@ cklibrary-cb9b1-firebase-adminsdk-*.json
 # Local scripts data (user list / seeds with secrets)
 scripts/users.json
 
+# Local-only operational scripts (contain credentials / one-time use)
+scripts/create_users.mjs
+scripts/usertoken.mjs
+scripts/setup_webapp.mjs
+
 # Dependencies
 node_modules/
 

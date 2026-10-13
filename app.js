@@ -1,0 +1,653 @@
+// CK Kütüphanesi — aile kitaplığı kataloğu
+// Firebase modular v11 (CDN), build adımı yok.
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
+} from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+import {
+  getFirestore, collection, collectionGroup, getDocs,
+  doc, setDoc, addDoc, updateDoc, deleteDoc,
+} from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// CONTRACT: roller e-postadan türetilir (UID'den değil).
+const ROLES = {
+  "kaanyaren@gmail.com": { name: "kaan", role: "editor" },
+  "ceyda.d@gmail.com":   { name: "ceyda", role: "editor" },
+  "lenayaren@gmail.com": { name: "lena", role: "adder" },
+};
+const PEOPLE = ["kaan", "ceyda", "lena"];
+
+const state = {
+  user: null,          // { uid, email, name, role }
+  books: [],           // [{ id, ...data }]
+  ratings: new Map(),  // bookId -> Map(uid -> { value, name, updatedAt })
+  notes: new Map(),    // bookId -> [{ id, text, uid, name, createdAt }]
+  activity: [],        // [{ id, ... }] en yeni önce
+  query: "",
+  filter: "all",
+  editingId: null,     // form dialog: null = ekle, id = düzenle
+};
+
+// ── DOM ────────────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const loginView = $("login-view");
+const appView = $("app-view");
+const loginForm = $("login-form");
+const passwordInput = $("password");
+const loginError = $("login-error");
+const loginSubmit = $("login-submit");
+const whoButtons = [...document.querySelectorAll(".who-btn")];
+const shelf = $("shelf");
+const shelfStatus = $("shelf-status");
+const shelfError = $("shelf-error");
+const searchInput = $("search");
+const filterButtons = [...document.querySelectorAll(".chip")];
+const detailDialog = $("detail-dialog");
+const detailBody = $("detail-body");
+const formDialog = $("form-dialog");
+const bookForm = $("book-form");
+const formTitle = $("form-title");
+const formError = $("form-error");
+const formSubmit = $("form-submit");
+
+let selectedEmail = null;
+
+// ── Yardımcılar ────────────────────────────────────────────────
+const trLower = (s) => String(s ?? "").toLocaleLowerCase("tr");
+
+function el(tag, props = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "class") node.className = v;
+    else if (k === "text") node.textContent = v;
+    else if (k === "html") node.innerHTML = v;         // yalnızca sabit şablonlar için
+    else if (k.startsWith("on") && typeof v === "function") node.addEventListener(k.slice(2), v);
+    else if (v !== null && v !== undefined && v !== false) node.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of children) if (c != null) node.append(c);
+  return node;
+}
+
+function fmtDate(iso, withTime = false) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const opts = { day: "numeric", month: "long", year: "numeric" };
+  if (withTime) { opts.hour = "2-digit"; opts.minute = "2-digit"; }
+  return d.toLocaleDateString("tr-TR", opts);
+}
+
+// Kapak: Open Library; yüklenemezse deterministik harf-kapak.
+const TONES = ["#d8c8a6", "#cdb894", "#c8b79c", "#d3bfa1", "#bfa886", "#d9cdb2"];
+function toneFor(str) {
+  let n = 0;
+  for (const ch of String(str)) n = (n + ch.codePointAt(0)) % 9973;
+  return TONES[n % TONES.length];
+}
+function letterTile(title) {
+  const ch = Array.from(String(title || "?").trim())[0] || "?";
+  return el("div", { class: "cover-tile", text: ch.toLocaleUpperCase("tr"),
+                     style: `background:${toneFor(title)}` });
+}
+function coverNode(book) {
+  const wrap = el("div", { class: "cover" });
+  if (book.isbn13) {
+    const img = el("img", { src: `https://covers.openlibrary.org/b/isbn/${book.isbn13}-M.jpg`,
+                            alt: "", loading: "lazy", decoding: "async" });
+    img.addEventListener("error", () => { img.remove(); wrap.append(letterTile(book.title)); });
+    wrap.append(img);
+  } else {
+    wrap.append(letterTile(book.title));
+  }
+  return wrap;
+}
+
+// ── Türetilmiş veri ────────────────────────────────────────────
+const getBook = (id) => state.books.find((b) => b.id === id);
+const ratingsOf = (id) => state.ratings.get(id) || new Map();
+const notesOf = (id) => state.notes.get(id) || [];
+const activityOf = (id) => state.activity.filter((a) => a.bookId === id);
+
+function averageOf(id) {
+  const values = [...ratingsOf(id).values()].map((r) => Number(r.value)).filter((n) => Number.isFinite(n));
+  if (!values.length) return { avg: null, count: 0 };
+  return { avg: values.reduce((a, b) => a + b, 0) / values.length, count: values.length };
+}
+function valueForName(id, name) {
+  for (const r of ratingsOf(id).values()) if (r.name === name) return Number(r.value);
+  return null;
+}
+
+// ── Giriş ekranı ───────────────────────────────────────────────
+function showLoginError(msg) {
+  loginError.textContent = msg;
+  loginError.hidden = false;
+}
+function clearLoginError() { loginError.hidden = true; loginError.textContent = ""; }
+
+whoButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    selectedEmail = btn.dataset.email;
+    whoButtons.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+    clearLoginError();
+    passwordInput.focus();
+  });
+});
+
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  clearLoginError();
+  if (!selectedEmail) { showLoginError("Önce bir isim seç."); return; }
+  const password = passwordInput.value;
+  if (!password) { showLoginError("Şifre gerekli."); return; }
+
+  loginSubmit.disabled = true;
+  loginSubmit.textContent = "Giriş yapılıyor…";
+  try {
+    await signInWithEmailAndPassword(auth, selectedEmail, password);
+  } catch (err) {
+    showLoginError(loginErrorMessage(err));
+    passwordInput.select();
+  } finally {
+    loginSubmit.disabled = false;
+    loginSubmit.textContent = "Giriş yap";
+  }
+});
+
+function loginErrorMessage(err) {
+  switch (err?.code) {
+    case "auth/invalid-credential":
+    case "auth/wrong-password":
+    case "auth/invalid-login-credentials":
+      return "Şifre yanlış. Tekrar dene.";
+    case "auth/user-not-found":
+      return "Bu hesap bulunamadı.";
+    case "auth/too-many-requests":
+      return "Çok fazla deneme. Biraz bekleyip tekrar dene.";
+    case "auth/network-request-failed":
+      return "Bağlantı kurulamadı. İnternetini kontrol et.";
+    case "auth/invalid-api-key":
+    case "auth/api-key-not-valid":
+      return "Firebase yapılandırması geçersiz.";
+    default:
+      return "Giriş yapılamadı. Tekrar dene.";
+  }
+}
+
+$("logout").addEventListener("click", () => signOut(auth));
+
+// ── Kimlik akışı ───────────────────────────────────────────────
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    state.user = null;
+    state.books = [];
+    state.ratings = new Map();
+    state.notes = new Map();
+    state.activity = [];
+    if (detailDialog.open) detailDialog.close();
+    if (formDialog.open) formDialog.close();
+    appView.hidden = true;
+    loginView.hidden = false;
+    passwordInput.value = "";
+    return;
+  }
+
+  const info = ROLES[user.email];
+  if (!info) {
+    showLoginError("Bu hesap kütüphaneye tanımlı değil.");
+    await signOut(auth);
+    return;
+  }
+
+  state.user = { uid: user.uid, email: user.email, ...info };
+  loginView.hidden = true;
+  appView.hidden = false;
+  $("user-name").textContent = state.user.name;
+  $("user-role").textContent = state.user.role === "editor" ? "düzenleyici" : "ekleyici";
+  searchInput.value = "";
+  state.query = "";
+  state.filter = "all";
+  filterButtons.forEach((b) => b.classList.toggle("is-active", b.dataset.filter === "all"));
+
+  renderSkeleton();
+  await loadAll();
+});
+
+// ── Veri yükleme (sınırlı okuma: kitap + collectionGroup + activity) ──
+async function loadAll() {
+  shelfError.hidden = true;
+  try {
+    const [booksSnap, ratingsSnap, notesSnap, activitySnap] = await Promise.all([
+      getDocs(collection(db, "books")),
+      getDocs(collectionGroup(db, "ratings")),
+      getDocs(collectionGroup(db, "notes")),
+      getDocs(collection(db, "activity")),
+    ]);
+
+    state.books = booksSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    state.ratings = new Map();
+    for (const d of ratingsSnap.docs) {
+      const bookId = d.ref.parent.parent.id;
+      if (!state.ratings.has(bookId)) state.ratings.set(bookId, new Map());
+      state.ratings.get(bookId).set(d.id, d.data());
+    }
+
+    state.notes = new Map();
+    for (const d of notesSnap.docs) {
+      const bookId = d.ref.parent.parent.id;
+      if (!state.notes.has(bookId)) state.notes.set(bookId, []);
+      state.notes.get(bookId).push({ id: d.id, ...d.data() });
+    }
+    for (const arr of state.notes.values()) {
+      arr.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+    }
+
+    state.activity = activitySnap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => String(b.at || "").localeCompare(String(a.at || "")));
+
+    renderShelf();
+  } catch (err) {
+    shelf.innerHTML = "";
+    shelfError.hidden = false;
+    shelfError.textContent = loadErrorMessage(err);
+    shelfStatus.textContent = "";
+  }
+}
+
+function loadErrorMessage(err) {
+  if (err?.code === "permission-denied") {
+    return "Kitaplara erişilemedi. Firestore güvenlik kurallarını denetle.";
+  }
+  if (err?.code === "unavailable") return "Sunucuya ulaşılamadı. İnternetini kontrol et.";
+  return "Kitaplar yüklenemedi. Sayfayı yenilemeyi dene.";
+}
+
+// ── Liste ──────────────────────────────────────────────────────
+function renderSkeleton() {
+  shelf.innerHTML = "";
+  shelfStatus.textContent = "Kitaplar yükleniyor…";
+  for (let i = 0; i < 6; i++) shelf.append(el("div", { class: "skeleton" }));
+}
+
+function visibleBooks() {
+  const q = trLower(state.query.trim());
+  return state.books
+    .filter((b) => {
+      const r = ratingsOf(b.id).size;
+      if (state.filter === "rated" && r === 0) return false;
+      if (state.filter === "unrated" && r > 0) return false;
+      if (state.filter === "mine" && b.created_by !== state.user.name) return false;
+      if (!q) return true;
+      const hay = trLower([b.title, b.creators, b.publisher].filter(Boolean).join(" "));
+      return hay.includes(q);
+    })
+    .sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "tr"));
+}
+
+function renderShelf() {
+  shelf.innerHTML = "";
+  shelfError.hidden = true;
+  const list = visibleBooks();
+
+  const ratedCount = state.books.filter((b) => ratingsOf(b.id).size > 0).length;
+  shelfStatus.textContent = `${state.books.length} kitap · ${ratedCount} puanlanmış` +
+    (state.query || state.filter !== "all" ? ` · ${list.length} sonuç` : "");
+
+  if (!list.length) {
+    shelf.append(el("div", { class: "shelf-empty" },
+      el("h2", { text: state.books.length ? "Eşleşen kitap yok" : "Kütüphane boş" }),
+      el("p", { text: state.books.length
+        ? "Aramayı veya filtreleri gevşetmeyi dene."
+        : "İlk kitabı eklemek için “Kitap ekle”ye dokun." })));
+    return;
+  }
+
+  for (const b of list) shelf.append(bookCard(b));
+}
+
+function bookCard(b) {
+  const { avg, count } = averageOf(b.id);
+  const avgNode = avg === null
+    ? el("span", { class: "score-avg is-none", text: "—" })
+    : el("span", { class: "score-avg", text: avg.toFixed(1) });
+
+  const breakdown = el("ul", { class: "breakdown" },
+    ...PEOPLE.map((name) => {
+      const v = valueForName(b.id, name);
+      return el("li", { class: name === state.user.name ? "is-mine" : "" },
+        el("span", { class: "who", text: name }),
+        el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) }));
+    }));
+
+  const meta = [b.creators, [b.publisher, b.publish_date].filter(Boolean).join(" · ")]
+    .filter(Boolean).join(" — ");
+
+  const card = el("article", { class: "book", role: "button", tabindex: "0", "aria-label": b.title },
+    coverNode(b),
+    el("div", { class: "book-main" },
+      el("h3", { class: "book-title", text: b.title || "(başlıksız)" }),
+      meta ? el("p", { class: "book-creators", text: meta }) : null,
+      el("div", { class: "book-foot" },
+        el("div", { class: "score" },
+          avgNode,
+          el("span", { class: "score-of", text: "/10" }),
+          el("span", { class: "score-count", text: count ? `${count} oy` : "oy yok" })),
+        breakdown)));
+
+  const open = () => openDetail(b.id);
+  card.addEventListener("click", open);
+  card.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+  });
+  return card;
+}
+
+// ── Detay ──────────────────────────────────────────────────────
+function openDetail(bookId) {
+  renderDetail(bookId);
+  detailDialog.showModal();
+}
+
+function renderDetail(bookId) {
+  const b = getBook(bookId);
+  if (!b) return;
+  const { avg, count } = averageOf(bookId);
+  const isEditor = state.user.role === "editor";
+  const myRating = ratingsOf(bookId).get(state.user.uid)?.value ?? null;
+
+  detailBody.innerHTML = "";
+
+  detailBody.append(
+    el("div", { class: "detail-top" },
+      el("span", { class: "catalog-no", text: `Fiş № ${String(b.id).toUpperCase()}` }),
+      el("button", { class: "detail-close", type: "button", text: "Kapat",
+                     onclick: () => detailDialog.close() })));
+
+  detailBody.append(
+    el("div", { class: "detail-head" },
+      coverNode(b),
+      el("div", {},
+        el("h2", { id: "detail-title", text: b.title || "(başlıksız)" }),
+        b.creators ? el("p", { class: "detail-creators", text: b.creators }) : null,
+        el("p", { class: "detail-meta" },
+          [b.publisher, b.publish_date, b.pages ? `${b.pages} s.` : null,
+           b.isbn13 ? `ISBN ${b.isbn13}` : null]
+            .filter(Boolean)
+            .map((t) => el("span", { text: t }))))));
+
+  // Ortalama
+  detailBody.append(
+    el("div", { class: "detail-score" },
+      avg === null
+        ? el("span", { class: "score-avg is-none", text: "—" })
+        : el("span", { class: "score-avg", text: avg.toFixed(1) }),
+      el("span", { class: "score-of", text: "/10" }),
+      el("span", { class: "score-count", text: count ? `${count} oy ortalaması` : "henüz oy yok" })));
+
+  // Açıklama
+  const desc = el("section", { class: "section" },
+    el("h3", { class: "section-title", text: "Açıklama" }),
+    el("p", { class: "prose" + (b.description ? "" : " is-empty"),
+              text: b.description || "Açıklama girilmemiş." }));
+  detailBody.append(desc);
+
+  // Kişi puanları
+  detailBody.append(
+    el("section", { class: "section" },
+      el("h3", { class: "section-title", text: "Kim kaç verdi" }),
+      el("ul", { class: "breakdown breakdown-lg" },
+        ...PEOPLE.map((name) => {
+          const v = valueForName(bookId, name);
+          return el("li", { class: name === state.user.name ? "is-mine" : "" },
+            el("span", { class: "who", text: name }),
+            el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) }));
+        }))));
+
+  // Puan kontrolü
+  const rateRow = el("div", { class: "rate-row" });
+  for (let v = 1; v <= 10; v++) {
+    rateRow.append(el("button", {
+      type: "button",
+      class: "rate-btn" + (myRating === v ? " is-current" : ""),
+      text: String(v),
+      "aria-label": `${v} puan`,
+      "aria-pressed": String(myRating === v),
+      onclick: () => submitRating(bookId, v),
+    }));
+  }
+  detailBody.append(
+    el("section", { class: "section" },
+      el("h3", { class: "section-title", text: "Puan ver" }),
+      rateRow,
+      el("p", { class: "rate-help", text: myRating
+        ? `Şu anki puanın: ${myRating}/10 · değiştirmek için başka bir sayıya dokun.`
+        : "1–10 arası bir sayıya dokun." })));
+
+  // Notlar
+  const notes = notesOf(bookId);
+  const noteList = el("ul", { class: "note-list" });
+  if (!notes.length) {
+    noteList.append(el("li", { class: "prose is-empty", text: "Henüz not yok." }));
+  } else {
+    for (const n of notes) {
+      noteList.append(el("li", { class: "note-entry" },
+        el("div", { class: "note-head" },
+          el("span", { class: "note-author", text: n.name || "?" }),
+          el("span", { class: "note-date", text: fmtDate(n.createdAt, true) })),
+        el("p", { class: "note-text", text: n.text })));
+    }
+  }
+  const noteBox = el("textarea", { rows: "3", placeholder: "Bu kitap hakkında bir not yaz…",
+                                   "aria-label": "Not" });
+  const noteBtn = el("button", { class: "btn btn-primary", type: "button", text: "Notu ekle" });
+  noteBtn.addEventListener("click", () => submitNote(bookId, noteBox, noteBtn));
+  detailBody.append(
+    el("section", { class: "section" },
+      el("h3", { class: "section-title", text: "Notlar" }),
+      el("div", { class: "note-form" }, noteBox, noteBtn),
+      noteList));
+
+  // Geçmiş
+  const acts = activityOf(bookId);
+  const actList = el("ul", { class: "activity-list" });
+  if (!acts.length) {
+    actList.append(el("li", { class: "prose is-empty", text: "Kayıtlı hareket yok." }));
+  } else {
+    for (const a of acts) {
+      actList.append(el("li", { class: "activity-entry" },
+        el("span", { class: "activity-name", text: a.name || "?" }),
+        el("span", { class: "activity-what" },
+          document.createTextNode(`${actionLabel(a.action)}`),
+          a.detail ? el("strong", { text: ` ${a.detail}` }) : null),
+        el("span", { class: "activity-at", text: fmtDate(a.at, true) })));
+    }
+  }
+  detailBody.append(
+    el("section", { class: "section" },
+      el("h3", { class: "section-title", text: "Hareket geçmişi" }),
+      actList));
+
+  // Düzenleyici işlemleri — YALNIZCA editor
+  if (isEditor) {
+    detailBody.append(
+      el("div", { class: "editor-actions" },
+        el("button", { class: "btn btn-ghost", type: "button", text: "Düzenle",
+                       onclick: () => { detailDialog.close(); openForm(bookId); } }),
+        el("button", { class: "btn btn-danger", type: "button", text: "Sil",
+                       onclick: () => removeBook(bookId) })));
+  }
+}
+
+function actionLabel(action) {
+  return ({ add: "ekledi", edit: "düzenledi", delete: "sildi", rate: "puanladı", note: "not ekledi" })[action]
+    || action;
+}
+
+// ── Yazma işlemleri ────────────────────────────────────────────
+async function logActivity(book, action, detail) {
+  const rec = {
+    bookId: book.id, bookTitle: book.title || "", action, detail: detail || "",
+    uid: state.user.uid, name: state.user.name, at: new Date().toISOString(),
+  };
+  try {
+    const ref = await addDoc(collection(db, "activity"), rec);
+    state.activity.unshift({ id: ref.id, ...rec });
+  } catch { /* geçmiş yazılamazsa asıl işlem bozulmasın */ }
+}
+
+async function submitRating(bookId, value) {
+  const b = getBook(bookId);
+  const prev = ratingsOf(bookId).get(state.user.uid)?.value ?? null;
+  const updatedAt = new Date().toISOString();
+  try {
+    await setDoc(doc(db, "books", bookId, "ratings", state.user.uid),
+      { value, name: state.user.name, updatedAt });
+  } catch (err) {
+    alertWriteError(err); return;
+  }
+  if (!state.ratings.has(bookId)) state.ratings.set(bookId, new Map());
+  state.ratings.get(bookId).set(state.user.uid, { value, name: state.user.name, updatedAt });
+  await logActivity(b, "rate", prev ? `${prev} → ${value}` : `${value}`);
+  renderDetail(bookId);
+  renderShelf();
+}
+
+async function submitNote(bookId, box, btn) {
+  const text = box.value.trim();
+  if (!text) { box.focus(); return; }
+  const b = getBook(bookId);
+  const rec = { text, uid: state.user.uid, name: state.user.name, createdAt: new Date().toISOString() };
+  btn.disabled = true;
+  btn.textContent = "Kaydediliyor…";
+  try {
+    const ref = await addDoc(collection(db, "books", bookId, "notes"), rec);
+    if (!state.notes.has(bookId)) state.notes.set(bookId, []);
+    state.notes.get(bookId).unshift({ id: ref.id, ...rec });
+  } catch (err) {
+    btn.disabled = false; btn.textContent = "Notu ekle"; alertWriteError(err); return;
+  }
+  await logActivity(b, "note", text.slice(0, 60));
+  renderDetail(bookId);
+}
+
+// ── Kitap ekle / düzenle / sil ─────────────────────────────────
+function openForm(bookId = null) {
+  state.editingId = bookId;
+  const b = bookId ? getBook(bookId) : null;
+  formTitle.textContent = b ? "Kitabı düzenle" : "Kitap ekle";
+  formSubmit.textContent = b ? "Değişiklikleri kaydet" : "Kaydet";
+  formError.hidden = true;
+  $("f-title").value = b?.title || "";
+  $("f-creators").value = b?.creators || "";
+  $("f-publisher").value = b?.publisher || "";
+  $("f-date").value = b?.publish_date || "";
+  $("f-pages").value = b?.pages ?? "";
+  $("f-isbn13").value = b?.isbn13 || "";
+  $("f-isbn10").value = b?.isbn10 || "";
+  $("f-description").value = b?.description || "";
+  formDialog.showModal();
+  $("f-title").focus();
+}
+
+$("add-book").addEventListener("click", () => openForm(null));
+document.querySelectorAll("[data-close-form]").forEach((b) =>
+  b.addEventListener("click", () => formDialog.close()));
+
+bookForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const title = $("f-title").value.trim();
+  if (!title) { showFormError("Başlık zorunlu."); $("f-title").focus(); return; }
+
+  const pagesRaw = $("f-pages").value.trim();
+  const pages = pagesRaw ? parseInt(pagesRaw, 10) : null;
+
+  const fields = {
+    title,
+    creators: $("f-creators").value.trim(),
+    publisher: $("f-publisher").value.trim(),
+    publish_date: $("f-date").value.trim(),
+    isbn13: $("f-isbn13").value.trim().replace(/[^0-9Xx]/g, ""),
+    isbn10: $("f-isbn10").value.trim().replace(/[^0-9Xx]/g, ""),
+    description: $("f-description").value.trim(),
+    pages: Number.isFinite(pages) ? pages : null,
+  };
+
+  formSubmit.disabled = true;
+  formSubmit.textContent = "Kaydediliyor…";
+  try {
+    if (state.editingId) await saveEdit(state.editingId, fields);
+    else await saveNew(fields);
+    formDialog.close();
+    renderShelf();
+    if (detailDialog.open && state.editingId) renderDetail(state.editingId);
+  } catch (err) {
+    showFormError(err?.code === "permission-denied"
+      ? "Yetkin yok. Bu işlemi yalnızca düzenleyiciler yapabilir."
+      : "Kaydedilemedi. Tekrar dene.");
+  } finally {
+    formSubmit.disabled = false;
+    formSubmit.textContent = state.editingId ? "Değişiklikleri kaydet" : "Kaydet";
+  }
+});
+
+function showFormError(msg) { formError.textContent = msg; formError.hidden = false; }
+
+async function saveNew(fields) {
+  const now = new Date().toISOString();
+  const data = { ...fields, item_type: "book", added_at: now.slice(0, 10),
+                 created_at: now, created_by: state.user.name };
+  const ref = await addDoc(collection(db, "books"), data);
+  const book = { id: ref.id, ...data };
+  state.books.push(book);
+  await logActivity(book, "add", "");
+  state.editingId = null;
+}
+
+async function saveEdit(bookId, fields) {
+  const b = getBook(bookId);
+  await updateDoc(doc(db, "books", bookId), fields);
+  Object.assign(b, fields);
+  await logActivity(b, "edit", "");
+}
+
+async function removeBook(bookId) {
+  const b = getBook(bookId);
+  if (!b) return;
+  if (!confirm(`“${b.title}” silinsin mi? Bu işlem geri alınamaz.`)) return;
+  try {
+    await deleteDoc(doc(db, "books", bookId));
+  } catch (err) { alertWriteError(err); return; }
+  state.books = state.books.filter((x) => x.id !== bookId);
+  state.ratings.delete(bookId);
+  state.notes.delete(bookId);
+  detailDialog.close();
+  await logActivity(b, "delete", "");
+  renderShelf();
+}
+
+function alertWriteError(err) {
+  const msg = err?.code === "permission-denied"
+    ? "Yetkin yok. Bu işlemi yalnızca düzenleyiciler yapabilir."
+    : "İşlem tamamlanamadı. Tekrar dene.";
+  shelfError.hidden = false;
+  shelfError.textContent = msg;
+}
+
+// ── Arama & filtre ─────────────────────────────────────────────
+searchInput.addEventListener("input", () => { state.query = searchInput.value; renderShelf(); });
+filterButtons.forEach((btn) => btn.addEventListener("click", () => {
+  state.filter = btn.dataset.filter;
+  filterButtons.forEach((b) => b.classList.toggle("is-active", b === btn));
+  renderShelf();
+}));
+
+// Arka plana dokununca kapat
+detailDialog.addEventListener("click", (e) => { if (e.target === detailDialog) detailDialog.close(); });
+formDialog.addEventListener("click", (e) => { if (e.target === formDialog) formDialog.close(); });
