@@ -31,6 +31,9 @@
 
 * { box-sizing: border-box; }
 
+/* hidden özeliği her zaman kazansın (display veren sınıflar ezmesin) */
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; }
 
 body {
