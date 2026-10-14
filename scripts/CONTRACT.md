@@ -98,6 +98,11 @@ Gutendex + Apple Books (CORS yok → JSONP). Her kaynakta önce başlık+yazar,
 boşsa başlıkla deneme. Candidates must pass a load check; OL first.
 Bulk scan uses OL only (quota-friendly); detail search merges all.
 
+Summary search (detail page, editors only): OL edition→work description +
+GB volumeInfo.description + Gutendex summaries + Apple description.
+Archive.org excluded (only physical metadata). First hit per source,
+max 4 candidates; user picks one to overwrite `description`.
+
 ## House rules for the UI
 
 - Turkish UI, Turkish-aware search (`str.toLocaleLowerCase("tr")`).

@@ -18,6 +18,9 @@ ve not düşer. Ortak veri Firebase'de tutulur, uygulama GitHub Pages'te yaşar.
   gösterilir, onaylananlar kaydedilir (yalnızca düzenleyiciler). Kitap detayından
   da tekil kapak araması yapılır (Open Library + Google Books + Archive.org +
   Gutendex + Apple Books).
+- **Özet bulma** — kitap detayında (yalnızca düzenleyiciler) açıklama için
+  Open Library + Google Books + Gutendex + Apple Books'tan aday özetler
+  getirilir, seçilen uygulanır.
 - **Okuma durumu** — her kullanıcı kitapları okundu/okunmadı işaretler;
   liste "Okuduklarım / Okumadıklarım" filtreleriyle süzülür.
 

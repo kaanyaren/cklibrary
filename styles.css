@@ -558,6 +558,17 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; letter
 }
 .cover-all input { width: 1.3rem; height: 1.3rem; accent-color: var(--accent); cursor: pointer; }
 
+/* ── ÖZET ADAYLARI ─────────────────────────────────── */
+.sum-row {
+  display: flex; gap: .7rem; align-items: flex-start;
+  border: 1px solid var(--line); border-radius: var(--r);
+  padding: .6rem .7rem; background: var(--paper); margin-top: .6rem;
+}
+.sum-row > div { min-width: 0; flex: 1; }
+.sum-src { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+.sum-text { margin: .2rem 0 0; font-size: .92rem; color: var(--ink-soft); }
+.sum-row .btn { flex: none; }
+
 /* ── DETAY KAPAK ────────────────────────────────────── */
 .cover-detail-row { display: flex; gap: 1rem; align-items: flex-start; }
 .cover-detail-btns { display: grid; gap: .5rem; align-content: start; }

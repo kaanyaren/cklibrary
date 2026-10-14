@@ -506,12 +506,40 @@ function renderDetail(bookId) {
                        onclick: () => removeBook(bookId) })));
   }
 
-  // Açıklama
-  const desc = el("section", { class: "section" },
+  // Açıklama (+ YALNIZCA editor: özet bul)
+  const descPara = el("p", { class: "prose" + (b.description ? "" : " is-empty"),
+                             text: b.description || "Açıklama girilmemiş." });
+  const descSec = el("section", { class: "section" },
     el("h3", { class: "section-title", text: "Açıklama" }),
-    el("p", { class: "prose" + (b.description ? "" : " is-empty"),
-              text: b.description || "Açıklama girilmemiş." }));
-  detailBody.append(desc);
+    descPara);
+  if (isEditor) {
+    const sumStatus = el("p", { class: "rate-help", text: "" });
+    const sumOpts = el("div", {});
+    const sumBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Özet bul" });
+    sumBtn.addEventListener("click", async () => {
+      sumBtn.disabled = true;
+      sumBtn.textContent = "Aranıyor…";
+      sumOpts.innerHTML = "";
+      sumStatus.textContent = "";
+      const found = await searchSummaries(b);
+      sumBtn.disabled = false;
+      sumBtn.textContent = "Özet bul";
+      if (!found.length) { sumStatus.textContent = "Özet bulunamadı."; return; }
+      sumStatus.textContent = "Birini seç — açıklamanın yerine geçer.";
+      for (const s of found) {
+        const preview = s.text.length > 300 ? s.text.slice(0, 300) + "…" : s.text;
+        const apply = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Uygula" });
+        apply.addEventListener("click", () => applySummary(bookId, s.text));
+        sumOpts.append(el("div", { class: "sum-row" },
+          el("div", {},
+            el("span", { class: "sum-src", text: s.source }),
+            el("p", { class: "sum-text", text: preview })),
+          apply));
+      }
+    });
+    descSec.append(sumBtn, sumStatus, sumOpts);
+  }
+  detailBody.append(descSec);
 
   // Kişi puanları
   detailBody.append(
@@ -1025,8 +1053,108 @@ async function gutendexSearchCovers(b, n) {
   return urls.slice(0, n);
 }
 
+function stripHtml(s) {
+  return String(s || "").replace(/<[^>]*>/g, "").replace(/&nbsp;|&#xa0;/g, " ").trim();
+}
+
+// Open Library: search → edition/work kaydından açıklama.
+async function olDescriptionForKey(key) {
+  const pick = (v) => {
+    const s = typeof v === "string" ? v : v?.value;
+    return s && s.trim() ? s.trim() : null;
+  };
+  if (!key) return null;
+  if (key.startsWith("/works/")) {
+    return pick((await fetchJson(`https://openlibrary.org${key}.json`))?.description);
+  }
+  if (key.startsWith("/books/")) {
+    const ed = await fetchJson(`https://openlibrary.org${key}.json`);
+    return pick(ed?.description)
+      || (ed?.works?.[0]?.key
+        ? pick((await fetchJson(`https://openlibrary.org${ed.works[0].key}.json`))?.description)
+        : null);
+  }
+  return null;
+}
+
+async function olSearchSummaries(b) {
+  const author = firstAuthorOf(b);
+  const queries = [];
+  if (b.title && author) {
+    queries.push(new URLSearchParams({ title: b.title, author, limit: "3", fields: "key" }));
+  }
+  if (b.title) {
+    queries.push(new URLSearchParams({ title: b.title, limit: "3", fields: "key" }));
+  }
+  for (const q of queries) {
+    const data = await fetchJson(`https://openlibrary.org/search.json?${q}`);
+    for (const d of (data?.docs || [])) {
+      const text = await olDescriptionForKey(d.key);
+      if (text) return [{ text, source: "Open Library" }];
+    }
+  }
+  return [];
+}
+
+// Google Books: volumeInfo.description (servis cevap vermezse boş).
+async function gbSearchSummaries(b) {
+  const author = firstAuthorOf(b);
+  const queries = [];
+  if (b.title && author) {
+    queries.push(`intitle:${encodeURIComponent(b.title)}+inauthor:${encodeURIComponent(author)}`);
+  }
+  if (b.title) {
+    queries.push(`intitle:${encodeURIComponent(b.title)}`);
+  }
+  for (const q of queries) {
+    const data = await fetchJson(
+      `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=5` +
+      `&fields=items(volumeInfo/description)&key=${firebaseConfig.apiKey}`);
+    for (const item of (data?.items || [])) {
+      const text = stripHtml(item.volumeInfo?.description);
+      if (text) return [{ text, source: "Google Books" }];
+    }
+  }
+  return [];
+}
+
+// Gutendex: summaries alanı doğrudan aramada gelir.
+async function gutendexSearchSummaries(b) {
+  const author = firstAuthorOf(b);
+  const queries = [];
+  if (b.title && author) queries.push(`${b.title} ${author}`);
+  if (b.title) queries.push(b.title);
+  for (const q of queries) {
+    const data = await fetchJson(`https://gutendex.com/books?search=${encodeURIComponent(q)}`);
+    for (const item of (data?.results || [])) {
+      const text = (item.summaries || []).find((s) => s && s.trim());
+      if (text) return [{ text: text.trim(), source: "Gutendex" }];
+    }
+  }
+  return [];
+}
+
+// Apple Books: ham kayıtlar üzerinden (kapak aramasıyla aynı JSONP çağrısı).
+async function appleSearchSummaries(b) {
+  for (const item of await appleSearchItems(b)) {
+    const text = stripHtml(item.description);
+    if (text) return [{ text, source: "Apple Books" }];
+  }
+  return [];
+}
+
+// Özet adayları: 4 kaynak paralel, en çok 4 tane.
+async function searchSummaries(b) {
+  const [ol, gb, gx, ap] = await Promise.all([
+    olSearchSummaries(b), gbSearchSummaries(b),
+    gutendexSearchSummaries(b), appleSearchSummaries(b),
+  ]);
+  return [...ol, ...gb, ...gx, ...ap].slice(0, 4);
+}
+
 // Apple Books: anahtarsız ama CORS yok → JSONP (script etiketi).
-function appleSearchCovers(b, n) {
+// Ham kayıtları döner; kapak ve özet aramaları buradan beslenir.
+function appleSearchItems(b) {
   const author = firstAuthorOf(b);
   const term = b.title ? `${b.title}${author ? " " + author : ""}` : "";
   if (!term) return Promise.resolve([]);
@@ -1035,24 +1163,25 @@ function appleSearchCovers(b, n) {
     const cb = `ckAppleCb${Date.now().toString(36)}${Math.floor(Math.random() * 1e6)}`;
     const cleanup = () => { clearTimeout(timer); delete window[cb]; script.remove(); };
     const timer = setTimeout(() => { cleanup(); res([]); }, 15000);
-    window[cb] = (data) => {
-      const urls = [];
-      for (const item of (data?.results || [])) {
-        const art = item.artworkUrl100 || item.artworkUrl60;
-        if (art) {
-          const u = art.replace(/\d+x\d+bb\.jpg/, "300x300bb.jpg");
-          if (!urls.includes(u)) urls.push(u);
-          if (urls.length >= n) break;
-        }
-      }
-      cleanup();
-      res(urls);
-    };
+    window[cb] = (data) => { cleanup(); res(data?.results || []); };
     script.onerror = () => { cleanup(); res([]); };
     script.src = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}` +
       `&media=ebook&limit=10&callback=${cb}`;
     document.head.appendChild(script);
   });
+}
+
+async function appleSearchCovers(b, n) {
+  const urls = [];
+  for (const item of await appleSearchItems(b)) {
+    const art = item.artworkUrl100 || item.artworkUrl60;
+    if (art) {
+      const u = art.replace(/\d+x\d+bb\.jpg/, "300x300bb.jpg");
+      if (!urls.includes(u)) urls.push(u);
+      if (urls.length >= n) break;
+    }
+  }
+  return urls;
 }
 
 // Başlık+yazara göre kapak adayları: 5 kaynak paralel,
@@ -1176,6 +1305,16 @@ async function applyCover(bookId, url) {
   getBook(bookId).cover_url = url;
   renderDetail(bookId);
   renderShelf();
+}
+
+async function applySummary(bookId, text) {
+  try {
+    await updateDoc(doc(db, "books", bookId), { description: text });
+  } catch (err) {
+    alertWriteError(err); return;
+  }
+  getBook(bookId).description = text;
+  renderDetail(bookId);
 }
 
 async function clearCover(bookId) {
