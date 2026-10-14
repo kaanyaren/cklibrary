@@ -92,11 +92,12 @@ at: string
 letter-tile fallback (first letter of title, deterministic paper tone).
 (`?default=false` şart: OL olmayan kapaklara 200 + boş GIF döner.)
 
-Cover search sources (5, hepsi anahtarsız; GB proje anahtarıyla):
+Cover search sources (6, hepsi anahtarsız; GB proje anahtarıyla):
 Open Library search + Google Books + Archive.org advancedsearch +
-Gutendex + Apple Books (CORS yok → JSONP). Her kaynakta önce başlık+yazar,
-boşsa başlıkla deneme. Candidates must pass a load check; OL first.
-Bulk scan uses OL only (quota-friendly); detail search merges all.
+Gutendex + Apple Books (CORS yok → JSONP) + Amazon CDN (ISBN-10/ASIN).
+Her kaynakta önce başlık+yazar, boşsa başlıkla deneme. Candidates must pass a
+load check (1x1 GIF elenir); OL first. Bulk scan uses OL + Amazon fallback for
+ISBN books (quota-friendly); detail search merges all 6.
 
 Summary search (detail page, editors only): OL edition→work description +
 GB volumeInfo.description + Gutendex summaries + Apple description.

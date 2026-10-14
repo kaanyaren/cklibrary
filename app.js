@@ -248,7 +248,7 @@ onAuthStateChanged(auth, async (user) => {
   state.user = { uid: user.uid, email: user.email, ...info };
   loginView.hidden = true;
   appView.hidden = false;
-  $("welcome").textContent = `kütüphanene hoş geldin ${state.user.name}.`;
+  $("welcome").textContent = `Kütüphanene hoş geldin ${state.user.name}.`;
   $("user-role").textContent = state.user.role === "editor" ? "düzenleyici" : "ekleyici";
   $("find-covers").hidden = state.user.role !== "editor";
   searchInput.value = "";
@@ -1486,7 +1486,6 @@ const themeBtn = $("theme-toggle");
 function paintThemeBtn() {
   if (!themeBtn) return;
   const dark = document.documentElement.dataset.theme === "dark";
-  themeBtn.textContent = dark ? "Açık" : "Koyu";
   themeBtn.setAttribute("aria-pressed", String(dark));
   themeBtn.setAttribute("aria-label", dark ? "Açık temaya geç" : "Koyu temaya geç");
 }

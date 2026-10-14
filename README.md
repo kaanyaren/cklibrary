@@ -17,7 +17,7 @@ ve not düşer. Ortak veri Firebase'de tutulur, uygulama GitHub Pages'te yaşar.
   kapaklılara farklı baskı bulunursa değişiklik önerilir. Eski/yeni yan yana
   gösterilir, onaylananlar kaydedilir (yalnızca düzenleyiciler). Kitap detayından
   da tekil kapak araması yapılır (Open Library + Google Books + Archive.org +
-  Gutendex + Apple Books).
+  Gutendex + Apple Books + Amazon).
 - **Özet bulma** — kitap detayında (yalnızca düzenleyiciler) açıklama için
   Open Library + Google Books + Gutendex + Apple Books'tan aday özetler
   getirilir, seçilen uygulanır.
