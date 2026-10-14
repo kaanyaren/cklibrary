@@ -76,7 +76,7 @@ function el(tag, props = {}, ...children) {
     else if (k.startsWith("on") && typeof v === "function") node.addEventListener(k.slice(2), v);
     else if (v !== null && v !== undefined && v !== false) node.setAttribute(k, v === true ? "" : v);
   }
-  for (const c of children) if (c != null) node.append(c);
+  for (const c of children.flat(Infinity)) if (c != null) node.append(c);
   return node;
 }
 
@@ -403,12 +403,19 @@ function renderDetail(bookId) {
         el("h2", { id: "detail-title", text: b.title || "(başlıksız)" }),
         b.creators ? el("p", { class: "detail-creators", text: b.creators }) : null,
         el("p", { class: "detail-meta" },
-          [b.publisher, b.publish_date, b.pages ? `${b.pages} s.` : null,
+          ...[b.publisher, b.publish_date, b.pages ? `${b.pages} s.` : null,
            b.isbn13 ? `ISBN ${b.isbn13}` : null]
             .filter(Boolean)
-            .map((t) => el("span", { text: t }))))));
+            .map((t) => el("span", { text: t })))),
+      el("div", { class: "detail-score" },
+        avg === null
+          ? el("span", { class: "score-avg is-none", text: "—" })
+          : el("span", { class: "score-avg", text: avg.toFixed(1) }),
+        el("span", { class: "score-of", text: "/10" }),
+        el("span", { class: "score-count", text: count ? `${count} oy` : "oy yok" }))));
 
   // ── İşlemler (hepsi üstte) ──
+  const opsGrid = el("div", { class: "detail-grid" });
   // Puan ver
   const rateRow = el("div", { class: "rate-row" });
   for (let v = 1; v <= 10; v++) {
@@ -421,7 +428,7 @@ function renderDetail(bookId) {
       onclick: () => submitRating(bookId, v),
     }));
   }
-  detailBody.append(
+  opsGrid.append(
     el("section", { class: "section" },
       el("h3", { class: "section-title", text: "Puan ver" }),
       rateRow,
@@ -431,7 +438,7 @@ function renderDetail(bookId) {
 
   // Okuma durumu
   const iRead = readsOf(bookId).get(state.user.uid)?.read === true;
-  detailBody.append(
+  opsGrid.append(
     el("section", { class: "section" },
       el("h3", { class: "section-title", text: "Okuma durumu" }),
       el("p", { class: "rate-help", text: iRead ? "Bu kitabı okudun." : "Bu kitabı henüz okumadın." }),
@@ -444,7 +451,7 @@ function renderDetail(bookId) {
                                    "aria-label": "Not" });
   const noteBtn = el("button", { class: "btn btn-primary", type: "button", text: "Notu ekle" });
   noteBtn.addEventListener("click", () => submitNote(bookId, noteBox, noteBtn));
-  detailBody.append(
+  opsGrid.append(
     el("section", { class: "section" },
       el("h3", { class: "section-title", text: "Not ekle" }),
       el("div", { class: "note-form" }, noteBox, noteBtn)));
@@ -479,13 +486,15 @@ function renderDetail(bookId) {
       clearBtn.addEventListener("click", () => clearCover(bookId));
       covBtns.append(clearBtn);
     }
-    detailBody.append(
+    opsGrid.append(
       el("section", { class: "section" },
         el("h3", { class: "section-title", text: "Kapak" }),
         el("div", { class: "cover-detail-row" }, coverNode(b), covBtns),
         covStatus,
         covOpts));
   }
+
+  detailBody.append(opsGrid);
 
   // Düzenleyici işlemleri — YALNIZCA editor (üstte, işlemlerle birlikte)
   if (isEditor) {
@@ -496,15 +505,6 @@ function renderDetail(bookId) {
         el("button", { class: "btn btn-danger", type: "button", text: "Sil",
                        onclick: () => removeBook(bookId) })));
   }
-
-  // Ortalama
-  detailBody.append(
-    el("div", { class: "detail-score" },
-      avg === null
-        ? el("span", { class: "score-avg is-none", text: "—" })
-        : el("span", { class: "score-avg", text: avg.toFixed(1) }),
-      el("span", { class: "score-of", text: "/10" }),
-      el("span", { class: "score-count", text: count ? `${count} oy ortalaması` : "henüz oy yok" })));
 
   // Açıklama
   const desc = el("section", { class: "section" },
