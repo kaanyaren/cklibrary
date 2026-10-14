@@ -67,6 +67,22 @@ const displayName = (s) => {
   const v = String(s ?? "");
   return v.charAt(0).toLocaleUpperCase("tr") + v.slice(1);
 };
+// Sayı + belirtme ("3'ünü okudun"): ek, sayının okunuşundaki son sözcüğe göre
+// seçilir (1'ini, 2'sini, 6'sını, 9'unu, 10'unu, 20'sini, 40'ını, 100'ünü, 1000'ini).
+function readPartitive(n) {
+  const v = Math.floor(Math.abs(Number(n)));
+  if (!Number.isFinite(v)) return `${n}'ini`;
+  const ones = ["", "'ini", "'sini", "'ünü", "'ünü", "'ini", "'sını", "'sini", "'ini", "'unu"];
+  const tensMap = ["", "'unu", "'sini", "'unu", "'ını", "'sini", "'ını", "'ini", "'ini", "'ını"];
+  if (v % 10) return `${v}${ones[v % 10]}`;
+  if (v % 100) return `${v}${tensMap[Math.floor(v / 10) % 10]}`;
+  if (v === 0) return "0'ını";
+  if (v % 1000) return `${v}'ünü`; // …yüz
+  if (Math.floor(v / 1e3) % 1e3) return `${v}'ini`; // …bin
+  if (Math.floor(v / 1e6) % 1e3) return `${v}'unu`; // …milyon
+  if (Math.floor(v / 1e9) % 1e3) return `${v}'ını`; // …milyar
+  return `${v}'unu`; // …trilyon ve üstü
+}
 
 function el(tag, props = {}, ...children) {
   const node = document.createElement(tag);
@@ -169,14 +185,54 @@ function showLoginError(msg) {
 }
 function clearLoginError() { loginError.hidden = true; loginError.textContent = ""; }
 
-whoButtons.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    selectedEmail = btn.dataset.email;
-    whoButtons.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
-    clearLoginError();
-    passwordInput.focus();
+function selectWho(btn) {
+  if (!btn) return;
+  selectedEmail = btn.dataset.email;
+  whoButtons.forEach((b) => {
+    const isSelected = b === btn;
+    b.setAttribute("aria-pressed", String(isSelected));
+    b.setAttribute("aria-checked", String(isSelected));
+    b.tabIndex = isSelected ? 0 : -1;
+  });
+  clearLoginError();
+  passwordInput.focus();
+}
+
+whoButtons.forEach((btn, idx) => {
+  btn.addEventListener("click", () => selectWho(btn));
+  btn.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      const next = whoButtons[(idx + 1) % whoButtons.length];
+      selectWho(next);
+      next.focus();
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const prev = whoButtons[(idx - 1 + whoButtons.length) % whoButtons.length];
+      selectWho(prev);
+      prev.focus();
+    }
   });
 });
+
+const togglePasswordBtn = $("toggle-password");
+if (togglePasswordBtn && passwordInput) {
+  togglePasswordBtn.addEventListener("click", () => {
+    const isPassword = passwordInput.type === "password";
+    passwordInput.type = isPassword ? "text" : "password";
+    togglePasswordBtn.setAttribute("aria-pressed", String(isPassword));
+    const label = isPassword ? "Şifreyi gizle" : "Şifreyi göster";
+    togglePasswordBtn.setAttribute("aria-label", label);
+    togglePasswordBtn.title = label;
+    const eye = togglePasswordBtn.querySelector(".icon-eye");
+    const eyeOff = togglePasswordBtn.querySelector(".icon-eye-off");
+    if (eye) eye.hidden = isPassword;
+    if (eyeOff) eyeOff.hidden = !isPassword;
+    passwordInput.focus();
+  });
+}
+
+passwordInput?.addEventListener("input", clearLoginError);
 
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -249,7 +305,7 @@ onAuthStateChanged(auth, async (user) => {
   state.user = { uid: user.uid, email: user.email, ...info };
   loginView.hidden = true;
   appView.hidden = false;
-  $("welcome").textContent = `Kütüphanene hoş geldin ${state.user.name}.`;
+  $("welcome").textContent = `Kütüphanene hoş geldin ${displayName(state.user.name)}.`;
   $("user-role").textContent = state.user.role === "editor" ? "düzenleyici" : "ekleyici";
   $("find-covers").hidden = state.user.role !== "editor";
   $("find-summaries").hidden = state.user.role !== "editor";
@@ -357,7 +413,7 @@ function renderShelf() {
   const readCount = state.books.filter((b) => myRead(b.id)).length;
   const totalPages = state.books.reduce((sum, b) => sum + (Number(b.pages) > 0 ? Number(b.pages) : 0), 0);
   libraryStats.textContent =
-    `${state.books.length} kitap · ${readCount}'ünü okudun · toplam ${totalPages.toLocaleString("tr-TR")} sayfa`;
+    `${state.books.length} kitap · ${readPartitive(readCount)} okudun · toplam ${totalPages.toLocaleString("tr-TR")} sayfa`;
 
   if (!list.length) {
     shelf.append(el("div", { class: "shelf-empty" },
@@ -426,8 +482,9 @@ function renderDetail(bookId) {
   const notes = notesOf(bookId);
   const acts = activityOf(bookId);
 
+  const prevTab = currentDetailTabKey();
+  const prevScroll = detailDialog.scrollTop;
   detailBody.innerHTML = "";
-  detailBody.scrollTop = 0;
 
   // ── Yapışkan üst bar: fiş no + hızlı işlem + kapat ──
   const topActions = el("div", { class: "detail-top-actions" });
@@ -444,7 +501,7 @@ function renderDetail(bookId) {
   detailBody.append(
     el("div", { class: "detail-top is-sticky" },
       el("div", { class: "detail-top-left" },
-        el("span", { class: "catalog-no", text: `Fiş № ${String(b.id).toUpperCase()}` }),
+        el("span", { class: "catalog-no", text: "Fiş", title: `Fiş № ${String(b.id).toUpperCase()}` }),
         el("p", { class: "detail-top-title", text: b.title || "(başlıksız)" })),
       topActions));
 
@@ -483,25 +540,44 @@ function renderDetail(bookId) {
   detailBody.append(hero);
 
   // ── Birincil işlemler: her zaman sekmelerin üstünde ──
-  const rateRow = el("div", { class: "rate-row", role: "group", "aria-label": "Puan ver" });
-  for (let v = 1; v <= 10; v++) {
-    rateRow.append(el("button", {
-      type: "button",
-      class: "rate-btn" + (myRating === v ? " is-current" : ""),
-      text: String(v),
-      "aria-label": `${v} puan`,
-      "aria-pressed": String(myRating === v),
-      onclick: () => submitRating(bookId, v),
-    }));
+  const rateRow = el("div", { class: "rate-row" });
+  for (const [rangeLabel, from, to] of [["1–5", 1, 5], ["6–10", 6, 10]]) {
+    const group = el("div", { class: "rate-group", role: "group", "aria-label": rangeLabel });
+    group.append(el("span", { class: "rate-range", "aria-hidden": "true", text: rangeLabel }));
+    for (let v = from; v <= to; v++) {
+      group.append(el("button", {
+        type: "button",
+        class: "rate-btn" + (myRating === v ? " is-current" : ""),
+        text: String(v),
+        "aria-label": myRating === v ? `${v} puan, şu anki puanın` : `${v} puan ver`,
+        "aria-pressed": String(myRating === v),
+        onclick: () => submitRating(bookId, v),
+      }));
+    }
+    rateRow.append(group);
   }
+  rateRow.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const n = e.key === "0" ? 10 : Number(e.key);
+    if (!Number.isInteger(n) || n < 1 || n > 10) return;
+    e.preventDefault();
+    submitRating(bookId, n);
+  });
+  const rateHelp = el("p", { class: "rate-help", "aria-live": "polite", text: myRating !== null
+    ? "Başka sayıya dokunursan değişir; Puanı kaldırırsan ortalamadan çıkarsın. Klavyeden 1–9, 10 için 0."
+    : "1–10 arası bir sayıya dokun; ortalamaya eklenir. Klavyeden 1–9, 10 için 0." });
   detailBody.append(
     el("div", { class: "detail-actions" },
       el("section", { class: "action-card", "aria-label": "Puan ver" },
         el("h3", { class: "section-title", text: "Puan ver" }),
         rateRow,
-        el("p", { class: "rate-help", text: myRating !== null
-          ? `Şu anki puanın: ${myRating}/10 · değiştirmek için başka bir sayıya dokun.`
-          : "1–10 arası bir sayıya dokun." })),
+        rateHelp,
+        myRating !== null
+          ? el("button", { class: "btn btn-ghost rate-clear", type: "button",
+                           text: "Puanı kaldır",
+                           "aria-label": `Puanını kaldır (${myRating}/10)`,
+                           onclick: () => clearRating(bookId) })
+          : null),
       el("section", { class: "action-card", "aria-label": "Okuma durumu" },
         el("h3", { class: "section-title", text: "Okuma durumu" }),
         el("p", { class: "read-desc", text: iRead ? "Bu kitabı okudun." : "Bu kitabı henüz okumadın." }),
@@ -700,7 +776,8 @@ function renderDetail(bookId) {
   histBtn.innerHTML = `Geçmiş <span class="tab-count">${acts.length ? `· ${acts.length}` : ""}</span>`;
 
   detailBody.append(tabBar, panels);
-  selectTab("genel");
+  selectTab(prevTab || "genel");
+  detailDialog.scrollTop = prevScroll || 0;
 }
 
 function actionLabel(action) {
@@ -709,6 +786,81 @@ function actionLabel(action) {
 }
 
 // ── Yazma işlemleri ────────────────────────────────────────────
+// Harden: çift-dokunma kilidi + satır-içi hata/onay + Geri al. Türkçe,
+// sessiz durum dili, yeni bağımlılık yok.
+const writeBusy = new Set();
+const confirmPending = new Map();
+const removeArmed = new Set();
+const UNDO_MS = 8000;
+let undoTimer = 0;
+
+function writeErrorMessage(err) {
+  switch (err?.code) {
+    case "permission-denied": return "Yetkin yok. Bu işlemi yalnızca düzenleyiciler yapabilir.";
+    case "unavailable":
+    case "deadline-exceeded":
+    case "cancelled": return "Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.";
+    case "unauthenticated": return "Oturumun kapandı. Yeniden giriş yapıp tekrar dene.";
+    default: return "İşlem tamamlanamadı. Tekrar dene.";
+  }
+}
+
+function currentDetailTabKey() {
+  const cur = detailBody.querySelector('.tab-btn[aria-selected="true"]');
+  const m = String(cur?.id || "").match(/^tab-(genel|notlar|gecmis)-/);
+  return m ? m[1] : null;
+}
+
+function rerenderDetailPreserving(bookId) {
+  renderDetail(bookId);
+  renderShelf();
+}
+
+function showDetailError(msg, onRetry) {
+  detailBody.querySelector(".detail-write-error")?.remove();
+  const row = el("div", { class: "detail-write-error", role: "alert" },
+    el("span", { text: msg }));
+  if (onRetry) {
+    const retry = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Tekrar dene" });
+    retry.addEventListener("click", () => { row.remove(); onRetry(); });
+    row.append(retry);
+    retry.focus({ preventScroll: true });
+  }
+  const anchor = detailBody.querySelector(".detail-top");
+  if (anchor) anchor.after(row); else detailBody.prepend(row);
+}
+
+function showConfirmRow(msg, confirmLabel, onConfirm, onCancel) {
+  detailBody.querySelector(".detail-write-error")?.remove();
+  const ok = el("button", { class: "btn btn-danger btn-tiny", type: "button", text: confirmLabel });
+  const no = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Vazgeç" });
+  const row = el("div", { class: "detail-write-error is-confirm", role: "alert" },
+    el("span", { text: msg }), ok, no);
+  const done = () => row.remove();
+  ok.addEventListener("click", () => { done(); onConfirm(); });
+  no.addEventListener("click", () => { done(); onCancel?.(); });
+  const anchor = detailBody.querySelector(".detail-top");
+  if (anchor) anchor.after(row); else detailBody.prepend(row);
+  ok.focus({ preventScroll: true });
+}
+
+function showUndo(message, onUndo) {
+  document.querySelectorAll(".undo-bar").forEach((n) => n.remove());
+  clearTimeout(undoTimer);
+  const btn = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Geri al" });
+  const bar = el("div", { class: "undo-bar", role: "status" },
+    el("span", { text: message }), btn);
+  if (detailDialog.open) {
+    const anchor = detailBody.querySelector(".detail-top");
+    if (anchor) anchor.after(bar); else detailBody.prepend(bar);
+  } else {
+    appView.prepend(bar);
+  }
+  const done = () => { clearTimeout(undoTimer); bar.remove(); };
+  btn.addEventListener("click", async () => { done(); await onUndo(); });
+  undoTimer = setTimeout(done, UNDO_MS);
+}
+
 async function logActivity(book, action, detail) {
   const rec = {
     bookId: book.id, bookTitle: book.title || "", action, detail: detail || "",
@@ -721,41 +873,86 @@ async function logActivity(book, action, detail) {
 }
 
 async function submitRating(bookId, value) {
+  const key = `rate:${bookId}`;
+  if (writeBusy.has(key)) return;
+  const prevEntry = ratingsOf(bookId).get(state.user.uid) || null;
+  const prev = prevEntry?.value ?? null;
+  if (prev === value) return;
+  writeBusy.add(key);
   const b = getBook(bookId);
-  const prev = ratingsOf(bookId).get(state.user.uid)?.value ?? null;
   const updatedAt = new Date().toISOString();
+  if (!state.ratings.has(bookId)) state.ratings.set(bookId, new Map());
+  state.ratings.get(bookId).set(state.user.uid, { value, name: state.user.name, updatedAt });
+  rerenderDetailPreserving(bookId);
   try {
     await setDoc(doc(db, "books", bookId, "ratings", state.user.uid),
       { value, name: state.user.name, updatedAt });
   } catch (err) {
-    alertWriteError(err); return;
+    if (prevEntry) state.ratings.get(bookId).set(state.user.uid, prevEntry);
+    else state.ratings.get(bookId).delete(state.user.uid);
+    rerenderDetailPreserving(bookId);
+    showDetailError(writeErrorMessage(err), () => submitRating(bookId, value));
+    writeBusy.delete(key); return;
   }
-  if (!state.ratings.has(bookId)) state.ratings.set(bookId, new Map());
-  state.ratings.get(bookId).set(state.user.uid, { value, name: state.user.name, updatedAt });
+  writeBusy.delete(key);
   await logActivity(b, "rate", prev ? `${prev} → ${value}` : `${value}`);
-  renderDetail(bookId);
-  renderShelf();
+  rerenderDetailPreserving(bookId);
+}
+
+async function clearRating(bookId) {
+  const key = `rate:${bookId}`;
+  if (writeBusy.has(key)) return;
+  const prevEntry = ratingsOf(bookId).get(state.user.uid) || null;
+  if (prevEntry === null) return;
+  const prev = prevEntry.value;
+  writeBusy.add(key);
+  const b = getBook(bookId);
+  state.ratings.get(bookId)?.delete(state.user.uid);
+  rerenderDetailPreserving(bookId);
+  try {
+    await deleteDoc(doc(db, "books", bookId, "ratings", state.user.uid));
+  } catch (err) {
+    if (!state.ratings.has(bookId)) state.ratings.set(bookId, new Map());
+    state.ratings.get(bookId).set(state.user.uid, prevEntry);
+    rerenderDetailPreserving(bookId);
+    showDetailError(writeErrorMessage(err), () => clearRating(bookId));
+    writeBusy.delete(key); return;
+  }
+  writeBusy.delete(key);
+  await logActivity(b, "rate", `${prev} → –`);
+  rerenderDetailPreserving(bookId);
 }
 
 async function submitRead(bookId, read) {
+  const key = `read:${bookId}`;
+  if (writeBusy.has(key)) return;
+  writeBusy.add(key);
+  const prevEntry = readsOf(bookId).get(state.user.uid) || null;
   const updatedAt = new Date().toISOString();
+  if (!state.reads.has(bookId)) state.reads.set(bookId, new Map());
+  state.reads.get(bookId).set(state.user.uid, { read, name: state.user.name, updatedAt });
+  rerenderDetailPreserving(bookId);
   try {
     await setDoc(doc(db, "books", bookId, "reads", state.user.uid),
       { read, name: state.user.name, updatedAt });
   } catch (err) {
-    alertWriteError(err); return;
+    if (prevEntry) state.reads.get(bookId).set(state.user.uid, prevEntry);
+    else state.reads.get(bookId).delete(state.user.uid);
+    rerenderDetailPreserving(bookId);
+    showDetailError(writeErrorMessage(err), () => submitRead(bookId, read));
+    writeBusy.delete(key); return;
   }
-  if (!state.reads.has(bookId)) state.reads.set(bookId, new Map());
-  state.reads.get(bookId).set(state.user.uid, { read, name: state.user.name, updatedAt });
-  renderDetail(bookId);
-  renderShelf();
+  writeBusy.delete(key);
 }
 
 async function submitNote(bookId, box, btn) {
+  const key = `note:${bookId}`;
+  if (writeBusy.has(key)) return;
   const text = box.value.trim();
   if (!text) { box.focus(); return; }
   const b = getBook(bookId);
   const rec = { text, uid: state.user.uid, name: state.user.name, createdAt: new Date().toISOString() };
+  writeBusy.add(key);
   btn.disabled = true;
   btn.textContent = "Kaydediliyor…";
   try {
@@ -763,8 +960,11 @@ async function submitNote(bookId, box, btn) {
     if (!state.notes.has(bookId)) state.notes.set(bookId, []);
     state.notes.get(bookId).unshift({ id: ref.id, ...rec });
   } catch (err) {
-    btn.disabled = false; btn.textContent = "Notu ekle"; alertWriteError(err); return;
+    btn.disabled = false; btn.textContent = "Notu ekle";
+    showDetailError(writeErrorMessage(err), () => submitNote(bookId, box, btn));
+    writeBusy.delete(key); return;
   }
+  writeBusy.delete(key);
   await logActivity(b, "note", text.slice(0, 60));
   renderDetail(bookId);
 }
@@ -854,22 +1054,54 @@ async function saveEdit(bookId, fields) {
 async function removeBook(bookId) {
   const b = getBook(bookId);
   if (!b) return;
-  if (!confirm(`“${b.title}” silinsin mi? Bu işlem geri alınamaz.`)) return;
+  const key = `del:${bookId}`;
+  if (writeBusy.has(key)) return;
+  if (!removeArmed.has(bookId)) {
+    removeArmed.add(bookId);
+    showConfirmRow(`“${b.title || "Kitap"}” silinir; puanlar ve notlar listeden kalkar.`, "Sil",
+      () => { removeArmed.delete(bookId); removeBook(bookId); },
+      () => removeArmed.delete(bookId));
+    setTimeout(() => removeArmed.delete(bookId), UNDO_MS);
+    return;
+  }
+  removeArmed.delete(bookId);
+  writeBusy.add(key);
+  const snap = { ...b }; delete snap.id;
+  const snapRatings = new Map(ratingsOf(bookId));
+  const snapNotes = [...notesOf(bookId)];
+  const snapReads = new Map(readsOf(bookId));
   try {
     await deleteDoc(doc(db, "books", bookId));
-  } catch (err) { alertWriteError(err); return; }
+  } catch (err) {
+    writeBusy.delete(key);
+    removeArmed.add(bookId);
+    showDetailError(writeErrorMessage(err), () => removeBook(bookId));
+    return;
+  }
+  // NOT: deleteDoc alt koleksiyonları silmez; aynı id ile yeniden yazmak
+  // onları görünür kılar, o yüzden Geri al yalnızca üst belgeyi yazar.
   state.books = state.books.filter((x) => x.id !== bookId);
   state.ratings.delete(bookId);
   state.notes.delete(bookId);
+  state.reads.delete(bookId);
   detailDialog.close();
   await logActivity(b, "delete", "");
   renderShelf();
+  writeBusy.delete(key);
+  showUndo(`“${snap.title || "Kitap"}” silindi.`, async () => {
+    try { await setDoc(doc(db, "books", bookId), snap); }
+    catch (err) { shelfError.hidden = false; shelfError.textContent = writeErrorMessage(err); return; }
+    state.books.push({ id: bookId, ...snap });
+    state.ratings.set(bookId, snapRatings);
+    if (snapNotes.length) state.notes.set(bookId, snapNotes);
+    state.reads.set(bookId, snapReads);
+    renderShelf();
+  });
 }
 
 function alertWriteError(err) {
-  const msg = err?.code === "permission-denied"
-    ? "Yetkin yok. Bu işlemi yalnızca düzenleyiciler yapabilir."
-    : "İşlem tamamlanamadı. Tekrar dene.";
+  const msg = writeErrorMessage(err);
+  if (detailDialog.open) { showDetailError(msg, null); return; }
   shelfError.hidden = false;
   shelfError.textContent = msg;
 }
@@ -1556,14 +1788,39 @@ coversApply.addEventListener("click", async () => {
 });
 
 async function applyCover(bookId, url) {
+  const key = `cover:${bookId}`;
+  if (writeBusy.has(key)) return;
+  const b = getBook(bookId);
+  if (!b) return;
+  const prev = b.cover_url || null;
+  if (prev && prev !== url && confirmPending.get(key) !== url) {
+    confirmPending.set(key, url);
+    showConfirmRow(`“${b.title || "Kitap"}” için mevcut kapağın yerine geçer.`, "Üzerine yaz",
+      () => applyCover(bookId, url), () => confirmPending.delete(key));
+    setTimeout(() => confirmPending.delete(key), UNDO_MS);
+    return;
+  }
+  confirmPending.delete(key);
+  writeBusy.add(key);
+  b.cover_url = url;
+  rerenderDetailPreserving(bookId);
   try {
     await updateDoc(doc(db, "books", bookId), { cover_url: url });
   } catch (err) {
-    alertWriteError(err); return;
+    if (prev) b.cover_url = prev; else delete b.cover_url;
+    confirmPending.set(key, url);
+    rerenderDetailPreserving(bookId);
+    showDetailError(writeErrorMessage(err), () => applyCover(bookId, url));
+    writeBusy.delete(key); return;
   }
-  getBook(bookId).cover_url = url;
-  renderDetail(bookId);
-  renderShelf();
+  writeBusy.delete(key);
+  showUndo("Kapak değişti.", async () => {
+    try {
+      if (prev) { await updateDoc(doc(db, "books", bookId), { cover_url: prev }); getBook(bookId).cover_url = prev; }
+      else { await updateDoc(doc(db, "books", bookId), { cover_url: deleteField() }); delete getBook(bookId).cover_url; }
+    } catch (err) { showDetailError(writeErrorMessage(err), null); return; }
+    rerenderDetailPreserving(bookId);
+  });
 }
 
 // ── Toplu özet bulma (açıklamasız kitaplar taranır) ───────
@@ -1673,24 +1930,62 @@ summariesApply.addEventListener("click", async () => {
 });
 
 async function applySummary(bookId, text) {
+  const key = `sum:${bookId}`;
+  if (writeBusy.has(key)) return;
+  const b = getBook(bookId);
+  if (!b) return;
+  const prev = b.description || "";
+  if (prev.trim() && prev !== text && confirmPending.get(key) !== text) {
+    confirmPending.set(key, text);
+    showConfirmRow(`Mevcut açıklamanın yerine geçer (${prev.length} → ${text.length} karakter).`, "Üzerine yaz",
+      () => applySummary(bookId, text), () => confirmPending.delete(key));
+    setTimeout(() => confirmPending.delete(key), UNDO_MS);
+    return;
+  }
+  confirmPending.delete(key);
+  writeBusy.add(key);
+  b.description = text;
+  rerenderDetailPreserving(bookId);
   try {
     await updateDoc(doc(db, "books", bookId), { description: text });
   } catch (err) {
-    alertWriteError(err); return;
+    b.description = prev;
+    confirmPending.set(key, text);
+    rerenderDetailPreserving(bookId);
+    showDetailError(writeErrorMessage(err), () => applySummary(bookId, text));
+    writeBusy.delete(key); return;
   }
-  getBook(bookId).description = text;
-  renderDetail(bookId);
+  writeBusy.delete(key);
+  showUndo("Açıklama değişti.", async () => {
+    try { await updateDoc(doc(db, "books", bookId), { description: prev }); getBook(bookId).description = prev; }
+    catch (err) { showDetailError(writeErrorMessage(err), null); return; }
+    rerenderDetailPreserving(bookId);
+  });
 }
 
 async function clearCover(bookId) {
+  const key = `cover:${bookId}`;
+  if (writeBusy.has(key)) return;
+  const b = getBook(bookId);
+  if (!b?.cover_url) return;
+  const prev = b.cover_url;
+  writeBusy.add(key);
+  delete b.cover_url;
+  rerenderDetailPreserving(bookId);
   try {
     await updateDoc(doc(db, "books", bookId), { cover_url: deleteField() });
   } catch (err) {
-    alertWriteError(err); return;
+    b.cover_url = prev;
+    rerenderDetailPreserving(bookId);
+    showDetailError(writeErrorMessage(err), () => clearCover(bookId));
+    writeBusy.delete(key); return;
   }
-  delete getBook(bookId).cover_url;
-  renderDetail(bookId);
-  renderShelf();
+  writeBusy.delete(key);
+  showUndo("Kapak kaldırıldı.", async () => {
+    try { await updateDoc(doc(db, "books", bookId), { cover_url: prev }); getBook(bookId).cover_url = prev; }
+    catch (err) { showDetailError(writeErrorMessage(err), null); return; }
+    rerenderDetailPreserving(bookId);
+  });
 }
 
 // ── Arama & filtre ─────────────────────────────────────────────
@@ -1702,18 +1997,21 @@ filterButtons.forEach((btn) => btn.addEventListener("click", () => {
 }));
 
 // ── Tema (açık/koyu) ───────────────────────────────────────────
-const themeBtn = $("theme-toggle");
+const themeButtons = [...document.querySelectorAll(".theme-toggle")];
 function paintThemeBtn() {
-  if (!themeBtn) return;
   const dark = document.documentElement.dataset.theme === "dark";
-  themeBtn.setAttribute("aria-pressed", String(dark));
-  themeBtn.setAttribute("aria-label", dark ? "Açık temaya geç" : "Koyu temaya geç");
+  themeButtons.forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(dark));
+    btn.setAttribute("aria-label", dark ? "Açık temaya geç" : "Koyu temaya geç");
+  });
 }
-themeBtn?.addEventListener("click", () => {
-  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-  document.documentElement.dataset.theme = next;
-  try { localStorage.setItem("ck-theme", next); } catch { /* yoksay */ }
-  paintThemeBtn();
+themeButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("ck-theme", next); } catch { /* yoksay */ }
+    paintThemeBtn();
+  });
 });
 paintThemeBtn();
 
