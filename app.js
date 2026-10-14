@@ -221,7 +221,7 @@ onAuthStateChanged(auth, async (user) => {
   state.user = { uid: user.uid, email: user.email, ...info };
   loginView.hidden = true;
   appView.hidden = false;
-  $("welcome").textContent = `Kütüphanene Hoş Geldin ${displayName(state.user.name)}.`;
+  $("welcome").textContent = `kütüphanene hoş geldin ${state.user.name}.`;
   $("user-role").textContent = state.user.role === "editor" ? "düzenleyici" : "ekleyici";
   $("find-covers").hidden = state.user.role !== "editor";
   searchInput.value = "";
@@ -408,6 +408,47 @@ function renderDetail(bookId) {
             .filter(Boolean)
             .map((t) => el("span", { text: t }))))));
 
+  // ── İşlemler (hepsi üstte) ──
+  // Puan ver
+  const rateRow = el("div", { class: "rate-row" });
+  for (let v = 1; v <= 10; v++) {
+    rateRow.append(el("button", {
+      type: "button",
+      class: "rate-btn" + (myRating === v ? " is-current" : ""),
+      text: String(v),
+      "aria-label": `${v} puan`,
+      "aria-pressed": String(myRating === v),
+      onclick: () => submitRating(bookId, v),
+    }));
+  }
+  detailBody.append(
+    el("section", { class: "section" },
+      el("h3", { class: "section-title", text: "Puan ver" }),
+      rateRow,
+      el("p", { class: "rate-help", text: myRating
+        ? `Şu anki puanın: ${myRating}/10 · değiştirmek için başka bir sayıya dokun.`
+        : "1–10 arası bir sayıya dokun." })));
+
+  // Okuma durumu
+  const iRead = readsOf(bookId).get(state.user.uid)?.read === true;
+  detailBody.append(
+    el("section", { class: "section" },
+      el("h3", { class: "section-title", text: "Okuma durumu" }),
+      el("p", { class: "rate-help", text: iRead ? "Bu kitabı okudun." : "Bu kitabı henüz okumadın." }),
+      el("button", { class: "btn btn-ghost", type: "button",
+                     text: iRead ? "Okumadı olarak işaretle" : "Okudum olarak işaretle",
+                     onclick: () => submitRead(bookId, !iRead) })));
+
+  // Not ekle (form üstte; liste aşağıda "Notlar"da)
+  const noteBox = el("textarea", { rows: "3", placeholder: "Bu kitap hakkında bir not yaz…",
+                                   "aria-label": "Not" });
+  const noteBtn = el("button", { class: "btn btn-primary", type: "button", text: "Notu ekle" });
+  noteBtn.addEventListener("click", () => submitNote(bookId, noteBox, noteBtn));
+  detailBody.append(
+    el("section", { class: "section" },
+      el("h3", { class: "section-title", text: "Not ekle" }),
+      el("div", { class: "note-form" }, noteBox, noteBtn)));
+
   // Kapak — YALNIZCA editor (tekil arama + kaldırma)
   if (isEditor) {
     const covStatus = el("p", { class: "rate-help", text: b.cover_url
@@ -446,6 +487,16 @@ function renderDetail(bookId) {
         covOpts));
   }
 
+  // Düzenleyici işlemleri — YALNIZCA editor (üstte, işlemlerle birlikte)
+  if (isEditor) {
+    detailBody.append(
+      el("div", { class: "editor-actions" },
+        el("button", { class: "btn btn-ghost", type: "button", text: "Düzenle",
+                       onclick: () => { detailDialog.close(); openForm(bookId); } }),
+        el("button", { class: "btn btn-danger", type: "button", text: "Sil",
+                       onclick: () => removeBook(bookId) })));
+  }
+
   // Ortalama
   detailBody.append(
     el("div", { class: "detail-score" },
@@ -474,36 +525,7 @@ function renderDetail(bookId) {
             el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) }));
         }))));
 
-  // Puan kontrolü
-  const rateRow = el("div", { class: "rate-row" });
-  for (let v = 1; v <= 10; v++) {
-    rateRow.append(el("button", {
-      type: "button",
-      class: "rate-btn" + (myRating === v ? " is-current" : ""),
-      text: String(v),
-      "aria-label": `${v} puan`,
-      "aria-pressed": String(myRating === v),
-      onclick: () => submitRating(bookId, v),
-    }));
-  }
-  detailBody.append(
-    el("section", { class: "section" },
-      el("h3", { class: "section-title", text: "Puan ver" }),
-      rateRow,
-      el("p", { class: "rate-help", text: myRating
-        ? `Şu anki puanın: ${myRating}/10 · değiştirmek için başka bir sayıya dokun.`
-        : "1–10 arası bir sayıya dokun." })));
-
-  const iRead = readsOf(bookId).get(state.user.uid)?.read === true;
-  detailBody.append(
-    el("section", { class: "section" },
-      el("h3", { class: "section-title", text: "Okuma durumu" }),
-      el("p", { class: "rate-help", text: iRead ? "Bu kitabı okudun." : "Bu kitabı henüz okumadın." }),
-      el("button", { class: "btn btn-ghost", type: "button",
-                     text: iRead ? "Okumadı olarak işaretle" : "Okudum olarak işaretle",
-                     onclick: () => submitRead(bookId, !iRead) })));
-
-  // Notlar
+  // Notlar (liste; form yukarıda "Not ekle"de)
   const notes = notesOf(bookId);
   const noteList = el("ul", { class: "note-list" });
   if (!notes.length) {
@@ -517,14 +539,9 @@ function renderDetail(bookId) {
         el("p", { class: "note-text", text: n.text })));
     }
   }
-  const noteBox = el("textarea", { rows: "3", placeholder: "Bu kitap hakkında bir not yaz…",
-                                   "aria-label": "Not" });
-  const noteBtn = el("button", { class: "btn btn-primary", type: "button", text: "Notu ekle" });
-  noteBtn.addEventListener("click", () => submitNote(bookId, noteBox, noteBtn));
   detailBody.append(
     el("section", { class: "section" },
       el("h3", { class: "section-title", text: "Notlar" }),
-      el("div", { class: "note-form" }, noteBox, noteBtn),
       noteList));
 
   // Geçmiş
@@ -546,16 +563,6 @@ function renderDetail(bookId) {
     el("section", { class: "section" },
       el("h3", { class: "section-title", text: "Hareket geçmişi" }),
       actList));
-
-  // Düzenleyici işlemleri — YALNIZCA editor
-  if (isEditor) {
-    detailBody.append(
-      el("div", { class: "editor-actions" },
-        el("button", { class: "btn btn-ghost", type: "button", text: "Düzenle",
-                       onclick: () => { detailDialog.close(); openForm(bookId); } }),
-        el("button", { class: "btn btn-danger", type: "button", text: "Sil",
-                       onclick: () => removeBook(bookId) })));
-  }
 }
 
 function actionLabel(action) {
@@ -892,30 +899,93 @@ function imageLoads(url, ms = 12000) {
 }
 
 async function olSearchCover(b) {
-  const found = await searchCovers(b, 1);
+  const found = await olSearchCovers(b, 1);
   return found[0] || null;
 }
 
-// Başlık+yazara göre kapak adayları (yüklenebilenler, en çok n tane).
-async function searchCovers(b, n = 4) {
-  const q = new URLSearchParams({ title: b.title || "", limit: "6",
-                                 fields: "key,title,author_name,cover_i" });
-  const firstAuthor = String(b.creators || "").split(",")[0].trim();
-  if (firstAuthor) q.set("author", firstAuthor);
+async function fetchJson(url, ms = 15000) {
   const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 15000);
+  const timer = setTimeout(() => ctl.abort(), ms);
   try {
-    const res = await fetch(`https://openlibrary.org/search.json?${q}`, { signal: ctl.signal });
-    if (!res.ok) return [];
-    const docs = (await res.json()).docs || [];
-    const urls = [...new Set(docs.filter((d) => d.cover_i).map((d) => d.cover_i))]
-      .slice(0, 6)
-      .map((id) => `https://covers.openlibrary.org/b/id/${id}-M.jpg`);
-    const ok = [];
-    await Promise.all(urls.map(async (u) => { if (await imageLoads(u)) ok.push(u); }));
-    return ok.slice(0, n);
-  } catch { return []; }
+    const res = await fetch(url, { signal: ctl.signal });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
   finally { clearTimeout(timer); }
+}
+
+function firstAuthorOf(b) {
+  return String(b.creators || "").split(",")[0].trim();
+}
+
+// Open Library: önce başlık+yazar, boşsa başlıkla dene.
+async function olSearchCovers(b, n) {
+  const queries = [];
+  const author = firstAuthorOf(b);
+  if (b.title && author) {
+    queries.push(new URLSearchParams({ title: b.title, author,
+      limit: "6", fields: "key,title,author_name,cover_i" }));
+  }
+  if (b.title) {
+    queries.push(new URLSearchParams({ title: b.title,
+      limit: "6", fields: "key,title,author_name,cover_i" }));
+  }
+  const seen = new Set();
+  const urls = [];
+  for (const q of queries) {
+    const data = await fetchJson(`https://openlibrary.org/search.json?${q}`);
+    for (const d of (data?.docs || [])) {
+      if (d.cover_i && !seen.has(d.cover_i)) {
+        seen.add(d.cover_i);
+        urls.push(`https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`);
+        if (urls.length >= n) return urls;
+      }
+    }
+    if (urls.length) return urls.slice(0, n);
+  }
+  return urls.slice(0, n);
+}
+
+// Google Books (aynı web anahtarıyla; servis cevap vermezse sessizce atlanır).
+async function gbSearchCovers(b, n) {
+  const queries = [];
+  const author = firstAuthorOf(b);
+  if (b.title && author) {
+    queries.push(`intitle:${encodeURIComponent(b.title)}+inauthor:${encodeURIComponent(author)}`);
+  }
+  if (b.title) {
+    queries.push(`intitle:${encodeURIComponent(b.title)}`);
+  }
+  const seen = new Set();
+  const urls = [];
+  for (const q of queries) {
+    const data = await fetchJson(
+      `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=10` +
+      `&fields=items(volumeInfo/imageLinks)&key=${firebaseConfig.apiKey}`);
+    for (const item of (data?.items || [])) {
+      const t = item.volumeInfo?.imageLinks?.thumbnail;
+      if (t) {
+        const u = t.replace(/^http:\/\//, "https://");
+        if (!seen.has(u)) {
+          seen.add(u);
+          urls.push(u);
+          if (urls.length >= n) return urls;
+        }
+      }
+    }
+    if (urls.length) return urls.slice(0, n);
+  }
+  return urls.slice(0, n);
+}
+
+// Başlık+yazara göre kapak adayları: OL + Google Books paralel,
+// yüklenebilenler, Open Library öncelikli, en çok n tane.
+async function searchCovers(b, n = 4) {
+  const [ol, gb] = await Promise.all([olSearchCovers(b, n), gbSearchCovers(b, n)]);
+  const merged = [...ol, ...gb.filter((u) => !ol.includes(u))].slice(0, 8);
+  const good = new Set();
+  await Promise.all(merged.map(async (u) => { if (await imageLoads(u)) good.add(u); }));
+  return merged.filter((u) => good.has(u)).slice(0, n);
 }
 
 // Kapaklı kitap atlanır (ISBN kapağı canonical sayılır); kapaklı ama özel
