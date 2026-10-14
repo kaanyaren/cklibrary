@@ -100,15 +100,42 @@ function letterTile(title) {
   return el("div", { class: "cover-tile", text: ch.toLocaleUpperCase("tr"),
                      style: `background:${toneFor(title)}` });
 }
+function isbn13to10(isbn) {
+  const clean = String(isbn || "").replace(/[^0-9X]/gi, "");
+  if (clean.length === 10) return clean;
+  if (clean.length !== 13 || !clean.startsWith("978")) return null;
+  const core = clean.slice(3, 12);
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += parseInt(core[i], 10) * (10 - i);
+  const rem = (11 - (sum % 11)) % 11;
+  const check = rem === 10 ? "X" : String(rem);
+  return core + check;
+}
 function coverNode(book) {
   const wrap = el("div", { class: "cover" });
   // ?default=false: olmayan kapakta 404 dönsün ki harf-kapak devreye girsin.
-  const src = book.cover_url ||
-    (book.isbn13 ? `https://covers.openlibrary.org/b/isbn/${book.isbn13}-M.jpg?default=false` : null);
-  if (src) {
-    const img = el("img", { src,
+  const isbn10 = isbn13to10(book.isbn10 || book.isbn13);
+  const amzUrl = isbn10 ? `https://images-na.ssl-images-amazon.com/images/P/${isbn10}.01._SCLZZZZZZZ_.jpg` : null;
+  const olUrl = book.isbn13 ? `https://covers.openlibrary.org/b/isbn/${book.isbn13}-M.jpg?default=false` : null;
+  let current = book.cover_url || olUrl || amzUrl;
+  if (current) {
+    const img = el("img", { src: current,
                             alt: "", loading: "lazy", decoding: "async" });
-    img.addEventListener("error", () => { img.remove(); wrap.append(letterTile(book.title)); });
+    const fallback = () => {
+      if (current === olUrl && amzUrl) {
+        current = amzUrl;
+        img.src = amzUrl;
+        return;
+      }
+      img.remove();
+      wrap.append(letterTile(book.title));
+    };
+    img.addEventListener("error", fallback);
+    img.addEventListener("load", () => {
+      if (img.naturalWidth <= 1 || img.naturalHeight <= 1) {
+        fallback();
+      }
+    });
     wrap.append(img);
   } else {
     wrap.append(letterTile(book.title));
@@ -351,14 +378,15 @@ function bookCard(b) {
         el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) }));
     }));
 
-  const meta = [b.creators, [b.publisher, b.publish_date].filter(Boolean).join(" · ")]
-    .filter(Boolean).join(" — ");
+  const creators = b.creators || "";
+  const publine = [b.publisher, b.publish_date].filter(Boolean).join(" · ");
 
-  const card = el("article", { class: "book", role: "button", tabindex: "0", "aria-label": b.title },
+  const card = el("article", { class: "book book-entry", role: "button", tabindex: "0", "aria-label": b.title },
     coverNode(b),
     el("div", { class: "book-main" },
       el("h3", { class: "book-title", text: b.title || "(başlıksız)" }),
-      meta ? el("p", { class: "book-creators", text: meta }) : null,
+      creators ? el("p", { class: "book-creators", text: creators }) : null,
+      publine ? el("p", { class: "book-pub", text: publine }) : null,
       el("div", { class: "book-foot" },
         el("div", { class: "score" },
           avgNode,
@@ -387,37 +415,68 @@ function renderDetail(bookId) {
   const { avg, count } = averageOf(bookId);
   const isEditor = state.user.role === "editor";
   const myRating = ratingsOf(bookId).get(state.user.uid)?.value ?? null;
+  const iRead = readsOf(bookId).get(state.user.uid)?.read === true;
+  const notes = notesOf(bookId);
+  const acts = activityOf(bookId);
 
   detailBody.innerHTML = "";
+  detailBody.scrollTop = 0;
 
+  // ── Yapışkan üst bar: fiş no + hızlı işlem + kapat ──
+  const topActions = el("div", { class: "detail-top-actions" });
+  if (isEditor) {
+    topActions.append(
+      el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Düzenle",
+                     onclick: () => { detailDialog.close(); openForm(bookId); } }),
+      el("button", { class: "btn btn-danger btn-tiny", type: "button", text: "Sil",
+                     onclick: () => removeBook(bookId) }));
+  }
+  topActions.append(
+    el("button", { class: "detail-close", type: "button", text: "Kapat",
+                   onclick: () => detailDialog.close() }));
   detailBody.append(
-    el("div", { class: "detail-top" },
-      el("span", { class: "catalog-no", text: `Fiş № ${String(b.id).toUpperCase()}` }),
-      el("button", { class: "detail-close", type: "button", text: "Kapat",
-                     onclick: () => detailDialog.close() })));
+    el("div", { class: "detail-top is-sticky" },
+      el("div", { class: "detail-top-left" },
+        el("span", { class: "catalog-no", text: `Fiş № ${String(b.id).toUpperCase()}` }),
+        el("p", { class: "detail-top-title", text: b.title || "(başlıksız)" })),
+      topActions));
 
-  detailBody.append(
-    el("div", { class: "detail-head" },
-      coverNode(b),
-      el("div", {},
-        el("h2", { id: "detail-title", text: b.title || "(başlıksız)" }),
-        b.creators ? el("p", { class: "detail-creators", text: b.creators }) : null,
-        el("p", { class: "detail-meta" },
-          ...[b.publisher, b.publish_date, b.pages ? `${b.pages} s.` : null,
-           b.isbn13 ? `ISBN ${b.isbn13}` : null]
-            .filter(Boolean)
-            .map((t) => el("span", { text: t })))),
-      el("div", { class: "detail-score" },
+  // ── Kahraman: kapak + başlık + çipler + skor kartı ──
+  const chips = [b.publisher, b.publish_date, b.pages ? `${b.pages} s.` : null]
+    .filter(Boolean);
+  const hero = el("div", { class: "detail-hero" },
+    el("div", { class: "detail-titleblock" },
+      el("h2", { id: "detail-title", text: b.title || "(başlıksız)" }),
+      b.creators ? el("p", { class: "detail-creators", text: b.creators }) : null,
+      chips.length
+        ? el("ul", { class: "meta-chips meta-plain-row" },
+            ...chips.map((t) => el("li", { class: "meta-chip meta-plain", text: t })),
+            ...(b.isbn13 ? [el("li", { class: "meta-chip meta-plain is-dim", text: `ISBN ${b.isbn13}` })] : []))
+        : (b.isbn13 ? el("ul", { class: "meta-chips meta-plain-row" },
+            el("li", { class: "meta-chip meta-plain is-dim", text: `ISBN ${b.isbn13}` })) : null),
+      b.cover_url ? el("span", { class: "cover-badge", text: "Onaylı kapak" }) : null,
+      iRead ? el("span", { class: "read-stamp", text: "okundu" }) : null),
+    el("div", { class: "detail-cover-note" }, coverNode(b)),
+    el("div", { class: "detail-scorecard detail-score-line" },
+      el("div", { class: "score-hero" },
         avg === null
           ? el("span", { class: "score-avg is-none", text: "—" })
           : el("span", { class: "score-avg", text: avg.toFixed(1) }),
         el("span", { class: "score-of", text: "/10" }),
-        el("span", { class: "score-count", text: count ? `${count} oy` : "oy yok" }))));
+        el("span", { class: "score-count", text: count ? `${count} oy` : "oy yok" })),
+      el("ul", { class: "mini-breakdown" },
+        ...PEOPLE.map((name) => {
+          const v = valueForName(bookId, name);
+          return el("li", { class: name === state.user.name ? "is-mine" : "" },
+            el("span", { class: "who", text: displayName(name) }),
+            el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) }));
+        })),
+      el("span", { class: "my-pill" + (myRating !== null ? " is-rated" : ""),
+                   text: myRating !== null ? `Senin puanın: ${myRating}` : "Henüz puanlamadın" })));
+  detailBody.append(hero);
 
-  // ── İşlemler (hepsi üstte) ──
-  const opsGrid = el("div", { class: "detail-grid" });
-  // Puan ver
-  const rateRow = el("div", { class: "rate-row" });
+  // ── Birincil işlemler: her zaman sekmelerin üstünde ──
+  const rateRow = el("div", { class: "rate-row", role: "group", "aria-label": "Puan ver" });
   for (let v = 1; v <= 10; v++) {
     rateRow.append(el("button", {
       type: "button",
@@ -428,85 +487,58 @@ function renderDetail(bookId) {
       onclick: () => submitRating(bookId, v),
     }));
   }
-  opsGrid.append(
-    el("section", { class: "section" },
-      el("h3", { class: "section-title", text: "Puan ver" }),
-      rateRow,
-      el("p", { class: "rate-help", text: myRating
-        ? `Şu anki puanın: ${myRating}/10 · değiştirmek için başka bir sayıya dokun.`
-        : "1–10 arası bir sayıya dokun." })));
+  detailBody.append(
+    el("div", { class: "detail-actions" },
+      el("section", { class: "action-card", "aria-label": "Puan ver" },
+        el("h3", { class: "section-title", text: "Puan ver" }),
+        rateRow,
+        el("p", { class: "rate-help", text: myRating !== null
+          ? `Şu anki puanın: ${myRating}/10 · değiştirmek için başka bir sayıya dokun.`
+          : "1–10 arası bir sayıya dokun." })),
+      el("section", { class: "action-card", "aria-label": "Okuma durumu" },
+        el("h3", { class: "section-title", text: "Okuma durumu" }),
+        el("p", { class: "read-desc", text: iRead ? "Bu kitabı okudun." : "Bu kitabı henüz okumadın." }),
+        el("button", { class: "btn btn-ghost read-toggle", type: "button",
+                       text: iRead ? "Okumadı olarak işaretle" : "Okudum olarak işaretle",
+                       onclick: () => submitRead(bookId, !iRead) }))));
 
-  // Okuma durumu
-  const iRead = readsOf(bookId).get(state.user.uid)?.read === true;
-  opsGrid.append(
-    el("section", { class: "section" },
-      el("h3", { class: "section-title", text: "Okuma durumu" }),
-      el("p", { class: "rate-help", text: iRead ? "Bu kitabı okudun." : "Bu kitabı henüz okumadın." }),
-      el("button", { class: "btn btn-ghost", type: "button",
-                     text: iRead ? "Okumadı olarak işaretle" : "Okudum olarak işaretle",
-                     onclick: () => submitRead(bookId, !iRead) })));
-
-  // Not ekle (form üstte; liste aşağıda "Notlar"da)
-  const noteBox = el("textarea", { rows: "3", placeholder: "Bu kitap hakkında bir not yaz…",
-                                   "aria-label": "Not" });
-  const noteBtn = el("button", { class: "btn btn-primary", type: "button", text: "Notu ekle" });
-  noteBtn.addEventListener("click", () => submitNote(bookId, noteBox, noteBtn));
-  opsGrid.append(
-    el("section", { class: "section" },
-      el("h3", { class: "section-title", text: "Not ekle" }),
-      el("div", { class: "note-form" }, noteBox, noteBtn)));
-
-  // Kapak — YALNIZCA editor (tekil arama + kaldırma)
-  if (isEditor) {
-    const covStatus = el("p", { class: "rate-help", text: b.cover_url
-      ? "Onaylı kapak kullanılıyor."
-      : "Otomatik kapak (ISBN) veya harf-kapak gösteriliyor." });
-    const covOpts = el("div", { class: "cover-opts" });
-    const searchBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Kapak ara" });
-    searchBtn.addEventListener("click", async () => {
-      searchBtn.disabled = true;
-      searchBtn.textContent = "Aranıyor…";
-      covOpts.innerHTML = "";
-      const urls = await searchCovers(b, 6);
-      searchBtn.disabled = false;
-      searchBtn.textContent = "Kapak ara";
-      if (!urls.length) { covStatus.textContent = "Kapak bulunamadı."; return; }
-      covStatus.textContent = "Birine dokun — hemen uygulanır.";
-      for (const u of urls) {
-        const pick = el("button", { class: "cover-opt", type: "button",
-                                    "aria-label": "Bu kapağı uygula" },
-          el("img", { src: u, alt: "", loading: "lazy" }));
-        pick.addEventListener("click", () => applyCover(bookId, u));
-        covOpts.append(pick);
-      }
+  // ── Sekmeler: Genel / Notlar / Geçmiş ──
+  const tabBar = el("div", { class: "detail-tabs", role: "tablist", "aria-label": "Detay bölümleri" });
+  const panels = el("div", { class: "detail-panels" });
+  const tabs = [];
+  function addTab(key, label, panelNode) {
+    panelNode.setAttribute("role", "tabpanel");
+    panelNode.id = `panel-${key}-${bookId}`;
+    const btn = el("button", { class: "tab-btn", type: "button", role: "tab",
+                               id: `tab-${key}-${bookId}`,
+                               "aria-selected": "false",
+                               "aria-controls": panelNode.id,
+                               html: `${label}` });
+    btn.addEventListener("click", () => selectTab(key));
+    btn.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      const idx = tabs.findIndex((t) => t.key === key);
+      const next = tabs[(idx + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+      next.btn.focus();
+      selectTab(next.key);
     });
-    const covBtns = el("div", { class: "cover-detail-btns" }, searchBtn);
-    if (b.cover_url) {
-      const clearBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Otomatik kapağa dön" });
-      clearBtn.addEventListener("click", () => clearCover(bookId));
-      covBtns.append(clearBtn);
+    tabs.push({ key, btn, panel: panelNode });
+    tabBar.append(btn);
+    panels.append(panelNode);
+    return btn;
+  }
+  function selectTab(key) {
+    for (const t of tabs) {
+      const on = t.key === key;
+      t.btn.setAttribute("aria-selected", String(on));
+      t.btn.tabIndex = on ? 0 : -1;
+      t.panel.hidden = !on;
     }
-    opsGrid.append(
-      el("section", { class: "section" },
-        el("h3", { class: "section-title", text: "Kapak" }),
-        el("div", { class: "cover-detail-row" }, coverNode(b), covBtns),
-        covStatus,
-        covOpts));
   }
 
-  detailBody.append(opsGrid);
-
-  // Düzenleyici işlemleri — YALNIZCA editor (üstte, işlemlerle birlikte)
-  if (isEditor) {
-    detailBody.append(
-      el("div", { class: "editor-actions" },
-        el("button", { class: "btn btn-ghost", type: "button", text: "Düzenle",
-                       onclick: () => { detailDialog.close(); openForm(bookId); } }),
-        el("button", { class: "btn btn-danger", type: "button", text: "Sil",
-                       onclick: () => removeBook(bookId) })));
-  }
-
-  // Açıklama (+ YALNIZCA editor: özet bul)
+  // — Genel: açıklama + künye + kapak (editor) —
+  const genel = el("div", {});
   const descPara = el("p", { class: "prose" + (b.description ? "" : " is-empty"),
                              text: b.description || "Açıklama girilmemiş." });
   const descSec = el("section", { class: "section" },
@@ -539,25 +571,68 @@ function renderDetail(bookId) {
     });
     descSec.append(sumBtn, sumStatus, sumOpts);
   }
-  detailBody.append(descSec);
+  genel.append(descSec);
 
-  // Kişi puanları
-  detailBody.append(
-    el("section", { class: "section" },
-      el("h3", { class: "section-title", text: "Kim kaç verdi" }),
-      el("ul", { class: "breakdown breakdown-lg" },
-        ...PEOPLE.map((name) => {
-          const v = valueForName(bookId, name);
-          return el("li", { class: name === state.user.name ? "is-mine" : "" },
-            el("span", { class: "who", text: displayName(name) }),
-            el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) }));
-        }))));
+  const facts = [
+    ["Yayınevi", b.publisher], ["Yayın tarihi", b.publish_date],
+    ["Sayfa", b.pages ? String(b.pages) : null],
+    ["ISBN-13", b.isbn13], ["ISBN-10", b.isbn10],
+    ["Ekleyen", b.created_by ? displayName(b.created_by) : null],
+  ].filter(([, v]) => v);
+  if (facts.length) {
+    genel.append(
+      el("section", { class: "section" },
+        el("h3", { class: "section-title", text: "Künye" }),
+        el("dl", { class: "fact-grid" },
+          ...facts.flatMap(([k, v]) => [el("dt", { text: k }), el("dd", { text: v })]))));
+  }
 
-  // Notlar (liste; form yukarıda "Not ekle"de)
-  const notes = notesOf(bookId);
+  if (isEditor) {
+    const covStatus = el("p", { class: "rate-help", text: b.cover_url
+      ? "Onaylı kapak kullanılıyor."
+      : "Otomatik kapak (ISBN) veya harf-kapak gösteriliyor." });
+    const covOpts = el("div", { class: "cover-opts" });
+    const searchBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Kapak ara" });
+    searchBtn.addEventListener("click", async () => {
+      searchBtn.disabled = true;
+      searchBtn.textContent = "Aranıyor…";
+      covOpts.innerHTML = "";
+      const urls = await searchCovers(b, 6);
+      searchBtn.disabled = false;
+      searchBtn.textContent = "Kapak ara";
+      if (!urls.length) { covStatus.textContent = "Kapak bulunamadı."; return; }
+      covStatus.textContent = "Birine dokun — hemen uygulanır.";
+      for (const u of urls) {
+        const pick = el("button", { class: "cover-opt", type: "button",
+                                    "aria-label": "Bu kapağı uygula" },
+          el("img", { src: u, alt: "", loading: "lazy" }));
+        pick.addEventListener("click", () => applyCover(bookId, u));
+        covOpts.append(pick);
+      }
+    });
+    const covBtns = el("div", { class: "cover-detail-btns" }, searchBtn);
+    if (b.cover_url) {
+      const clearBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Otomatik kapağa dön" });
+      clearBtn.addEventListener("click", () => clearCover(bookId));
+      covBtns.append(clearBtn);
+    }
+    genel.append(
+      el("section", { class: "section" },
+        el("h3", { class: "section-title", text: "Kapak" }),
+        el("div", { class: "cover-detail-row" }, coverNode(b), covBtns),
+        covStatus,
+        covOpts));
+  }
+
+  // — Notlar: form üstte, liste altta —
+  const notlar = el("div", {});
+  const noteBox = el("textarea", { rows: "3", placeholder: "Bu kitap hakkında bir not yaz…",
+                                   "aria-label": "Not" });
+  const noteBtn = el("button", { class: "btn btn-primary", type: "button", text: "Notu ekle" });
+  noteBtn.addEventListener("click", () => submitNote(bookId, noteBox, noteBtn));
   const noteList = el("ul", { class: "note-list" });
   if (!notes.length) {
-    noteList.append(el("li", { class: "prose is-empty", text: "Henüz not yok." }));
+    noteList.append(el("li", { class: "prose is-empty", text: "Henüz not yok. İlk notu sen ekle." }));
   } else {
     for (const n of notes) {
       noteList.append(el("li", { class: "note-entry" },
@@ -567,13 +642,24 @@ function renderDetail(bookId) {
         el("p", { class: "note-text", text: n.text })));
     }
   }
-  detailBody.append(
+  notlar.append(
     el("section", { class: "section" },
       el("h3", { class: "section-title", text: "Notlar" }),
+      el("div", { class: "note-form" }, noteBox, noteBtn),
       noteList));
 
-  // Geçmiş
-  const acts = activityOf(bookId);
+  // — Geçmiş: kırılım + hareketler —
+  const gecmis = el("div", {});
+  gecmis.append(
+    el("section", { class: "section" },
+      el("h3", { class: "section-title", text: "Kim kaç verdi" }),
+      el("ul", { class: "breakdown breakdown-lg" },
+        ...PEOPLE.map((name) => {
+          const v = valueForName(bookId, name);
+          return el("li", { class: name === state.user.name ? "is-mine" : "" },
+            el("span", { class: "who", text: displayName(name) }),
+            el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) }));
+        }))));
   const actList = el("ul", { class: "activity-list" });
   if (!acts.length) {
     actList.append(el("li", { class: "prose is-empty", text: "Kayıtlı hareket yok." }));
@@ -587,10 +673,28 @@ function renderDetail(bookId) {
         el("span", { class: "activity-at", text: fmtDate(a.at, true) })));
     }
   }
-  detailBody.append(
+  gecmis.append(
     el("section", { class: "section" },
       el("h3", { class: "section-title", text: "Hareket geçmişi" }),
       actList));
+
+  if (isEditor) {
+    gecmis.append(
+      el("div", { class: "editor-bar" },
+        el("button", { class: "btn btn-ghost", type: "button", text: "Düzenle",
+                       onclick: () => { detailDialog.close(); openForm(bookId); } }),
+        el("button", { class: "btn btn-danger", type: "button", text: "Sil",
+                       onclick: () => removeBook(bookId) })));
+  }
+
+  addTab("genel", "Genel", genel);
+  const notesBtn = addTab("notlar", "Notlar", notlar);
+  const histBtn = addTab("gecmis", "Geçmiş", gecmis);
+  notesBtn.innerHTML = `Notlar <span class="tab-count">${notes.length ? `· ${notes.length}` : ""}</span>`;
+  histBtn.innerHTML = `Geçmiş <span class="tab-count">${acts.length ? `· ${acts.length}` : ""}</span>`;
+
+  detailBody.append(tabBar, panels);
+  selectTab("genel");
 }
 
 function actionLabel(action) {
@@ -675,7 +779,9 @@ function openForm(bookId = null) {
   $("f-isbn10").value = b?.isbn10 || "";
   $("f-description").value = b?.description || "";
   formDialog.showModal();
-  $("f-title").focus();
+  // Kısa ekranlarda (telefon + açık klavye) otomatik odak klavyeyi
+  // dayayıp formu perdeliyor; odaklamayı uzun ekrana sakla.
+  if (matchMedia("(min-height: 500px)").matches) $("f-title").focus();
 }
 
 $("add-book").addEventListener("click", () => openForm(null));
@@ -915,11 +1021,12 @@ coversDialog.addEventListener("click", (e) => { if (e.target === coversDialog) c
 
 function imageLoads(url, ms = 12000) {
   // NOT: Open Library olmayan kapaklara 200 + boş GIF döner; ?default=false
-  // ile 404 alınır, yoksa yoklama da harf-kapak geri dönüşü de çalışmaz.
+  // ile 404 alınır. Amazon vb. bulunamayan görseller için 1x1 GIF döner;
+  // naturalWidth > 1 ile 1x1 boş görseller elenir.
   const probe = url + (url.includes("?") ? "&" : "?") + "default=false";
   return new Promise((res) => {
     const im = new Image();
-    im.onload = () => res(true);
+    im.onload = () => res(im.naturalWidth > 1 && im.naturalHeight > 1);
     im.onerror = () => res(false);
     setTimeout(() => res(false), ms);
     im.src = probe;
@@ -943,7 +1050,7 @@ async function fetchJson(url, ms = 15000) {
 }
 
 function firstAuthorOf(b) {
-  return String(b.creators || "").split(",")[0].trim();
+  return String(b.creators || "").split(",")[0].trim().replace(/\bGreda\b/gi, "Gerda");
 }
 
 // Open Library: önce başlık+yazar, boşsa başlıkla dene.
@@ -1184,17 +1291,51 @@ async function appleSearchCovers(b, n) {
   return urls;
 }
 
-// Başlık+yazara göre kapak adayları: 5 kaynak paralel,
+// Amazon: ISBN-10 (ASIN) üzerinden doğrudan CDN görseli (anahtarsız, CORS serbest).
+// 1x1 GIF durumları imageLoads ile filtrelenir.
+async function amazonSearchCovers(b, n) {
+  const urls = [];
+  const seen = new Set();
+  const tryIsbn = (raw) => {
+    const c10 = isbn13to10(raw);
+    if (c10 && !seen.has(c10)) {
+      seen.add(c10);
+      urls.push(`https://images-na.ssl-images-amazon.com/images/P/${c10}.01._SCLZZZZZZZ_.jpg`);
+    }
+  };
+  if (b.isbn10) tryIsbn(b.isbn10);
+  if (b.isbn13) tryIsbn(b.isbn13);
+  if (urls.length < n && b.title) {
+    const author = firstAuthorOf(b);
+    const q = new URLSearchParams({
+      title: b.title,
+      ...(author ? { author } : {}),
+      limit: "5",
+      fields: "isbn",
+    });
+    const data = await fetchJson(`https://openlibrary.org/search.json?${q}`);
+    for (const doc of (data?.docs || [])) {
+      for (const raw of (doc.isbn || [])) {
+        tryIsbn(raw);
+        if (urls.length >= n) break;
+      }
+      if (urls.length >= n) break;
+    }
+  }
+  return urls.slice(0, n);
+}
+
+// Başlık+yazara göre kapak adayları: 6 kaynak paralel,
 // yüklenebilenler, Open Library öncelikli, en çok n tane.
 async function searchCovers(b, n = 6) {
-  const [ol, gb, ar, gx, ap] = await Promise.all([
+  const [ol, gb, ar, gx, ap, am] = await Promise.all([
     olSearchCovers(b, n), gbSearchCovers(b, n), archiveSearchCovers(b, n),
-    gutendexSearchCovers(b, n), appleSearchCovers(b, n),
+    gutendexSearchCovers(b, n), appleSearchCovers(b, n), amazonSearchCovers(b, n),
   ]);
   const merged = [];
-  for (const u of [...ol, ...gb, ...ar, ...gx, ...ap]) {
+  for (const u of [...ol, ...gb, ...ar, ...gx, ...ap, ...am]) {
     if (!merged.includes(u)) merged.push(u);
-    if (merged.length >= 10) break;
+    if (merged.length >= 12) break;
   }
   const good = new Set();
   await Promise.all(merged.map(async (u) => { if (await imageLoads(u)) good.add(u); }));
@@ -1207,7 +1348,11 @@ async function proposeCover(b) {
   const isbnUrl = b.isbn13 ? `https://covers.openlibrary.org/b/isbn/${b.isbn13}-M.jpg` : null;
   const isbnWorks = isbnUrl ? await imageLoads(isbnUrl) : false;
   if (isbnWorks && (!b.cover_url || b.cover_url === isbnUrl)) return null;
-  const alt = await olSearchCover(b);
+  let alt = await olSearchCover(b);
+  if (!alt && (b.isbn10 || b.isbn13)) {
+    const amz = (await amazonSearchCovers(b, 1))[0];
+    if (amz && await imageLoads(amz)) alt = amz;
+  }
   const current = b.cover_url || null;
   if (!alt || alt === current) return null;
   return { id: b.id, title: b.title, creators: b.creators, url: alt, isNew: !current };
@@ -1335,6 +1480,23 @@ filterButtons.forEach((btn) => btn.addEventListener("click", () => {
   filterButtons.forEach((b) => b.classList.toggle("is-active", b === btn));
   renderShelf();
 }));
+
+// ── Tema (açık/koyu) ───────────────────────────────────────────
+const themeBtn = $("theme-toggle");
+function paintThemeBtn() {
+  if (!themeBtn) return;
+  const dark = document.documentElement.dataset.theme === "dark";
+  themeBtn.textContent = dark ? "Açık" : "Koyu";
+  themeBtn.setAttribute("aria-pressed", String(dark));
+  themeBtn.setAttribute("aria-label", dark ? "Açık temaya geç" : "Koyu temaya geç");
+}
+themeBtn?.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem("ck-theme", next); } catch { /* yoksay */ }
+  paintThemeBtn();
+});
+paintThemeBtn();
 
 // Arka plana dokununca kapat
 detailDialog.addEventListener("click", (e) => { if (e.target === detailDialog) detailDialog.close(); });

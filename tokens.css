@@ -1,0 +1,44 @@
+/* CKLibrary tokens — mirrors design.md. Single source: design.md. */
+:root {
+  --paper:         #ece3d0;
+  --paper-raise:   #f6efe0;
+  --paper-recess:  #e2d7bf;
+  --ink:           #211b16;
+  --ink-soft:      #574c42;
+  --ink-faint:     #6b5e4f;
+  --accent:        #7c2d2c;
+  --accent-deep:   #5d1f1e;
+  --accent-wash:   #f0e0da;
+  --line:          #cabfa8;
+  --line-soft:     #ded3bb;
+  --ok:            #2c5e46;
+
+  --font-display: "Taviraj", Georgia, "Times New Roman", serif;
+  --font-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --space-3xs: 0.25rem;  --space-2xs: 0.5rem;  --space-xs: 0.75rem;
+  --space-sm:  1rem;     --space-md:  1.5rem;  --space-lg: 2rem;
+  --space-xl:  3rem;     --space-2xl: 4.5rem;  --space-3xl: 7rem;
+
+  --text-display: clamp(2rem, 7vw, 3rem);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.3, 0, 0.16, 1);
+  --dur-short: 220ms;
+  --dur-dialog: 150ms;
+  --radius-card: 3px; --radius-pill: 999px; --radius-input: 3px;
+}
+:root[data-theme="dark"] {
+  --paper:         #1c1713;
+  --paper-raise:   #262019;
+  --paper-recess:  #14100c;
+  --ink:           #f1e8d8;
+  --ink-soft:      #d3c6b2;
+  --ink-faint:     #a99a85;
+  --accent:        #d9988a;
+  --accent-deep:   #f0c4b6;
+  --accent-wash:   #3d2a25;
+  --line:          #4e4438;
+  --line-soft:     #3a332b;
+  --ok:            #8fc2a4;
+}
