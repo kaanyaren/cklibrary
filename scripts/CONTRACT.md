@@ -88,8 +88,14 @@ at: string
 
 ## Cover images
 
-`https://covers.openlibrary.org/b/isbn/{isbn13}-M.jpg`; on load error show a
+`https://covers.openlibrary.org/b/isbn/{isbn13}-M.jpg?default=false`; on load error show a
 letter-tile fallback (first letter of title, deterministic paper tone).
+(`?default=false` şart: OL olmayan kapaklara 200 + boş GIF döner.)
+
+Cover search sources: Open Library search (başlık+yazar, boşsa başlık) +
+Google Books (aynı web anahtarıyla; cevap vermezse sessizce atlanır).
+Candidates must pass a load check; OL first. Bulk scan uses OL only
+(quota-friendly); detail search merges both.
 
 ## House rules for the UI
 
