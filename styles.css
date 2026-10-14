@@ -290,6 +290,11 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; letter
 
 .add-btn { justify-self: start; }
 .toolbar-actions { display: flex; justify-content: flex-end; align-items: center; gap: .6rem; grid-column: 1 / -1; }
+.library-stats {
+  margin: 0; grid-column: 1 / -1;
+  font-family: var(--font-serif); font-size: 1rem; line-height: 1.4;
+  color: var(--ink-soft);
+}
 
 .shelf-status {
   margin: 0; padding: .9rem var(--pad) 0;
@@ -312,6 +317,9 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; letter
 @media (min-width: 720px) {
   .toolbar { grid-template-columns: 1fr auto; align-items: center; }
   .search-wrap { grid-column: 1 / -1; }
+  .filters { grid-column: 1; }
+  .toolbar-actions { grid-column: 2; }
+  .library-stats { white-space: nowrap; }
   .shelf { grid-template-columns: repeat(auto-fill, minmax(23rem, 1fr)); gap: 14px; }
 }
 

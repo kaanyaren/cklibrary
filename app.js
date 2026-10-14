@@ -46,6 +46,7 @@ const loginSubmit = $("login-submit");
 const whoButtons = [...document.querySelectorAll(".who-btn")];
 const shelf = $("shelf");
 const shelfStatus = $("shelf-status");
+const libraryStats = $("library-stats");
 const shelfError = $("shelf-error");
 const searchInput = $("search");
 const filterButtons = [...document.querySelectorAll(".chip")];
@@ -351,6 +352,11 @@ function renderShelf() {
   const ratedCount = state.books.filter((b) => ratingsOf(b.id).size > 0).length;
   shelfStatus.textContent = `${state.books.length} kitap · ${ratedCount} puanlanmış` +
     (state.query || state.filter !== "all" ? ` · ${list.length} sonuç` : "");
+
+  const readCount = state.books.filter((b) => myRead(b.id)).length;
+  const totalPages = state.books.reduce((sum, b) => sum + (Number(b.pages) > 0 ? Number(b.pages) : 0), 0);
+  libraryStats.textContent =
+    `${state.books.length} kitap · ${readCount}'ünü okudun · toplam ${totalPages.toLocaleString("tr-TR")} sayfa`;
 
   if (!list.length) {
     shelf.append(el("div", { class: "shelf-empty" },
