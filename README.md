@@ -13,11 +13,11 @@ ve not düşer. Ortak veri Firebase'de tutulur, uygulama GitHub Pages'te yaşar.
 - **GitHub Pages** — saf statik barındırma (`main` / root).
 - **Barkod tarama** — mobil kamerayla ISBN okuma (önce tarayıcının yerleşik
   BarcodeDetector'ı, yoksa ZXing); kitap bilgisi Open Library'den doldurulur.
-- **Kapak bulma** — tek tuşla tüm kitaplar taranır; kapaksızlara yeni kapak,
-  kapaklılara farklı baskı bulunursa değişiklik önerilir. Eski/yeni yan yana
-  gösterilir, onaylananlar kaydedilir (yalnızca düzenleyiciler). Kitap detayından
-  da tekil kapak araması yapılır (Open Library + Google Books + Archive.org +
-  Gutendex + Apple Books + Amazon).
+- **Kapak bulma** — tek tuşla tüm kitaplar kademeli (waterfall) olarak taranır (Open
+  Library ISBN → Amazon CDN → Open Library arama → Google Books → Apple Books →
+  Archive.org → Gutendex); kapaksızlara yeni kapak, kapaklılara farklı baskı bulunursa
+  değişiklik önerilir. Eski/yeni yan yana gösterilir, onaylananlar kaydedilir (yalnızca
+  düzenleyiciler). Kitap detayından da 6 kaynaktan paralel tekil kapak araması yapılır.
 - **Özet bulma** — kitap detayında (yalnızca düzenleyiciler) açıklama için
   Open Library + Google Books + Gutendex + Apple Books'tan aday özetler
   getirilir, seçilen uygulanır.

@@ -96,8 +96,11 @@ Cover search sources (6, hepsi anahtarsız; GB proje anahtarıyla):
 Open Library search + Google Books + Archive.org advancedsearch +
 Gutendex + Apple Books (CORS yok → JSONP) + Amazon CDN (ISBN-10/ASIN).
 Her kaynakta önce başlık+yazar, boşsa başlıkla deneme. Candidates must pass a
-load check (1x1 GIF elenir); OL first. Bulk scan uses OL + Amazon fallback for
-ISBN books (quota-friendly); detail search merges all 6.
+load check (1x1 GIF elenir); OL first.
+Bulk scan uses a 3-worker waterfall: (1) OL ISBN → (2) Amazon ISBN CDN →
+(3) OL title/author search → (4) Google Books → (5) Apple Books →
+(6) Archive.org → (7) Gutendex. Early exit on first working hit preserves quotas.
+Detail search merges all 6 in parallel.
 
 Summary search (detail page, editors only): OL edition→work description +
 GB volumeInfo.description + Gutendex summaries + Apple description.

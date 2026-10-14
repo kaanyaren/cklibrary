@@ -610,6 +610,9 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; letter
 .sum-row > div { min-width: 0; flex: 1; }
 .sum-src { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
 .sum-text { margin: .2rem 0 0; font-size: .92rem; color: var(--ink-soft); }
+.sum-text.is-full { max-height: 12rem; overflow-y: auto; white-space: pre-wrap; line-height: 1.5; }
+.sum-row.is-bulk { align-items: flex-start; }
+.sum-row.is-bulk .cover-title { margin-bottom: .1rem; }
 .sum-row .btn { flex: none; }
 
 /* ── DETAY KAPAK ────────────────────────────────────── */

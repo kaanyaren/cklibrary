@@ -252,6 +252,7 @@ onAuthStateChanged(auth, async (user) => {
   $("welcome").textContent = `Kütüphanene hoş geldin ${state.user.name}.`;
   $("user-role").textContent = state.user.role === "editor" ? "düzenleyici" : "ekleyici";
   $("find-covers").hidden = state.user.role !== "editor";
+  $("find-summaries").hidden = state.user.role !== "editor";
   searchInput.value = "";
   state.query = "";
   state.filter = "all";
@@ -563,15 +564,14 @@ function renderDetail(bookId) {
       sumBtn.disabled = false;
       sumBtn.textContent = "Özet bul";
       if (!found.length) { sumStatus.textContent = "Özet bulunamadı."; return; }
-      sumStatus.textContent = "Birini seç — açıklamanın yerine geçer.";
+      sumStatus.textContent = `${found.length} aday bulundu — tam metni okuyup birini seç, açıklamanın yerine geçer.`;
       for (const s of found) {
-        const preview = s.text.length > 300 ? s.text.slice(0, 300) + "…" : s.text;
         const apply = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Uygula" });
         apply.addEventListener("click", () => applySummary(bookId, s.text));
         sumOpts.append(el("div", { class: "sum-row" },
           el("div", {},
-            el("span", { class: "sum-src", text: s.source }),
-            el("p", { class: "sum-text", text: preview })),
+            el("span", { class: "sum-src", text: `${s.source} · ${s.text.length} karakter` }),
+            el("p", { class: "sum-text is-full", text: s.text })),
           apply));
       }
     });
@@ -1190,27 +1190,35 @@ async function olDescriptionForKey(key) {
   return null;
 }
 
-async function olSearchSummaries(b) {
+async function olSearchSummaries(b, n = 2) {
   const author = firstAuthorOf(b);
   const queries = [];
   if (b.title && author) {
-    queries.push(new URLSearchParams({ title: b.title, author, limit: "3", fields: "key" }));
+    queries.push(new URLSearchParams({ title: b.title, author, limit: "5", fields: "key" }));
   }
   if (b.title) {
-    queries.push(new URLSearchParams({ title: b.title, limit: "3", fields: "key" }));
+    queries.push(new URLSearchParams({ title: b.title, limit: "5", fields: "key" }));
   }
+  const out = [];
+  const seen = new Set();
   for (const q of queries) {
     const data = await fetchJson(`https://openlibrary.org/search.json?${q}`);
     for (const d of (data?.docs || [])) {
       const text = await olDescriptionForKey(d.key);
-      if (text) return [{ text, source: "Open Library" }];
+      const key = normSummary(text);
+      if (text && text.length > 40 && !seen.has(key)) {
+        seen.add(key);
+        out.push({ text: text.trim(), source: "Open Library" });
+        if (out.length >= n) return out;
+      }
     }
+    if (out.length) return out;
   }
-  return [];
+  return out;
 }
 
 // Google Books: volumeInfo.description (servis cevap vermezse boş).
-async function gbSearchSummaries(b) {
+async function gbSearchSummaries(b, n = 2) {
   const author = firstAuthorOf(b);
   const queries = [];
   if (b.title && author) {
@@ -1219,50 +1227,118 @@ async function gbSearchSummaries(b) {
   if (b.title) {
     queries.push(`intitle:${encodeURIComponent(b.title)}`);
   }
+  const out = [];
+  const seen = new Set();
   for (const q of queries) {
     const data = await fetchJson(
-      `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=5` +
+      `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=10` +
       `&fields=items(volumeInfo/description)&key=${firebaseConfig.apiKey}`);
     for (const item of (data?.items || [])) {
       const text = stripHtml(item.volumeInfo?.description);
-      if (text) return [{ text, source: "Google Books" }];
+      const key = normSummary(text);
+      if (text && text.length > 40 && !seen.has(key)) {
+        seen.add(key);
+        out.push({ text, source: "Google Books" });
+        if (out.length >= n) return out;
+      }
     }
+    if (out.length) return out;
   }
-  return [];
+  return out;
 }
 
 // Gutendex: summaries alanı doğrudan aramada gelir.
-async function gutendexSearchSummaries(b) {
+async function gutendexSearchSummaries(b, n = 2) {
   const author = firstAuthorOf(b);
   const queries = [];
   if (b.title && author) queries.push(`${b.title} ${author}`);
   if (b.title) queries.push(b.title);
+  const out = [];
+  const seen = new Set();
   for (const q of queries) {
     const data = await fetchJson(`https://gutendex.com/books?search=${encodeURIComponent(q)}`);
     for (const item of (data?.results || [])) {
-      const text = (item.summaries || []).find((s) => s && s.trim());
-      if (text) return [{ text: text.trim(), source: "Gutendex" }];
+      for (const raw of (item.summaries || [])) {
+        const text = String(raw || "").trim();
+        const key = normSummary(text);
+        if (text && text.length > 40 && !seen.has(key)) {
+          seen.add(key);
+          out.push({ text, source: "Gutendex" });
+          if (out.length >= n) return out;
+        }
+      }
     }
+    if (out.length) return out;
   }
-  return [];
+  return out;
 }
 
 // Apple Books: ham kayıtlar üzerinden (kapak aramasıyla aynı JSONP çağrısı).
-async function appleSearchSummaries(b) {
+async function appleSearchSummaries(b, n = 2) {
+  const out = [];
+  const seen = new Set();
   for (const item of await appleSearchItems(b)) {
     const text = stripHtml(item.description);
-    if (text) return [{ text, source: "Apple Books" }];
+    const key = normSummary(text);
+    if (text && text.length > 40 && !seen.has(key)) {
+      seen.add(key);
+      out.push({ text, source: "Apple Books" });
+      if (out.length >= n) break;
+    }
   }
-  return [];
+  return out;
 }
 
-// Özet adayları: 4 kaynak paralel, en çok 4 tane.
-async function searchSummaries(b) {
-  const [ol, gb, gx, ap] = await Promise.all([
-    olSearchSummaries(b), gbSearchSummaries(b),
-    gutendexSearchSummaries(b), appleSearchSummaries(b),
+// Archive.org: tarama kaydının açıklaması.
+async function archiveSearchSummaries(b, n = 2) {
+  const author = firstAuthorOf(b);
+  const queries = [];
+  if (b.title && author) queries.push(`title:(${b.title}) AND creator:(${author}) AND mediatype:texts`);
+  if (b.title) queries.push(`${b.title}${author ? " " + author : ""} AND mediatype:texts`);
+  const out = [];
+  const seen = new Set();
+  for (const q of queries) {
+    const data = await fetchJson(
+      `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}` +
+      `&fl[]=identifier&rows=10&output=json`);
+    for (const d of (data?.response?.docs || [])) {
+      if (!d.identifier) continue;
+      const meta = await fetchJson(`https://archive.org/metadata/${d.identifier}`);
+      const raw = meta?.metadata?.description;
+      const text = stripHtml(Array.isArray(raw) ? raw[0] : raw);
+      const key = normSummary(text);
+      if (text && text.length > 40 && !seen.has(key)) {
+        seen.add(key);
+        out.push({ text, source: "Archive.org" });
+        if (out.length >= n) return out;
+      }
+    }
+    if (out.length) return out;
+  }
+  return out;
+}
+
+function normSummary(s) {
+  return String(s || "").replace(/\s+/g, " ").trim().slice(0, 120).toLocaleLowerCase("tr");
+}
+
+// Özet adayları: 5 kaynak paralel, kaynak başına 2, toplam en çok 8.
+async function searchSummaries(b, n = 8) {
+  const [ol, gb, ap, gx, ar] = await Promise.all([
+    olSearchSummaries(b, 2), gbSearchSummaries(b, 2), appleSearchSummaries(b, 2),
+    gutendexSearchSummaries(b, 2), archiveSearchSummaries(b, 2),
   ]);
-  return [...ol, ...gb, ...gx, ...ap].slice(0, 4);
+  const out = [];
+  const seen = new Set();
+  // ponytail: sabit öncelik (OL → GB → Apple → Gutendex → Archive), puana gerek yok
+  for (const s of [...ol, ...gb, ...ap, ...gx, ...ar]) {
+    const key = normSummary(s.text);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(s);
+    if (out.length >= n) break;
+  }
+  return out;
 }
 
 // Apple Books: anahtarsız ama CORS yok → JSONP (script etiketi).
@@ -1348,18 +1424,50 @@ async function searchCovers(b, n = 6) {
   return merged.filter((u) => good.has(u)).slice(0, n);
 }
 
+// Toplu tarama için kademeli (waterfall) kapak arama:
+// 1. Kotasız doğrudan ISBN CDN'leri (Open Library + Amazon CDN)
+// 2. Open Library arama (başlık+yazar)
+// 3. Google Books (yalnızca öncekiler bulamazsa)
+// 4. Apple Books
+// 5. Archive.org
+// 6. Gutendex
+// İlk çalışan kapak bulunduğu an sonraki kaynaklara sorgu atılmaz.
+async function findFirstCover(b) {
+  if (b.isbn13) {
+    const olUrl = `https://covers.openlibrary.org/b/isbn/${b.isbn13}-M.jpg`;
+    if (await imageLoads(olUrl)) return olUrl;
+  }
+  const isbn10 = isbn13to10(b.isbn10 || b.isbn13);
+  if (isbn10) {
+    const amzUrl = `https://images-na.ssl-images-amazon.com/images/P/${isbn10}.01._SCLZZZZZZZ_.jpg`;
+    if (await imageLoads(amzUrl)) return amzUrl;
+  }
+  const ol = await olSearchCover(b);
+  if (ol) return ol;
+
+  const gb = (await gbSearchCovers(b, 1))[0];
+  if (gb && await imageLoads(gb)) return gb;
+
+  const ap = (await appleSearchCovers(b, 1))[0];
+  if (ap && await imageLoads(ap)) return ap;
+
+  const ar = (await archiveSearchCovers(b, 1))[0];
+  if (ar && await imageLoads(ar)) return ar;
+
+  const gx = (await gutendexSearchCovers(b, 1))[0];
+  if (gx && await imageLoads(gx)) return gx;
+
+  return null;
+}
+
 // Kapaklı kitap atlanır (ISBN kapağı canonical sayılır); kapaklı ama özel
 // cover_url'lu kitapta farklı kapak bulunursa değişiklik önerilir.
 async function proposeCover(b) {
+  const current = b.cover_url || null;
   const isbnUrl = b.isbn13 ? `https://covers.openlibrary.org/b/isbn/${b.isbn13}-M.jpg` : null;
   const isbnWorks = isbnUrl ? await imageLoads(isbnUrl) : false;
-  if (isbnWorks && (!b.cover_url || b.cover_url === isbnUrl)) return null;
-  let alt = await olSearchCover(b);
-  if (!alt && (b.isbn10 || b.isbn13)) {
-    const amz = (await amazonSearchCovers(b, 1))[0];
-    if (amz && await imageLoads(amz)) alt = amz;
-  }
-  const current = b.cover_url || null;
+  if (isbnWorks && (!current || current === isbnUrl)) return null;
+  const alt = await findFirstCover(b);
   if (!alt || alt === current) return null;
   return { id: b.id, title: b.title, creators: b.creators, url: alt, isNew: !current };
 }
@@ -1383,7 +1491,7 @@ async function openCovers() {
       coversStatus.textContent = `Taranıyor… ${done}/${cands.length} · ${found} öneri`;
     }
   };
-  await Promise.all([worker(), worker(), worker(), worker()]);
+  await Promise.all([worker(), worker(), worker()]);
   coverOffers.sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "tr"));
   renderOffers();
   const fresh = coverOffers.filter((o) => o.isNew).length;
@@ -1457,6 +1565,112 @@ async function applyCover(bookId, url) {
   renderDetail(bookId);
   renderShelf();
 }
+
+// ── Toplu özet bulma (açıklamasız kitaplar taranır) ───────
+// Kapak taramasının özet karşılığı: adayı olmayan kitap atlanır,
+// ilk aday önerilir, tam metin kutuda onaylanır.
+const findSummariesBtn = $("find-summaries");
+const summariesDialog = $("summaries-dialog");
+const summariesBody = $("summaries-body");
+const summariesStatus = $("summaries-status");
+const summariesApply = $("summaries-apply");
+const summariesSelectAll = $("summaries-select-all");
+let summaryOffers = []; // [{ id, title, creators, text, source, _check }]
+
+findSummariesBtn.addEventListener("click", openSummaries);
+document.querySelectorAll("[data-close-summaries]").forEach((b) =>
+  b.addEventListener("click", () => summariesDialog.close()));
+summariesDialog.addEventListener("click", (e) => { if (e.target === summariesDialog) summariesDialog.close(); });
+
+async function proposeSummary(b) {
+  if (String(b.description || "").trim()) return null;
+  const found = await searchSummaries(b, 3);
+  const first = found[0];
+  if (!first) return null;
+  return { id: b.id, title: b.title, creators: b.creators, text: first.text, source: first.source };
+}
+
+async function openSummaries() {
+  summaryOffers = [];
+  summariesBody.innerHTML = "";
+  summariesApply.disabled = true;
+  summariesSelectAll.disabled = true;
+  summariesStatus.textContent = "Hazırlanıyor…";
+  summariesDialog.showModal();
+  const cands = state.books.filter((b) => !String(b.description || "").trim());
+  if (!cands.length) { summariesStatus.textContent = "Özeti eksik kitap yok."; return; }
+  if (!state.books.length) { summariesStatus.textContent = "Kütüphane boş."; return; }
+  let done = 0, found = 0;
+  const queue = [...cands];
+  const worker = async () => {
+    while (queue.length) {
+      const b = queue.pop();
+      let p = null;
+      try { p = await proposeSummary(b); } catch { p = null; }
+      if (p) { summaryOffers.push(p); found++; }
+      done++;
+      summariesStatus.textContent = `Taranıyor… ${done}/${cands.length} · ${found} öneri`;
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  summaryOffers.sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "tr"));
+  renderSummaryOffers();
+  summariesStatus.textContent = summaryOffers.length
+    ? `${cands.length} eksik tarandı · ${summaryOffers.length} öneri. Tam metni okuyup seçtiklerini uygula.`
+    : `${cands.length} eksik tarandı · onay bekleyen öneri yok.`;
+}
+
+function renderSummaryOffers() {
+  summariesBody.innerHTML = "";
+  const on = summaryOffers.length > 0;
+  summariesApply.disabled = !on;
+  summariesSelectAll.disabled = !on;
+  summariesSelectAll.checked = true;
+  for (const o of summaryOffers) {
+    const check = el("input", { type: "checkbox", checked: true,
+                                "aria-label": `${o.title || "kitap"} özetini onayla` });
+    o._check = check;
+    summariesBody.append(el("div", { class: "sum-row is-bulk" },
+      el("div", {},
+        el("p", { class: "cover-title", text: o.title || "(başlıksız)" }),
+        o.creators ? el("p", { class: "cover-creators", text: o.creators }) : null,
+        el("span", { class: "sum-src", text: `${o.source} · ${o.text.length} karakter` }),
+        el("p", { class: "sum-text is-full", text: o.text })),
+      el("label", { class: "cover-check" }, check)));
+  }
+  updateSummariesApplyLabel();
+}
+
+function updateSummariesApplyLabel() {
+  const n = summaryOffers.filter((o) => o._check?.checked).length;
+  summariesApply.textContent = `Seçilenleri uygula (${n})`;
+}
+
+summariesSelectAll.addEventListener("change", () => {
+  for (const o of summaryOffers) if (!o._check.disabled) o._check.checked = summariesSelectAll.checked;
+  updateSummariesApplyLabel();
+});
+summariesBody.addEventListener("change", updateSummariesApplyLabel);
+
+summariesApply.addEventListener("click", async () => {
+  const sel = summaryOffers.filter((o) => o._check?.checked);
+  if (!sel.length) return;
+  summariesApply.disabled = true;
+  summariesApply.textContent = "Uygulanıyor…";
+  let n = 0;
+  for (const o of sel) {
+    try {
+      await updateDoc(doc(db, "books", o.id), { description: o.text });
+      const b = getBook(o.id);
+      if (b) b.description = o.text;
+      o._done = true;
+      n++;
+    } catch { /* tekil hata diğerlerini durdurmasın */ }
+  }
+  summaryOffers = summaryOffers.filter((o) => !o._done);
+  renderSummaryOffers();
+  summariesStatus.textContent = `${n} özet güncellendi.`;
+});
 
 async function applySummary(bookId, text) {
   try {

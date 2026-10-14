@@ -23,7 +23,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Taviraj:ital,wght@0,400;0,700;1,400&family=Public+Sans:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261014c" />
+  <link rel="stylesheet" href="styles.css?v=20261014d" />
 </head>
 <body>
   <noscript>
@@ -86,6 +86,7 @@
       <p id="library-stats" class="library-stats" aria-live="polite"></p>
       <div class="toolbar-actions">
         <button type="button" id="find-covers" class="btn btn-ghost btn-tiny" hidden>Tüm Kapakları Bul</button>
+        <button type="button" id="find-summaries" class="btn btn-ghost btn-tiny" hidden>Tüm Özetleri Bul</button>
         <button type="button" id="add-book" class="btn btn-primary btn-tiny add-btn">Kitap ekle</button>
       </div>
       <div class="filters" role="group" aria-label="Filtreler">
@@ -199,6 +200,22 @@
     </div>
   </dialog>
 
-  <script type="module" src="app.js?v=20261014c"></script>
+  <!-- ───────────── ÖZET ÖNERİLERİ ───────────── -->
+  <dialog id="summaries-dialog" class="sheet" aria-labelledby="summaries-title">
+    <div class="scan-body">
+      <div class="detail-top">
+        <h2 id="summaries-title" class="sheet-title">Özet önerileri</h2>
+        <button type="button" class="detail-close" data-close-summaries>Kapat</button>
+      </div>
+      <p id="summaries-status" class="scan-status" role="status">Hazırlanıyor…</p>
+      <div id="summaries-body" class="covers-body"></div>
+      <div class="form-actions covers-actions">
+        <label class="cover-all"><input type="checkbox" id="summaries-select-all" checked disabled /> Tümünü seç</label>
+        <button type="button" id="summaries-apply" class="btn btn-primary" disabled>Seçilenleri uygula (0)</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script type="module" src="app.js?v=20261014d"></script>
 </body>
 </html>
