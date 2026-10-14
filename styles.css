@@ -161,7 +161,7 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; margin: 0; letter
   background: var(--accent-wash);
   box-shadow: inset 0 0 0 1px var(--accent);
 }
-.who-name { font-size: 1.5rem; font-weight: 600; }
+.who-name { font-size: 1.5rem; font-weight: 600; text-transform: capitalize; }
 .who-role {
   font-family: var(--font-narrow);
   font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
@@ -215,8 +215,15 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; margin: 0; letter
   background: var(--paper-raise);
 }
 .topbar-right { display: flex; align-items: center; gap: .8rem; }
+.welcome {
+  margin: 0; flex: 1; text-align: center;
+  font-family: var(--font-serif); font-weight: 600;
+  font-size: calc(1.2rem + 2pt); line-height: 1.2;
+}
+@media (max-width: 640px) {
+  .welcome { order: 3; flex-basis: 100%; }
+}
 .user-chip { margin: 0; display: flex; align-items: baseline; gap: .5rem; }
-.user-name { font-family: var(--font-serif); font-size: 1.2rem; font-weight: 600; }
 .user-role {
   font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint);
 }
@@ -336,7 +343,7 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; margin: 0; letter
   border: 1px solid var(--line-soft); border-radius: 2px; padding: .18rem .3rem;
 }
 .breakdown .who {
-  font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint);
+  font-size: .7rem; letter-spacing: .1em; text-transform: capitalize; color: var(--ink-faint);
 }
 .breakdown .val { font-family: var(--font-serif); font-size: 1.05rem; font-weight: 600; }
 .breakdown .val.is-none { color: var(--ink-faint); }

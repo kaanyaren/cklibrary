@@ -61,6 +61,11 @@ let selectedEmail = null;
 
 // ── Yardımcılar ────────────────────────────────────────────────
 const trLower = (s) => String(s ?? "").toLocaleLowerCase("tr");
+// Veri küçük harf kalır; ekranda ilk harf büyük gösterilir.
+const displayName = (s) => {
+  const v = String(s ?? "");
+  return v.charAt(0).toLocaleUpperCase("tr") + v.slice(1);
+};
 
 function el(tag, props = {}, ...children) {
   const node = document.createElement(tag);
@@ -216,7 +221,7 @@ onAuthStateChanged(auth, async (user) => {
   state.user = { uid: user.uid, email: user.email, ...info };
   loginView.hidden = true;
   appView.hidden = false;
-  $("user-name").textContent = state.user.name;
+  $("welcome").textContent = `Kütüphanene Hoş Geldin ${displayName(state.user.name)}.`;
   $("user-role").textContent = state.user.role === "editor" ? "düzenleyici" : "ekleyici";
   $("find-covers").hidden = state.user.role !== "editor";
   searchInput.value = "";
@@ -342,7 +347,7 @@ function bookCard(b) {
     ...PEOPLE.map((name) => {
       const v = valueForName(b.id, name);
       return el("li", { class: name === state.user.name ? "is-mine" : "" },
-        el("span", { class: "who", text: name }),
+        el("span", { class: "who", text: displayName(name) }),
         el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) }));
     }));
 
@@ -465,7 +470,7 @@ function renderDetail(bookId) {
         ...PEOPLE.map((name) => {
           const v = valueForName(bookId, name);
           return el("li", { class: name === state.user.name ? "is-mine" : "" },
-            el("span", { class: "who", text: name }),
+            el("span", { class: "who", text: displayName(name) }),
             el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) }));
         }))));
 
@@ -507,7 +512,7 @@ function renderDetail(bookId) {
     for (const n of notes) {
       noteList.append(el("li", { class: "note-entry" },
         el("div", { class: "note-head" },
-          el("span", { class: "note-author", text: n.name || "?" }),
+          el("span", { class: "note-author", text: displayName(n.name) || "?" }),
           el("span", { class: "note-date", text: fmtDate(n.createdAt, true) })),
         el("p", { class: "note-text", text: n.text })));
     }
@@ -530,7 +535,7 @@ function renderDetail(bookId) {
   } else {
     for (const a of acts) {
       actList.append(el("li", { class: "activity-entry" },
-        el("span", { class: "activity-name", text: a.name || "?" }),
+        el("span", { class: "activity-name", text: displayName(a.name) || "?" }),
         el("span", { class: "activity-what" },
           document.createTextNode(`${actionLabel(a.action)}`),
           a.detail ? el("strong", { text: ` ${a.detail}` }) : null),
