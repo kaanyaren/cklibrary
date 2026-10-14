@@ -519,6 +519,11 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; letter
 }
 .chip:hover { border-color: var(--ink-faint); color: var(--ink); }
 .chip.is-active { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.addedby { display: inline-flex; align-items: center; gap: .4rem; font-size: .86rem; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); min-height: 44px; }
+.addedby-select { font: inherit; text-transform: none; letter-spacing: normal; color: var(--ink);
+  background: transparent; border: 1px solid var(--line); border-radius: 999px;
+  padding: .5rem .6rem; min-height: 44px; cursor: pointer; }
 
 .toolbar-actions { display: flex; align-items: stretch; gap: var(--space-2xs); flex: none; }
 .add-btn { min-height: 48px; white-space: nowrap; }
@@ -537,12 +542,6 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; letter
   font-weight: 700; color: var(--ink-soft); font-variant-numeric: tabular-nums;
 }
 
-.shelf-status {
-  margin: 0; padding: 0;
-  font-size: .82rem; letter-spacing: .07em; text-transform: uppercase;
-  font-weight: 700;
-  color: var(--ink-faint);
-}
 .load-error {
   margin: 1rem var(--pad); padding: .8rem 1rem;
   background: var(--accent-wash); border: 1px solid var(--accent);
@@ -609,6 +608,7 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; letter
   margin: 0; font-size: .82rem; letter-spacing: .04em; color: var(--ink-faint);
   text-transform: uppercase;
 }
+.book-added { margin: 0; font-size: .82rem; color: var(--ink-faint); }
 .book-foot {
   margin-top: .45rem; display: flex; align-items: flex-end; justify-content: space-between;
   gap: .8rem; flex-wrap: wrap;
@@ -1057,7 +1057,6 @@ html, body { overflow-x: clip; }
 .chip { white-space: nowrap; }
 
 /* ── Shelf · Catalogue: hairline rows, tabular counts ── */
-.shelf-meta .shelf-status { font-variant-numeric: tabular-nums; }
 .book-entry {
   background: var(--paper);
   border-left-width: 2px;

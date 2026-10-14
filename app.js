@@ -32,6 +32,7 @@ const state = {
   activity: [],        // [{ id, ... }] en yeni önce
   query: "",
   filter: "all",
+  addedBy: "all",
   editingId: null,     // form dialog: null = ekle, id = düzenle
 };
 
@@ -45,7 +46,6 @@ const loginError = $("login-error");
 const loginSubmit = $("login-submit");
 const whoButtons = [...document.querySelectorAll(".who-btn")];
 const shelf = $("shelf");
-const shelfStatus = $("shelf-status");
 const libraryStats = $("library-stats");
 const shelfError = $("shelf-error");
 const searchInput = $("search");
@@ -312,7 +312,9 @@ onAuthStateChanged(auth, async (user) => {
   searchInput.value = "";
   state.query = "";
   state.filter = "all";
+  state.addedBy = "all";
   filterButtons.forEach((b) => b.classList.toggle("is-active", b.dataset.filter === "all"));
+  document.querySelectorAll(".addedby-select").forEach((s) => { s.value = "all"; });
 
   renderSkeleton();
   await loadAll();
@@ -365,7 +367,6 @@ async function loadAll() {
     shelf.innerHTML = "";
     shelfError.hidden = false;
     shelfError.textContent = loadErrorMessage(err);
-    shelfStatus.textContent = "";
   }
 }
 
@@ -380,7 +381,7 @@ function loadErrorMessage(err) {
 // ── Liste ──────────────────────────────────────────────────────
 function renderSkeleton() {
   shelf.innerHTML = "";
-  shelfStatus.textContent = "Kitaplar yükleniyor…";
+  libraryStats.textContent = "Kitaplar yükleniyor…";
   for (let i = 0; i < 6; i++) shelf.append(el("div", { class: "skeleton" }));
 }
 
@@ -392,6 +393,7 @@ function visibleBooks() {
       if (state.filter === "rated" && r === 0) return false;
       if (state.filter === "unrated" && r > 0) return false;
       if (state.filter === "mine" && b.created_by !== state.user.name) return false;
+      if (state.addedBy !== "all" && b.created_by !== state.addedBy) return false;
       if (state.filter === "read" && !myRead(b.id)) return false;
       if (state.filter === "unread" && myRead(b.id)) return false;
       if (!q) return true;
@@ -406,14 +408,12 @@ function renderShelf() {
   shelfError.hidden = true;
   const list = visibleBooks();
 
-  const ratedCount = state.books.filter((b) => ratingsOf(b.id).size > 0).length;
-  shelfStatus.textContent = `${state.books.length} kitap · ${ratedCount} puanlanmış` +
-    (state.query || state.filter !== "all" ? ` · ${list.length} sonuç` : "");
-
   const readCount = state.books.filter((b) => myRead(b.id)).length;
   const totalPages = state.books.reduce((sum, b) => sum + (Number(b.pages) > 0 ? Number(b.pages) : 0), 0);
   libraryStats.textContent =
-    `${state.books.length} kitap · ${readPartitive(readCount)} okudun · toplam ${totalPages.toLocaleString("tr-TR")} sayfa`;
+    `${state.books.length} kitap · ${readPartitive(readCount)} okudun · toplam ${totalPages.toLocaleString("tr-TR")} sayfa` +
+    (state.query || state.filter !== "all" || state.addedBy !== "all" ? ` · ${list.length} sonuç` : "") +
+    (state.addedBy !== "all" ? ` · ekleyen: ${displayName(state.addedBy)}` : "");
 
   if (!list.length) {
     shelf.append(el("div", { class: "shelf-empty" },
@@ -443,6 +443,7 @@ function bookCard(b) {
 
   const creators = b.creators || "";
   const publine = [b.publisher, b.publish_date].filter(Boolean).join(" · ");
+  const addedBy = b.created_by ? displayName(b.created_by) : null;
 
   const card = el("article", { class: "book book-entry", role: "button", tabindex: "0", "aria-label": b.title },
     coverNode(b),
@@ -450,6 +451,7 @@ function bookCard(b) {
       el("h3", { class: "book-title", text: b.title || "(başlıksız)" }),
       creators ? el("p", { class: "book-creators", text: creators }) : null,
       publine ? el("p", { class: "book-pub", text: publine }) : null,
+      addedBy ? el("p", { class: "book-added", text: `Ekleyen: ${addedBy}` }) : null,
       el("div", { class: "book-foot" },
         el("div", { class: "score" },
           avgNode,
@@ -1450,6 +1452,7 @@ async function olSearchSummaries(b, n = 2) {
 }
 
 // Google Books: volumeInfo.description (servis cevap vermezse boş).
+// Önce Türkçe sonuçlar (langRestrict=tr), sonra genel arama.
 async function gbSearchSummaries(b, n = 2) {
   const author = firstAuthorOf(b);
   const queries = [];
@@ -1461,21 +1464,28 @@ async function gbSearchSummaries(b, n = 2) {
   }
   const out = [];
   const seen = new Set();
-  for (const q of queries) {
-    const data = await fetchJson(
-      `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=10` +
-      `&fields=items(volumeInfo/description)&key=${firebaseConfig.apiKey}`);
-    for (const item of (data?.items || [])) {
-      const text = stripHtml(item.volumeInfo?.description);
-      const key = normSummary(text);
-      if (text && text.length > 40 && !seen.has(key)) {
-        seen.add(key);
-        out.push({ text, source: "Google Books" });
-        if (out.length >= n) return out;
+  const run = async (lang) => {
+    for (const q of queries) {
+      const data = await fetchJson(
+        `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=10` +
+        `&fields=items(volumeInfo/description)` +
+        (lang ? `&langRestrict=${lang}` : "") +
+        `&key=${firebaseConfig.apiKey}`);
+      for (const item of (data?.items || [])) {
+        const text = stripHtml(item.volumeInfo?.description);
+        const key = normSummary(text);
+        if (text && text.length > 40 && !seen.has(key)) {
+          seen.add(key);
+          out.push({ text, source: lang === "tr" ? "Google Books (TR)" : "Google Books" });
+          if (out.length >= n) return true;
+        }
       }
+      if (out.length) return true;
     }
-    if (out.length) return out;
-  }
+    return false;
+  };
+  if (await run("tr")) return out;
+  await run("");
   return out;
 }
 
@@ -1555,15 +1565,25 @@ function normSummary(s) {
 }
 
 // Özet adayları: 5 kaynak paralel, kaynak başına 2, toplam en çok 8.
+// İlk 5'i boşsa son çare: Kitapyurdu + D&R (CORS proxy üzerinden, sessizce boş dönebilir).
 async function searchSummaries(b, n = 8) {
-  const [ol, gb, ap, gx, ar] = await Promise.all([
-    olSearchSummaries(b, 2), gbSearchSummaries(b, 2), appleSearchSummaries(b, 2),
+  const [gb, ol, ap, gx, ar] = await Promise.all([
+    gbSearchSummaries(b, 2), olSearchSummaries(b, 2), appleSearchSummaries(b, 2),
     gutendexSearchSummaries(b, 2), archiveSearchSummaries(b, 2),
   ]);
   const out = [];
   const seen = new Set();
-  // ponytail: sabit öncelik (OL → GB → Apple → Gutendex → Archive), puana gerek yok
-  for (const s of [...ol, ...gb, ...ap, ...gx, ...ar]) {
+  // ponytail: sabit öncelik (GB-TR → OL → GB → Apple → Gutendex → Archive → KY/DR), puana gerek yok
+  for (const s of [...gb, ...ol, ...ap, ...gx, ...ar]) {
+    const key = normSummary(s.text);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(s);
+    if (out.length >= n) return out;
+  }
+  if (out.length) return out;
+  // ponytail: KY/D&R kırılgan (proxy + HTML parse); sadece ilk 5 boşsa, hata = boş liste
+  for (const s of await trScrapeSummaries(b, 2)) {
     const key = normSummary(s.text);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -1571,6 +1591,83 @@ async function searchSummaries(b, n = 8) {
     if (out.length >= n) break;
   }
   return out;
+}
+
+// Son çare özetler: Kitapyurdu + D&R ürün sayfasındaki JSON-LD Book.description,
+// CORS proxy üzerinden çekilir (proxysiz tarayıcıdan erişilemez). Başarısızlık = [].
+async function trScrapeSummaries(b, n = 2) {
+  const out = [];
+  const seen = new Set();
+  for (const s of [...await kySearchSummaries(b), ...await drSearchSummaries(b)]) {
+    const key = normSummary(s.text);
+    if (s.text && s.text.length > 40 && !seen.has(key)) {
+      seen.add(key);
+      out.push(s);
+      if (out.length >= n) break;
+    }
+  }
+  return out;
+}
+
+async function fetchTextViaProxy(pageUrl, ms = 15000) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), ms);
+  try {
+    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(pageUrl)}`,
+      { signal: ctl.signal });
+    if (!res.ok) return null;
+    return await res.text();
+  } catch { return null; }
+  finally { clearTimeout(timer); }
+}
+
+// Ürün HTML'inden özet: önce JSON-LD Book.description, yoksa og:description.
+function parseProductDescription(html) {
+  for (const m of String(html || "").matchAll(
+    /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+    try {
+      const blocks = JSON.parse(m[1]);
+      for (const blk of (Array.isArray(blocks) ? blocks : [blocks])) {
+        const graphs = Array.isArray(blk["@graph"]) ? blk["@graph"] : [blk];
+        for (const node of graphs) {
+          if (String(node?.["@type"] || "").toLocaleLowerCase("tr").includes("book")
+            && node.description) {
+            const text = stripHtml(node.description);
+            if (text && text.length > 40) return text.trim();
+          }
+        }
+      }
+    } catch { /* bozuk JSON-LD'yi atla */ }
+  }
+  const og = String(html || "").match(
+    /<meta property="og:description" content="([^"]{40,}?)"/);
+  return og ? stripHtml(og[1]).trim() : null;
+}
+
+// Kitapyurdu: arama sayfasından ilk ürün linki → ürün sayfasından özet.
+async function kySearchSummaries(b) {
+  if (!b.title) return [];
+  const q = `${b.title}${firstAuthorOf(b) ? " " + firstAuthorOf(b) : ""}`;
+  const searchHtml = await fetchTextViaProxy(
+    `https://www.kitapyurdu.com/index.php?route=product/list&filter_name=${encodeURIComponent(q)}`);
+  const link = searchHtml?.match(/\/kitap\/[a-z0-9-]+\/\d+\.html/);
+  if (!link) return [];
+  const text = parseProductDescription(
+    await fetchTextViaProxy(`https://www.kitapyurdu.com${link[0]}`));
+  return text ? [{ text, source: "Kitapyurdu" }] : [];
+}
+
+// D&R: arama sayfasından ilk ürün linki → ürün sayfasından özet.
+async function drSearchSummaries(b) {
+  if (!b.title) return [];
+  const q = `${b.title}${firstAuthorOf(b) ? " " + firstAuthorOf(b) : ""}`;
+  const searchHtml = await fetchTextViaProxy(
+    `https://www.dr.com.tr/search?q=${encodeURIComponent(q)}`);
+  const link = searchHtml?.match(/\/[^"\s]*?urunno=\d+/);
+  if (!link) return [];
+  const url = link[0].startsWith("http") ? link[0] : `https://www.dr.com.tr${link[0]}`;
+  const text = parseProductDescription(await fetchTextViaProxy(url));
+  return text ? [{ text, source: "D&R" }] : [];
 }
 
 // Apple Books: anahtarsız ama CORS yok → JSONP (script etiketi).
@@ -1993,6 +2090,11 @@ searchInput.addEventListener("input", () => { state.query = searchInput.value; r
 filterButtons.forEach((btn) => btn.addEventListener("click", () => {
   state.filter = btn.dataset.filter;
   filterButtons.forEach((b) => b.classList.toggle("is-active", b === btn));
+  renderShelf();
+}));
+document.querySelectorAll(".addedby-select").forEach((sel) => sel.addEventListener("change", () => {
+  state.addedBy = sel.value;
+  document.querySelectorAll(".addedby-select").forEach((s) => { if (s !== sel) s.value = sel.value; });
   renderShelf();
 }));
 
