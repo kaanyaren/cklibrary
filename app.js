@@ -138,10 +138,17 @@ function coverNode(book) {
   if (current) {
     const img = el("img", { src: current,
                             alt: "", loading: "lazy", decoding: "async" });
+    // Onaylı kapak ölürse ISBN kaynaklarına düş, hepsi biterse harf-kapak.
+    const nextSource = () => {
+      if (current === book.cover_url && olUrl && olUrl !== current) return olUrl;
+      if (amzUrl && current !== amzUrl) return amzUrl;
+      return null;
+    };
     const fallback = () => {
-      if (current === olUrl && amzUrl) {
-        current = amzUrl;
-        img.src = amzUrl;
+      const n = nextSource();
+      if (n) {
+        current = n;
+        img.src = n;
         return;
       }
       img.remove();
@@ -323,13 +330,20 @@ onAuthStateChanged(auth, async (user) => {
 // ── Veri yükleme (sınırlı okuma: kitap + collectionGroup + activity) ──
 async function loadAll() {
   shelfError.hidden = true;
+  const shelfRetry = $("shelf-retry");
+  if (shelfRetry) shelfRetry.hidden = true;
   try {
-    const [booksSnap, ratingsSnap, notesSnap, readsSnap, activitySnap] = await Promise.all([
-      getDocs(collection(db, "books")),
-      getDocs(collectionGroup(db, "ratings")),
-      getDocs(collectionGroup(db, "notes")),
-      getDocs(collectionGroup(db, "reads")),
-      getDocs(collection(db, "activity")),
+    const timeout = new Promise((_, rej) =>
+      setTimeout(() => rej({ code: "unavailable" }), 20000));
+    const [booksSnap, ratingsSnap, notesSnap, readsSnap, activitySnap] = await Promise.race([
+      Promise.all([
+        getDocs(collection(db, "books")),
+        getDocs(collectionGroup(db, "ratings")),
+        getDocs(collectionGroup(db, "notes")),
+        getDocs(collectionGroup(db, "reads")),
+        getDocs(collection(db, "activity")),
+      ]),
+      timeout,
     ]);
 
     state.books = booksSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -367,6 +381,11 @@ async function loadAll() {
     shelf.innerHTML = "";
     shelfError.hidden = false;
     shelfError.textContent = loadErrorMessage(err);
+    const retry = $("shelf-retry");
+    if (retry) {
+      retry.hidden = false;
+      retry.onclick = () => { renderSkeleton(); loadAll(); };
+    }
   }
 }
 
@@ -406,6 +425,8 @@ function visibleBooks() {
 function renderShelf() {
   shelf.innerHTML = "";
   shelfError.hidden = true;
+  const retry = $("shelf-retry");
+  if (retry) retry.hidden = true;
   const list = visibleBooks();
 
   const readCount = state.books.filter((b) => myRead(b.id)).length;
@@ -1115,13 +1136,20 @@ const scanBtn = $("scan-btn");
 const scanDialog = $("scan-dialog");
 const scanVideo = $("scan-video");
 const scanStatus = $("scan-status");
+const scanFile = $("scan-file");
+const scanPhotoBtn = $("scan-photo-btn");
 const formNote = $("form-note");
 let scanStream = null, scanTimer = 0, scanReader = null, scanDone = false;
+let scanBatch = false, scanBusy = false, scanAdded = 0, scanSkipped = 0;
+let scanSeen = new Set(), scanLast = { code: "", at: 0 };
 
 function showFormNote(msg) { formNote.textContent = msg; formNote.hidden = false; }
 function clearFormNote() { formNote.hidden = true; formNote.textContent = ""; }
 
 scanBtn.addEventListener("click", () => { clearFormNote(); formError.hidden = true; openScanner(); });
+scanPhotoBtn?.addEventListener("click", () => scanFile?.click());
+scanFile?.addEventListener("change", handleScanFile);
+$("batch-scan")?.addEventListener("click", openBatchScanner);
 document.querySelectorAll("[data-close-scan]").forEach((b) =>
   b.addEventListener("click", () => scanDialog.close()));
 
@@ -1136,23 +1164,46 @@ function stopScanner() {
   scanReader = null;
   stopStream();
 }
-scanDialog.addEventListener("close", stopScanner);
+scanDialog.addEventListener("close", () => { stopScanner(); scanBatch = false; scanBusy = false; });
 
 async function openScanner() {
+  scanBatch = false;
+  $("scan-title").textContent = "Barkod tara";
+  $("scan-count").hidden = true;
+  $("scan-items").innerHTML = "";
   scanDone = false;
   scanStatus.textContent = "Kamera açılıyor…";
-  scanDialog.showModal();
-  try {
-    scanStream = await Promise.race([
-      navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } }, audio: false,
-      }),
-      new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 15000)),
-    ]);
-  } catch {
-    scanStatus.textContent = "Kameraya erişilemedi. İzni verdiğinden ve HTTPS üzerinden girdiğinden emin ol.";
+  if (scanFile) scanFile.value = "";
+  if (!scanDialog.open) scanDialog.showModal();
+  // iPad mini / eski iOS: mediaDevices hiç olmayabilir (eski Safari, WKWebView).
+  if (!navigator.mediaDevices?.getUserMedia) {
+    scanStatus.textContent = "Bu cihazda canlı kamera açılamıyor. Alttaki “Fotoğrafla tara”yı kullan veya ISBN'yi elle yaz.";
     return;
   }
+  // iOS uyumu: düz string en geniş desteklenir; olmazsa genel kameraya düş.
+  const tries = [
+    { video: { facingMode: "environment" }, audio: false },
+    { video: { facingMode: { ideal: "environment" } }, audio: false },
+    { video: true, audio: false },
+  ];
+  let err0 = null;
+  for (const c of tries) {
+    try {
+      scanStream = await Promise.race([
+        navigator.mediaDevices.getUserMedia(c),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 15000)),
+      ]);
+      err0 = null;
+      break;
+    } catch (e) { err0 = e; }
+  }
+  if (!scanStream) {
+    scanStatus.textContent = cameraErrorMessage(err0);
+    return;
+  }
+  scanVideo.setAttribute("playsinline", "true");
+  scanVideo.setAttribute("webkit-playsinline", "true");
+  scanVideo.muted = true;
   scanVideo.srcObject = scanStream;
   try { await scanVideo.play(); } catch { /* oynatılamazsa da devam */ }
   scanStatus.textContent = "Barkodu çerçevenin içine tut…";
@@ -1160,8 +1211,62 @@ async function openScanner() {
   else {
     try { await startZxingScan(); }
     catch {
-      scanStatus.textContent = "Bu tarayıcıda otomatik tarama yok. ISBN'yi elle yazabilirsin.";
+      scanStatus.textContent = "Canlı tarama açılamadı. “Fotoğrafla tara”yı kullan veya ISBN'yi elle yaz.";
     }
+  }
+}
+
+function cameraErrorMessage(err) {
+  const n = err?.name || "";
+  if (n === "NotAllowedError" || n === "SecurityError")
+    return "Kamera izni verilmedi. Ayarlar → Safari → Kamera'dan izin verip tekrar dene; olmazsa “Fotoğrafla tara”yı kullan.";
+  if (n === "NotFoundError" || n === "OverconstrainedError")
+    return "Kamera bulunamadı. “Fotoğrafla tara”yı kullan veya ISBN'yi elle yaz.";
+  if (n === "NotReadableError")
+    return "Kamera başka uygulamada açık. Diğer sekmeyi/uygulamayı kapatıp tekrar dene; olmazsa “Fotoğrafla tara”yı kullan.";
+  if (!window.isSecureContext)
+    return "Kamera için HTTPS gerekli. Adresin https ile başladığından emin ol; olmazsa “Fotoğrafla tara”yı kullan.";
+  return "Kameraya erişilemedi. “Fotoğrafla tara”yı kullan veya ISBN'yi elle yaz.";
+}
+
+// Fotoğraf yedeği: iOS'ta capture=environment kamera uygulamasını açar,
+// gelen kare BarcodeDetector / ZXing ile çözülür. getUserMedia'sız cihazda çalışır.
+async function handleScanFile() {
+  const f = scanFile?.files?.[0];
+  if (!f) return;
+  scanStatus.textContent = "Fotoğraf okunuyor…";
+  const url = URL.createObjectURL(f);
+  try {
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+    let raw = null;
+    if ("BarcodeDetector" in window) {
+      try {
+        const d = new BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e"] });
+        const codes = await d.detect(img);
+        raw = codes[0]?.rawValue || null;
+      } catch { raw = null; }
+    }
+    if (!raw) {
+      const ZX = await import("https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm");
+      const reader = new ZX.BrowserMultiFormatReader(new Map([
+        [ZX.DecodeHintType.POSSIBLE_FORMATS,
+         [ZX.BarcodeFormat.EAN_13, ZX.BarcodeFormat.EAN_8, ZX.BarcodeFormat.UPC_A]],
+      ]));
+      try { raw = (await reader.decodeFromImageElement(img))?.getText() || null; }
+      catch { raw = null; }
+      finally { try { reader.reset(); } catch { /* yoksay */ } }
+    }
+    if (!raw) {
+      scanStatus.textContent = "Barkod okunamadı. Daha net, yakın bir fotoğrafla tekrar dene veya ISBN'yi elle yaz.";
+      return;
+    }
+    await handleBarcode(raw);
+  } catch {
+    scanStatus.textContent = "Fotoğraf okunamadı. Tekrar dene veya ISBN'yi elle yaz.";
+  } finally {
+    URL.revokeObjectURL(url);
+    if (scanFile) scanFile.value = "";
   }
 }
 
@@ -1215,15 +1320,24 @@ async function lookupIsbn(isbn) {
 }
 
 async function handleBarcode(raw) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  if (digits.length !== 10 && digits.length !== 13) {
+    if (!scanBatch) {
+      scanDone = true;
+      stopScanner();
+      scanDialog.close();
+      showFormError("Barkod okunamadı. Tekrar dene veya bilgileri elle yaz.");
+    } else {
+      scanStatus.textContent = "Barkod okunamadı, sonrakini tut…";
+      resumeBatchScan();
+    }
+    return;
+  }
+  if (scanBatch) return handleBatchBarcode(digits);
   if (scanDone) return;
   scanDone = true;
   stopScanner();
   scanDialog.close();
-  const digits = String(raw || "").replace(/\D/g, "");
-  if (digits.length !== 10 && digits.length !== 13) {
-    showFormError("Barkod okunamadı. Tekrar dene veya bilgileri elle yaz.");
-    return;
-  }
   if (digits.length === 13) $("f-isbn13").value = digits;
   else $("f-isbn10").value = digits;
 
@@ -1241,6 +1355,129 @@ async function handleBarcode(raw) {
   $("f-date").value = info.publish_date;
   $("f-pages").value = info.pages ?? "";
   showFormNote(`“${info.title}” bulundu — kontrol edip Kaydet'e bas.`);
+}
+
+// ── Toplu barkod tarama: diyalog açık kalır, her barkod direkt kaydedilir ──
+function openBatchScanner() {
+  scanBatch = true;
+  scanBusy = false;
+  scanAdded = 0;
+  scanSkipped = 0;
+  scanSeen = new Set();
+  scanLast = { code: "", at: 0 };
+  $("scan-title").textContent = "Toplu barkod tara";
+  $("scan-items").innerHTML = "";
+  updateScanCount();
+  $("scan-count").hidden = false;
+  openScannerKeepBatch();
+}
+
+async function openScannerKeepBatch() {
+  scanBatch = true;
+  scanDone = false;
+  scanStatus.textContent = "Kamera açılıyor…";
+  if (scanFile) scanFile.value = "";
+  if (!scanDialog.open) scanDialog.showModal();
+  if (!navigator.mediaDevices?.getUserMedia) {
+    scanStatus.textContent = "Bu cihazda canlı kamera açılamıyor. Alttaki “Fotoğrafla tara”yı kullan.";
+    return;
+  }
+  if (scanStream) {
+    scanStatus.textContent = "Barkodu çerçevenin içine tut, bitince Kapat'a bas…";
+    if (!scanReader) startNativeScan();
+    return;
+  }
+  await openScannerStreamOnly();
+}
+
+async function openScannerStreamOnly() {
+  const tries = [
+    { video: { facingMode: "environment" }, audio: false },
+    { video: { facingMode: { ideal: "environment" } }, audio: false },
+    { video: true, audio: false },
+  ];
+  let err0 = null;
+  for (const c of tries) {
+    try {
+      scanStream = await Promise.race([
+        navigator.mediaDevices.getUserMedia(c),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 15000)),
+      ]);
+      err0 = null;
+      break;
+    } catch (e) { err0 = e; }
+  }
+  if (!scanStream) { scanStatus.textContent = cameraErrorMessage(err0); return; }
+  scanVideo.setAttribute("playsinline", "true");
+  scanVideo.setAttribute("webkit-playsinline", "true");
+  scanVideo.muted = true;
+  scanVideo.srcObject = scanStream;
+  try { await scanVideo.play(); } catch { /* oynatılamazsa da devam */ }
+  scanStatus.textContent = "Barkodu çerçevenin içine tut, bitince Kapat'a bas…";
+  if ("BarcodeDetector" in window) startNativeScan();
+  else {
+    try { await startZxingScan(); }
+    catch { scanStatus.textContent = "Canlı tarama açılamadı. “Fotoğrafla tara”yı kullan."; }
+  }
+}
+
+function updateScanCount() {
+  $("scan-count").textContent = `${scanAdded} eklendi · ${scanSkipped} atlandı — sonrakini tut, bitince Kapat'a bas`;
+}
+
+function addScanRow(text, cls) {
+  const li = document.createElement("li");
+  li.className = "note-entry" + (cls ? ` ${cls}` : "");
+  li.textContent = text;
+  $("scan-items").prepend(li);
+}
+
+function resumeBatchScan() {
+  scanBusy = false;
+  if (!scanBatch || !scanDialog.open) return;
+  updateScanCount();
+  // ZXing döngüsü kendi devam eder; native tick durduğu için yeniden başlat.
+  if (!scanReader) startNativeScan();
+  else scanStatus.textContent = "Sonrakini tut, bitince Kapat'a bas…";
+}
+
+async function handleBatchBarcode(digits) {
+  // Aynı kare üst üste ateşlenir; 4 sn içinde aynı kodu yoksay.
+  const now = Date.now();
+  if (scanBusy || (scanLast.code === digits && now - scanLast.at < 4000)) return;
+  scanBusy = true;
+  scanLast = { code: digits, at: now };
+  const dup = scanSeen.has(digits)
+    || state.books.some((b) => b.isbn13 === digits || b.isbn10 === digits);
+  if (dup) {
+    scanSkipped++;
+    addScanRow(`${digits} — zaten var, atlandı`);
+    resumeBatchScan();
+    return;
+  }
+  scanStatus.textContent = `${digits} bulunuyor…`;
+  let info = null;
+  try { info = await lookupIsbn(digits); } catch { info = null; }
+  try {
+    await saveNew({
+      title: info?.title || "",
+      creators: info?.creators || "",
+      publisher: info?.publisher || "",
+      publish_date: info?.publish_date || "",
+      isbn13: digits.length === 13 ? digits : "",
+      isbn10: digits.length === 10 ? digits : "",
+      description: "",
+      pages: info?.pages ?? null,
+    });
+    scanSeen.add(digits);
+    scanAdded++;
+    addScanRow(info?.title ? `“${info.title}” eklendi` : `${digits} eklendi (bilgi bulunamadı)`);
+    renderShelf();
+  } catch {
+    scanSkipped++;
+    addScanRow(`${digits} — kaydedilemedi`);
+  }
+  resumeBatchScan();
 }
 
 // ── Kapak bulma (eksik kapaklar Open Library'de aranır) ──────
@@ -1305,6 +1542,11 @@ async function olSearchCovers(b, n) {
     queries.push(new URLSearchParams({ title: b.title,
       limit: "6", fields: "key,title,author_name,cover_i" }));
   }
+  // ponytail: çeviri başlık EN kayda denk gelmez; yazar-son-çare (adaylar onaylı seçilir)
+  if (author) {
+    queries.push(new URLSearchParams({ author,
+      limit: "6", fields: "key,title,author_name,cover_i" }));
+  }
   const seen = new Set();
   const urls = [];
   for (const q of queries) {
@@ -1321,7 +1563,7 @@ async function olSearchCovers(b, n) {
   return urls.slice(0, n);
 }
 
-// Google Books (aynı web anahtarıyla; servis cevap vermezse sessizce atlanır).
+// Google Books (anahtarsız; proje anahtarının Books kotası 0, keyless IP kotası işler).
 async function gbSearchCovers(b, n) {
   const queries = [];
   const author = firstAuthorOf(b);
@@ -1331,12 +1573,14 @@ async function gbSearchCovers(b, n) {
   if (b.title) {
     queries.push(`intitle:${encodeURIComponent(b.title)}`);
   }
+  // ponytail: çeviri başlıklar EN kayda denk gelmez; yazar-son-çare (adaylar onaylı seçilir)
+  if (author) queries.push(`inauthor:${encodeURIComponent(author)}`);
   const seen = new Set();
   const urls = [];
   for (const q of queries) {
     const data = await fetchJson(
       `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=10` +
-      `&fields=items(volumeInfo/imageLinks)&key=${firebaseConfig.apiKey}`);
+      `&fields=items(volumeInfo/imageLinks)`);
     for (const item of (data?.items || [])) {
       const t = item.volumeInfo?.imageLinks?.thumbnail;
       if (t) {
@@ -1359,6 +1603,7 @@ async function archiveSearchCovers(b, n) {
   const queries = [];
   if (b.title && author) queries.push(`title:(${b.title}) AND creator:(${author}) AND mediatype:texts`);
   if (b.title) queries.push(`${b.title}${author ? " " + author : ""} AND mediatype:texts`);
+  if (author) queries.push(`creator:(${author}) AND mediatype:texts`); // ponytail: çeviri başlık denk gelmez
   const seen = new Set();
   const urls = [];
   for (const q of queries) {
@@ -1383,6 +1628,7 @@ async function gutendexSearchCovers(b, n) {
   const queries = [];
   if (b.title && author) queries.push(`${b.title} ${author}`);
   if (b.title) queries.push(b.title);
+  if (author) queries.push(author); // ponytail: çeviri başlık EN kayda denk gelmez
   const seen = new Set();
   const urls = [];
   for (const q of queries) {
@@ -1433,6 +1679,10 @@ async function olSearchSummaries(b, n = 2) {
   if (b.title) {
     queries.push(new URLSearchParams({ title: b.title, limit: "5", fields: "key" }));
   }
+  // ponytail: çeviri başlık EN kayda denk gelmez; yazar-son-çare (adaylar onaylı seçilir)
+  if (author) {
+    queries.push(new URLSearchParams({ author, limit: "5", fields: "key" }));
+  }
   const out = [];
   const seen = new Set();
   for (const q of queries) {
@@ -1462,6 +1712,8 @@ async function gbSearchSummaries(b, n = 2) {
   if (b.title) {
     queries.push(`intitle:${encodeURIComponent(b.title)}`);
   }
+  // ponytail: çeviri başlık EN kayda denk gelmez; yazar-son-çare (adaylar onaylı seçilir)
+  if (author) queries.push(`inauthor:${encodeURIComponent(author)}`);
   const out = [];
   const seen = new Set();
   const run = async (lang) => {
@@ -1469,8 +1721,7 @@ async function gbSearchSummaries(b, n = 2) {
       const data = await fetchJson(
         `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=10` +
         `&fields=items(volumeInfo/description)` +
-        (lang ? `&langRestrict=${lang}` : "") +
-        `&key=${firebaseConfig.apiKey}`);
+        (lang ? `&langRestrict=${lang}` : ""));
       for (const item of (data?.items || [])) {
         const text = stripHtml(item.volumeInfo?.description);
         const key = normSummary(text);
@@ -1495,6 +1746,7 @@ async function gutendexSearchSummaries(b, n = 2) {
   const queries = [];
   if (b.title && author) queries.push(`${b.title} ${author}`);
   if (b.title) queries.push(b.title);
+  if (author) queries.push(author); // ponytail: çeviri başlık EN kayda denk gelmez
   const out = [];
   const seen = new Set();
   for (const q of queries) {
@@ -1537,6 +1789,7 @@ async function archiveSearchSummaries(b, n = 2) {
   const queries = [];
   if (b.title && author) queries.push(`title:(${b.title}) AND creator:(${author}) AND mediatype:texts`);
   if (b.title) queries.push(`${b.title}${author ? " " + author : ""} AND mediatype:texts`);
+  if (author) queries.push(`creator:(${author}) AND mediatype:texts`); // ponytail: çeviri başlık denk gelmez
   const out = [];
   const seen = new Set();
   for (const q of queries) {
@@ -1674,9 +1927,12 @@ async function drSearchSummaries(b) {
 // Ham kayıtları döner; kapak ve özet aramaları buradan beslenir.
 function appleSearchItems(b) {
   const author = firstAuthorOf(b);
-  const term = b.title ? `${b.title}${author ? " " + author : ""}` : "";
-  if (!term) return Promise.resolve([]);
-  return new Promise((res) => {
+  // ponytail: çeviri başlık EN kayda denk gelmez; boşsa yazarla tekrar dene
+  const terms = [];
+  if (b.title) terms.push(`${b.title}${author ? " " + author : ""}`);
+  if (author) terms.push(author);
+  if (!terms.length) return Promise.resolve([]);
+  const once = (term) => new Promise((res) => {
     const script = document.createElement("script");
     const cb = `ckAppleCb${Date.now().toString(36)}${Math.floor(Math.random() * 1e6)}`;
     const cleanup = () => { clearTimeout(timer); delete window[cb]; script.remove(); };
@@ -1687,6 +1943,13 @@ function appleSearchItems(b) {
       `&media=ebook&limit=10&callback=${cb}`;
     document.head.appendChild(script);
   });
+  return (async () => {
+    for (const t of terms) {
+      const items = await once(t);
+      if (items.length) return items;
+    }
+    return [];
+  })();
 }
 
 async function appleSearchCovers(b, n) {
@@ -1839,7 +2102,8 @@ function renderOffers() {
     const check = el("input", { type: "checkbox", checked: true,
                                 "aria-label": `${o.title || "kitap"} önerisini onayla` });
     o._check = check;
-    const img = el("img", { src: o.url, alt: "", loading: "lazy" });
+    const img = el("img", { src: o.url, alt: "", loading: "lazy",
+                                class: "cover-offer-img" });
     img.addEventListener("error", () => { check.checked = false; check.disabled = true; });
     coversBody.append(el("div", { class: "cover-row" },
       coverNode(getBook(o.id) || { title: o.title }),
@@ -2086,7 +2350,14 @@ async function clearCover(bookId) {
 }
 
 // ── Arama & filtre ─────────────────────────────────────────────
-searchInput.addEventListener("input", () => { state.query = searchInput.value; renderShelf(); });
+searchInput.addEventListener("input", () => {
+  clearTimeout(searchInput._t);
+  searchInput._t = setTimeout(() => {
+    if (!state.user || state.query === searchInput.value) return;
+    state.query = searchInput.value;
+    renderShelf();
+  }, 150);
+});
 filterButtons.forEach((btn) => btn.addEventListener("click", () => {
   state.filter = btn.dataset.filter;
   filterButtons.forEach((b) => b.classList.toggle("is-active", b === btn));
