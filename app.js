@@ -7,7 +7,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import {
   getFirestore, collection, collectionGroup, getDocs,
-  doc, setDoc, addDoc, updateDoc, deleteDoc,
+  doc, setDoc, addDoc, updateDoc, deleteDoc, deleteField,
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
@@ -97,8 +97,9 @@ function letterTile(title) {
 }
 function coverNode(book) {
   const wrap = el("div", { class: "cover" });
+  // ?default=false: olmayan kapakta 404 dönsün ki harf-kapak devreye girsin.
   const src = book.cover_url ||
-    (book.isbn13 ? `https://covers.openlibrary.org/b/isbn/${book.isbn13}-M.jpg` : null);
+    (book.isbn13 ? `https://covers.openlibrary.org/b/isbn/${book.isbn13}-M.jpg?default=false` : null);
   if (src) {
     const img = el("img", { src,
                             alt: "", loading: "lazy", decoding: "async" });
@@ -401,6 +402,44 @@ function renderDetail(bookId) {
            b.isbn13 ? `ISBN ${b.isbn13}` : null]
             .filter(Boolean)
             .map((t) => el("span", { text: t }))))));
+
+  // Kapak — YALNIZCA editor (tekil arama + kaldırma)
+  if (isEditor) {
+    const covStatus = el("p", { class: "rate-help", text: b.cover_url
+      ? "Onaylı kapak kullanılıyor."
+      : "Otomatik kapak (ISBN) veya harf-kapak gösteriliyor." });
+    const covOpts = el("div", { class: "cover-opts" });
+    const searchBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Kapak ara" });
+    searchBtn.addEventListener("click", async () => {
+      searchBtn.disabled = true;
+      searchBtn.textContent = "Aranıyor…";
+      covOpts.innerHTML = "";
+      const urls = await searchCovers(b, 4);
+      searchBtn.disabled = false;
+      searchBtn.textContent = "Kapak ara";
+      if (!urls.length) { covStatus.textContent = "Kapak bulunamadı."; return; }
+      covStatus.textContent = "Birine dokun — hemen uygulanır.";
+      for (const u of urls) {
+        const pick = el("button", { class: "cover-opt", type: "button",
+                                    "aria-label": "Bu kapağı uygula" },
+          el("img", { src: u, alt: "", loading: "lazy" }));
+        pick.addEventListener("click", () => applyCover(bookId, u));
+        covOpts.append(pick);
+      }
+    });
+    const covBtns = el("div", { class: "cover-detail-btns" }, searchBtn);
+    if (b.cover_url) {
+      const clearBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Otomatik kapağa dön" });
+      clearBtn.addEventListener("click", () => clearCover(bookId));
+      covBtns.append(clearBtn);
+    }
+    detailBody.append(
+      el("section", { class: "section" },
+        el("h3", { class: "section-title", text: "Kapak" }),
+        el("div", { class: "cover-detail-row" }, coverNode(b), covBtns),
+        covStatus,
+        covOpts));
+  }
 
   // Ortalama
   detailBody.append(
@@ -835,17 +874,26 @@ document.querySelectorAll("[data-close-covers]").forEach((b) =>
 coversDialog.addEventListener("click", (e) => { if (e.target === coversDialog) coversDialog.close(); });
 
 function imageLoads(url, ms = 12000) {
+  // NOT: Open Library olmayan kapaklara 200 + boş GIF döner; ?default=false
+  // ile 404 alınır, yoksa yoklama da harf-kapak geri dönüşü de çalışmaz.
+  const probe = url + (url.includes("?") ? "&" : "?") + "default=false";
   return new Promise((res) => {
     const im = new Image();
     im.onload = () => res(true);
     im.onerror = () => res(false);
     setTimeout(() => res(false), ms);
-    im.src = url;
+    im.src = probe;
   });
 }
 
 async function olSearchCover(b) {
-  const q = new URLSearchParams({ title: b.title || "", limit: "3",
+  const found = await searchCovers(b, 1);
+  return found[0] || null;
+}
+
+// Başlık+yazara göre kapak adayları (yüklenebilenler, en çok n tane).
+async function searchCovers(b, n = 4) {
+  const q = new URLSearchParams({ title: b.title || "", limit: "6",
                                  fields: "key,title,author_name,cover_i" });
   const firstAuthor = String(b.creators || "").split(",")[0].trim();
   if (firstAuthor) q.set("author", firstAuthor);
@@ -853,20 +901,28 @@ async function olSearchCover(b) {
   const timer = setTimeout(() => ctl.abort(), 15000);
   try {
     const res = await fetch(`https://openlibrary.org/search.json?${q}`, { signal: ctl.signal });
-    if (!res.ok) return null;
-    const hit = ((await res.json()).docs || []).find((d) => d.cover_i);
-    return hit ? `https://covers.openlibrary.org/b/id/${hit.cover_i}-M.jpg` : null;
-  } catch { return null; }
+    if (!res.ok) return [];
+    const docs = (await res.json()).docs || [];
+    const urls = [...new Set(docs.filter((d) => d.cover_i).map((d) => d.cover_i))]
+      .slice(0, 6)
+      .map((id) => `https://covers.openlibrary.org/b/id/${id}-M.jpg`);
+    const ok = [];
+    await Promise.all(urls.map(async (u) => { if (await imageLoads(u)) ok.push(u); }));
+    return ok.slice(0, n);
+  } catch { return []; }
   finally { clearTimeout(timer); }
 }
 
+// Kapaklı kitap atlanır (ISBN kapağı canonical sayılır); kapaklı ama özel
+// cover_url'lu kitapta farklı kapak bulunursa değişiklik önerilir.
 async function proposeCover(b) {
-  if (b.isbn13 && await imageLoads(`https://covers.openlibrary.org/b/isbn/${b.isbn13}-M.jpg`)) {
-    return null; // kapağı zaten çalışıyor, öneriye gerek yok
-  }
-  const url = await olSearchCover(b);
-  if (url && await imageLoads(url)) return { id: b.id, title: b.title, creators: b.creators, url };
-  return null;
+  const isbnUrl = b.isbn13 ? `https://covers.openlibrary.org/b/isbn/${b.isbn13}-M.jpg` : null;
+  const isbnWorks = isbnUrl ? await imageLoads(isbnUrl) : false;
+  if (isbnWorks && (!b.cover_url || b.cover_url === isbnUrl)) return null;
+  const alt = await olSearchCover(b);
+  const current = b.cover_url || null;
+  if (!alt || alt === current) return null;
+  return { id: b.id, title: b.title, creators: b.creators, url: alt, isNew: !current };
 }
 
 async function openCovers() {
@@ -876,8 +932,8 @@ async function openCovers() {
   coversSelectAll.disabled = true;
   coversStatus.textContent = "Hazırlanıyor…";
   coversDialog.showModal();
-  const cands = state.books.filter((b) => !b.cover_url);
-  if (!cands.length) { coversStatus.textContent = "Tüm kitapların kapağı kayıtlı."; return; }
+  const cands = state.books;
+  if (!cands.length) { coversStatus.textContent = "Kütüphane boş."; return; }
   let done = 0, found = 0;
   const queue = [...cands];
   const worker = async () => {
@@ -891,8 +947,9 @@ async function openCovers() {
   await Promise.all([worker(), worker(), worker(), worker()]);
   coverOffers.sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "tr"));
   renderOffers();
+  const fresh = coverOffers.filter((o) => o.isNew).length;
   coversStatus.textContent = coverOffers.length
-    ? `${cands.length} kitap tarandı · ${coverOffers.length} öneri onayın bekliyor.`
+    ? `${cands.length} kitap tarandı · ${coverOffers.length} öneri (${fresh} yeni, ${coverOffers.length - fresh} değişiklik).`
     : `${cands.length} kitap tarandı · onay bekleyen öneri yok.`;
 }
 
@@ -950,6 +1007,28 @@ coversApply.addEventListener("click", async () => {
   coversStatus.textContent = `${n} kapak güncellendi.`;
   renderShelf();
 });
+
+async function applyCover(bookId, url) {
+  try {
+    await updateDoc(doc(db, "books", bookId), { cover_url: url });
+  } catch (err) {
+    alertWriteError(err); return;
+  }
+  getBook(bookId).cover_url = url;
+  renderDetail(bookId);
+  renderShelf();
+}
+
+async function clearCover(bookId) {
+  try {
+    await updateDoc(doc(db, "books", bookId), { cover_url: deleteField() });
+  } catch (err) {
+    alertWriteError(err); return;
+  }
+  delete getBook(bookId).cover_url;
+  renderDetail(bookId);
+  renderShelf();
+}
 
 // ── Arama & filtre ─────────────────────────────────────────────
 searchInput.addEventListener("input", () => { state.query = searchInput.value; renderShelf(); });
