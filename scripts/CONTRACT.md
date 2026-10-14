@@ -92,10 +92,11 @@ at: string
 letter-tile fallback (first letter of title, deterministic paper tone).
 (`?default=false` şart: OL olmayan kapaklara 200 + boş GIF döner.)
 
-Cover search sources: Open Library search (başlık+yazar, boşsa başlık) +
-Google Books (aynı web anahtarıyla; cevap vermezse sessizce atlanır).
-Candidates must pass a load check; OL first. Bulk scan uses OL only
-(quota-friendly); detail search merges both.
+Cover search sources (5, hepsi anahtarsız; GB proje anahtarıyla):
+Open Library search + Google Books + Archive.org advancedsearch +
+Gutendex + Apple Books (CORS yok → JSONP). Her kaynakta önce başlık+yazar,
+boşsa başlıkla deneme. Candidates must pass a load check; OL first.
+Bulk scan uses OL only (quota-friendly); detail search merges all.
 
 ## House rules for the UI
 

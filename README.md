@@ -16,7 +16,8 @@ ve not düşer. Ortak veri Firebase'de tutulur, uygulama GitHub Pages'te yaşar.
 - **Kapak bulma** — tek tuşla tüm kitaplar taranır; kapaksızlara yeni kapak,
   kapaklılara farklı baskı bulunursa değişiklik önerilir. Eski/yeni yan yana
   gösterilir, onaylananlar kaydedilir (yalnızca düzenleyiciler). Kitap detayından
-  da tekil kapak araması yapılır (Open Library + Google Books).
+  da tekil kapak araması yapılır (Open Library + Google Books + Archive.org +
+  Gutendex + Apple Books).
 - **Okuma durumu** — her kullanıcı kitapları okundu/okunmadı işaretler;
   liste "Okuduklarım / Okumadıklarım" filtreleriyle süzülür.
 

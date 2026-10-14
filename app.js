@@ -467,7 +467,7 @@ function renderDetail(bookId) {
       searchBtn.disabled = true;
       searchBtn.textContent = "Aranıyor…";
       covOpts.innerHTML = "";
-      const urls = await searchCovers(b, 4);
+      const urls = await searchCovers(b, 6);
       searchBtn.disabled = false;
       searchBtn.textContent = "Kapak ara";
       if (!urls.length) { covStatus.textContent = "Kapak bulunamadı."; return; }
@@ -978,11 +978,95 @@ async function gbSearchCovers(b, n) {
   return urls.slice(0, n);
 }
 
-// Başlık+yazara göre kapak adayları: OL + Google Books paralel,
+// Archive.org: tam metin taramalar; kapak, taramanın kapağıdır.
+async function archiveSearchCovers(b, n) {
+  const author = firstAuthorOf(b);
+  const queries = [];
+  if (b.title && author) queries.push(`title:(${b.title}) AND creator:(${author}) AND mediatype:texts`);
+  if (b.title) queries.push(`${b.title}${author ? " " + author : ""} AND mediatype:texts`);
+  const seen = new Set();
+  const urls = [];
+  for (const q of queries) {
+    const data = await fetchJson(
+      `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}` +
+      `&fl[]=identifier&rows=10&output=json`);
+    for (const d of (data?.response?.docs || [])) {
+      if (d.identifier && !seen.has(d.identifier)) {
+        seen.add(d.identifier);
+        urls.push(`https://archive.org/services/img/${d.identifier}`);
+        if (urls.length >= n) return urls;
+      }
+    }
+    if (urls.length) return urls.slice(0, n);
+  }
+  return urls.slice(0, n);
+}
+
+// Gutendex (Project Gutenberg): kamu malı klasikler.
+async function gutendexSearchCovers(b, n) {
+  const author = firstAuthorOf(b);
+  const queries = [];
+  if (b.title && author) queries.push(`${b.title} ${author}`);
+  if (b.title) queries.push(b.title);
+  const seen = new Set();
+  const urls = [];
+  for (const q of queries) {
+    const data = await fetchJson(`https://gutendex.com/books?search=${encodeURIComponent(q)}`);
+    for (const item of (data?.results || [])) {
+      const img = item.formats?.["image/jpeg"];
+      if (img && !seen.has(img)) {
+        seen.add(img);
+        urls.push(img);
+        if (urls.length >= n) return urls;
+      }
+    }
+    if (urls.length) return urls.slice(0, n);
+  }
+  return urls.slice(0, n);
+}
+
+// Apple Books: anahtarsız ama CORS yok → JSONP (script etiketi).
+function appleSearchCovers(b, n) {
+  const author = firstAuthorOf(b);
+  const term = b.title ? `${b.title}${author ? " " + author : ""}` : "";
+  if (!term) return Promise.resolve([]);
+  return new Promise((res) => {
+    const script = document.createElement("script");
+    const cb = `ckAppleCb${Date.now().toString(36)}${Math.floor(Math.random() * 1e6)}`;
+    const cleanup = () => { clearTimeout(timer); delete window[cb]; script.remove(); };
+    const timer = setTimeout(() => { cleanup(); res([]); }, 15000);
+    window[cb] = (data) => {
+      const urls = [];
+      for (const item of (data?.results || [])) {
+        const art = item.artworkUrl100 || item.artworkUrl60;
+        if (art) {
+          const u = art.replace(/\d+x\d+bb\.jpg/, "300x300bb.jpg");
+          if (!urls.includes(u)) urls.push(u);
+          if (urls.length >= n) break;
+        }
+      }
+      cleanup();
+      res(urls);
+    };
+    script.onerror = () => { cleanup(); res([]); };
+    script.src = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}` +
+      `&media=ebook&limit=10&callback=${cb}`;
+    document.head.appendChild(script);
+  });
+}
+
+// Başlık+yazara göre kapak adayları: 5 kaynak paralel,
 // yüklenebilenler, Open Library öncelikli, en çok n tane.
-async function searchCovers(b, n = 4) {
-  const [ol, gb] = await Promise.all([olSearchCovers(b, n), gbSearchCovers(b, n)]);
-  const merged = [...ol, ...gb.filter((u) => !ol.includes(u))].slice(0, 8);
+async function searchCovers(b, n = 6) {
+  const [ol, gb, ar, gx, ap] = await Promise.all([
+    olSearchCovers(b, n), gbSearchCovers(b, n), archiveSearchCovers(b, n),
+    gutendexSearchCovers(b, n), appleSearchCovers(b, n),
+  ]);
+  const merged = [];
+  for (const u of [...ol, ...gb, ...ar, ...gx, ...ap]) {
+    if (!merged.includes(u)) merged.push(u);
+    if (merged.length >= 10) break;
+  }
   const good = new Set();
   await Promise.all(merged.map(async (u) => { if (await imageLoads(u)) good.add(u); }));
   return merged.filter((u) => good.has(u)).slice(0, n);
