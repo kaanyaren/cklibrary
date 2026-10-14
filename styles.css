@@ -19,7 +19,7 @@
 
   --ok:  #2c5e46;
 
-  --font-serif:  "Caudex", Georgia, "Times New Roman", serif;
+  --font-serif:  "Taviraj", Georgia, "Times New Roman", serif;
   --font-sans:   "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --r: 3px;
@@ -27,6 +27,29 @@
   --shadow-lift: 0 3px 9px -4px rgba(61, 45, 30, .38);
 
   --pad: clamp(1rem, 4vw, 2rem);
+}
+
+/* Koyu tema — aynı dilin gece karşılığı: sıcak kömür + açık mürekkep + aydınlık bordo */
+:root[data-theme="dark"] {
+  --paper:        #1c1713;
+  --paper-raise:  #262019;
+  --paper-recess: #14100c;
+
+  --ink:       #f1e8d8;
+  --ink-soft:  #d3c6b2;
+  --ink-faint: #a99a85;
+
+  --accent:      #d9988a;
+  --accent-deep: #f0c4b6;
+  --accent-wash: #3d2a25;
+
+  --line:      #4e4438;
+  --line-soft: #3a332b;
+
+  --ok:  #8fc2a4;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, .45);
+  --shadow-lift: 0 6px 18px -6px rgba(0, 0, 0, .6);
 }
 
 * { box-sizing: border-box; }
