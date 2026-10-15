@@ -584,7 +584,7 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; letter
   content-visibility: auto;
   contain-intrinsic-size: auto 120px;
   display: grid;
-  grid-template-columns: var(--cover-w, 4.1rem) minmax(0, 1fr);
+  grid-template-columns: 6.5rem minmax(0, 1fr);
   gap: 1rem;
   width: 100%;
   text-align: left;
@@ -610,7 +610,7 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; letter
   border: 1px solid var(--line);
 }
 .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Listede kapak genişliği JS ile kart yüksekliğinden türetilir (--cover-w); 2:3 korunur. */
+/* Liste kartında kapak sütunu sabit (6.5rem) → tüm kapaklar aynı boyut, 2:3 oran korunur. */
 .book > .cover { width: 100%; }
 .cover-tile {
   position: absolute; inset: 0;
@@ -1379,7 +1379,3 @@ html, body { overflow-x: clip; }
 .breakdown { order: -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; }
 /* Puan space-between ile sağa yaslanır (dar kartta alt satıra geçse de sağda kalır). */
 .book-foot .score { margin-left: auto; }
-
-/* ── Kapak ölçümü (2026-10-15): content-visibility ekran dışı kartları 120px
-   varsayıyor; fitCardCovers() ölçerken gerçek boyutta çizmek için bu sınıfı ekler. ── */
-.shelf.is-fitting .book { content-visibility: visible; }
