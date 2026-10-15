@@ -41,7 +41,7 @@ try {
   const reader = new ZX.BrowserMultiFormatOneDReader();
   check("ZXing yüklendi + okuyucu kuruldu", true, "OK");
 
-  // EAN-13 kodlanıp canvas'a çizilir, sahte kamera akışı olarak okutulur.
+  // Gerçek kamera karesi taklidi: 1920x1080 karede ortada EAN-13.
   const L = {0:"0001101",1:"0011001",2:"0010011",3:"0111101",4:"0100011",5:"0110001",6:"0101111",7:"0111011",8:"0110111",9:"0001011"};
   const G = {0:"0100111",1:"0110011",2:"0011011",3:"0100001",4:"0011101",5:"0111001",6:"0000101",7:"0010001",8:"0001001",9:"0010111"};
   const R = {0:"1110010",1:"1100110",2:"1101100",3:"1000010",4:"1011100",5:"1001110",6:"1010000",7:"1000100",8:"1001000",9:"1110100"};
@@ -52,25 +52,48 @@ try {
   bits += "01010";
   for (let i = 7; i <= 12; i++) bits += R[digits[i]];
   bits += "101";
-  const scale = 4, quiet = 20, canvas = document.getElementById("barcode");
-  canvas.width = (bits.length + quiet * 2) * scale; canvas.height = 200;
+  const VW = 1920, VH = 1080, canvas = document.getElementById("barcode");
+  canvas.width = VW; canvas.height = VH;
   const ctx = canvas.getContext("2d");
   const draw = () => {
-    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const modW = 6, bw = bits.length * modW, ox = Math.round((VW - bw) / 2), oy = Math.round(VH * 0.3), bh = Math.round(VH * 0.4);
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, VW, VH);
     ctx.fillStyle = "#000";
-    for (let i = 0; i < bits.length; i++) if (bits[i] === "1") ctx.fillRect((quiet + i) * scale, 10, scale, 180);
+    for (let i = 0; i < bits.length; i++) if (bits[i] === "1") ctx.fillRect(ox + i * modW, oy, modW, bh);
   };
   draw(); const repaint = setInterval(draw, 100);
-  const video = document.createElement("video"); video.muted = true; video.playsInline = true;
-  const decoded = await new Promise(async (resolve) => {
-    const t = setTimeout(() => resolve(null), 8000);
-    try {
-      await reader.decodeFromStream(canvas.captureStream(5), video, (res) => { if (res) { clearTimeout(t); resolve(res.getText()); } });
-    } catch (e) { clearTimeout(t); resolve("HATA " + e.name + ": " + e.message); }
-  });
+  const video = document.createElement("video");
+  video.muted = true; video.playsInline = true; video.width = 320;
+  video.style.cssText = "width:320px;background:#111";
+  document.body.appendChild(video);
+  video.srcObject = canvas.captureStream(30);
+  await video.play();
+
+  // app.js'teki startZxingScan döngüsünün AYNISI (ROI kırpma + 800px + 100 ms tick).
+  const cv = document.createElement("canvas");
+  const cx = cv.getContext("2d", { willReadFrequently: true });
+  const t0 = performance.now();
+  let tries = 0, decoded = null;
+  while (performance.now() - t0 < 5000) {
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (vw && vh) {
+      await new Promise((r) => setTimeout(r, 100)); // tick beklemesi
+      tries++;
+      const sw = Math.round(vw * 0.8), sh = Math.round(vh * 0.8);
+      const dw = Math.min(800, sw), dh = Math.round((dw * sh) / sw);
+      if (cv.width !== dw || cv.height !== dh) { cv.width = dw; cv.height = dh; }
+      cx.drawImage(video, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, dw, dh);
+      try { const res = reader.decodeFromCanvas(cv); if (res) { decoded = res.getText(); break; } } catch { /* barkod yok */ }
+    } else {
+      await new Promise((r) => setTimeout(r, 50));
+    }
+  }
   clearInterval(repaint);
   try { reader.reset(); } catch { /* yoksay */ }
+  const ms = Math.round(performance.now() - t0);
   check("EAN-13 çözüldü", decoded === digits, (decoded ?? "okunamadı") + " (beklenen " + digits + ")");
+  facts("Tanıma süresi", ms + " ms · " + tries + " deneme (uygulamadakiyle aynı döngü)");
+  check("Tanıma hızı < 500 ms", ms < 500, ms + " ms");
 } catch (e) {
   check("ZXing yüklendi + okuyucu kuruldu", false, e.name + ": " + e.message);
 }
