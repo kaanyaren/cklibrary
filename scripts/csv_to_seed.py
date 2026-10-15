@@ -10,8 +10,15 @@ CSV_PATH = os.path.join(REPO, "library_20261013_163504.csv")
 OUT_PATH = os.path.join(REPO, "books_seed.json")
 
 
+MOJIBAKE_MAP = str.maketrans({
+    "Ý": "İ", "ý": "ı",
+    "Þ": "Ş", "þ": "ş",
+    "Ð": "Ğ", "ð": "ğ",
+})
+
+
 def clean(v):
-    return (v or "").strip()
+    return (v or "").translate(MOJIBAKE_MAP).strip()
 
 
 def build(rows):

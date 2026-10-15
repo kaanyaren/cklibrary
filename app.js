@@ -501,7 +501,9 @@ function renderShelf() {
     return;
   }
 
-  for (const b of list) shelf.append(bookCard(b));
+  const frag = document.createDocumentFragment();
+  for (const b of list) frag.append(bookCard(b));
+  shelf.append(frag);
 }
 
 function bookCard(b) {
@@ -522,7 +524,8 @@ function bookCard(b) {
   const publine = [b.publisher, b.publish_date].filter(Boolean).join(" · ");
   const addedBy = b.created_by ? displayName(b.created_by) : null;
 
-  const card = el("article", { class: "book book-entry", role: "button", tabindex: "0", "aria-label": b.title },
+  const card = el("article", { class: "book book-entry", role: "button", tabindex: "0",
+                               "data-book-id": b.id, "aria-label": b.title },
     el("span", { class: "read-flag is-" + myReadStatus(b.id),
                  text: { read: "okudum", reading: "okuyorum", unread: "okumadım" }[myReadStatus(b.id)] }),
     coverNode(b, "S"),
@@ -538,11 +541,6 @@ function bookCard(b) {
           el("span", { class: "score-count", text: count ? `${count} oy` : "oy yok" })),
         breakdown)));
 
-  const open = () => openDetail(b.id);
-  card.addEventListener("click", open);
-  card.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
-  });
   return card;
 }
 
@@ -1104,13 +1102,13 @@ bookForm.addEventListener("submit", async (e) => {
   const pages = pagesRaw ? parseInt(pagesRaw, 10) : null;
 
   const fields = {
-    title,
-    creators: $("f-creators").value.trim(),
-    publisher: $("f-publisher").value.trim(),
+    title: fixTurkishMojibake(title),
+    creators: fixTurkishMojibake($("f-creators").value.trim()),
+    publisher: fixTurkishMojibake($("f-publisher").value.trim()),
     publish_date: $("f-date").value.trim(),
     isbn13: $("f-isbn13").value.trim().replace(/[^0-9Xx]/g, ""),
     isbn10: $("f-isbn10").value.trim().replace(/[^0-9Xx]/g, ""),
-    description: $("f-description").value.trim(),
+    description: fixTurkishMojibake($("f-description").value.trim()),
     pages: Number.isFinite(pages) ? pages : null,
   };
 
@@ -1434,9 +1432,17 @@ async function startZxingScan() {
 
 async function lookupIsbn(isbn) {
   // Sıra: Open Library → Google Books (isbn:) → Kitapyurdu + D&R (proxy, sessizce boş dönebilir).
-  try { const ol = await lookupIsbnOL(isbn); if (ol?.title) return ol; } catch { /* sonraki kaynağa düş */ }
-  try { const gb = await lookupIsbnGB(isbn); if (gb?.title) return gb; } catch { /* sonraki kaynağa düş */ }
-  try { return await lookupIsbnTR(isbn); } catch { return null; }
+  let res = null;
+  try { const ol = await lookupIsbnOL(isbn); if (ol?.title) res = ol; } catch { /* sonraki kaynağa düş */ }
+  if (!res) { try { const gb = await lookupIsbnGB(isbn); if (gb?.title) res = gb; } catch { /* sonraki kaynağa düş */ } }
+  if (!res) { try { res = await lookupIsbnTR(isbn); } catch { res = null; } }
+  if (!res) return null;
+  return {
+    ...res,
+    title: fixTurkishMojibake(res.title),
+    creators: fixTurkishMojibake(res.creators),
+    publisher: fixTurkishMojibake(res.publisher),
+  };
 }
 
 async function lookupIsbnOL(isbn) {
@@ -1514,9 +1520,9 @@ function bookInfoFromNode(node) {
   const pages = Number.isInteger(node.numberOfPages) ? node.numberOfPages
     : (Number.isInteger(parseInt(node.numberOfPages, 10)) ? parseInt(node.numberOfPages, 10) : null);
   return {
-    title: node.name || "",
-    creators: creators || "",
-    publisher: publisher || "",
+    title: fixTurkishMojibake(node.name || ""),
+    creators: fixTurkishMojibake(creators || ""),
+    publisher: fixTurkishMojibake(publisher || ""),
     publish_date: (String(node.datePublished || "").match(/\d{4}/) || [""])[0],
     pages,
     isbn: String(node.isbn || "").replace(/\D/g, ""),
@@ -1844,7 +1850,7 @@ async function archiveSearchCovers(b, n) {
   for (const q of queries) {
     const data = await fetchJson(
       `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}` +
-      `&fl[]=identifier&rows=10&output=json`);
+      `&fl[]=identifier&rows=10&output=json`, 6000);
     for (const d of (data?.response?.docs || [])) {
       if (d.identifier && !seen.has(d.identifier)) {
         seen.add(d.identifier);
@@ -1881,8 +1887,18 @@ async function gutendexSearchCovers(b, n) {
   return urls.slice(0, n);
 }
 
+function fixTurkishMojibake(s) {
+  if (!s) return "";
+  const map = {
+    'Ý': 'İ', 'ý': 'ı',
+    'Þ': 'Ş', 'þ': 'ş',
+    'Ð': 'Ğ', 'ð': 'ğ'
+  };
+  return String(s).replace(/[ÝýÞþÐð]/g, (c) => map[c] || c);
+}
+
 function stripHtml(s) {
-  return String(s || "").replace(/<[^>]*>/g, "").replace(/&nbsp;|&#xa0;/g, " ").trim();
+  return fixTurkishMojibake(String(s || "").replace(/<[^>]*>/g, "").replace(/&nbsp;|&#xa0;/g, " ").trim());
 }
 
 // Open Library: search → edition/work kaydından açıklama.
@@ -2030,10 +2046,10 @@ async function archiveSearchSummaries(b, n = 2) {
   for (const q of queries) {
     const data = await fetchJson(
       `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}` +
-      `&fl[]=identifier&rows=10&output=json`);
+      `&fl[]=identifier&rows=10&output=json`, 6000);
     for (const d of (data?.response?.docs || [])) {
       if (!d.identifier) continue;
-      const meta = await fetchJson(`https://archive.org/metadata/${d.identifier}`);
+      const meta = await fetchJson(`https://archive.org/metadata/${d.identifier}`, 6000);
       const raw = meta?.metadata?.description;
       const text = stripHtml(Array.isArray(raw) ? raw[0] : raw);
       const key = normSummary(text);
@@ -2665,6 +2681,7 @@ summariesApply.addEventListener("click", async () => {
 });
 
 async function applySummary(bookId, text) {
+  text = fixTurkishMojibake(text);
   const key = `sum:${bookId}`;
   if (writeBusy.has(key)) return;
   const b = getBook(bookId);
@@ -2680,13 +2697,13 @@ async function applySummary(bookId, text) {
   confirmPending.delete(key);
   writeBusy.add(key);
   b.description = text;
-  rerenderDetailPreserving(bookId);
+  renderDetail(bookId);
   try {
     await updateDoc(doc(db, "books", bookId), { description: text });
   } catch (err) {
     b.description = prev;
     confirmPending.set(key, text);
-    rerenderDetailPreserving(bookId);
+    renderDetail(bookId);
     showDetailError(writeErrorMessage(err), () => applySummary(bookId, text));
     writeBusy.delete(key); return;
   }
@@ -2694,7 +2711,7 @@ async function applySummary(bookId, text) {
   showUndo("Açıklama değişti.", async () => {
     try { await updateDoc(doc(db, "books", bookId), { description: prev }); getBook(bookId).description = prev; }
     catch (err) { showDetailError(writeErrorMessage(err), null); return; }
-    rerenderDetailPreserving(bookId);
+    renderDetail(bookId);
   });
 }
 
@@ -2732,6 +2749,23 @@ searchInput.addEventListener("input", () => {
     renderShelf();
   }, 150);
 });
+// Tek dinleyici: her kart için ayrı click/keydown eklemek yerine (429+ dinleyici)
+// event delegation — liste yeniden çizildiğinde listener yeniden bağlanmaz.
+shelf.addEventListener("click", (e) => {
+  const card = e.target.closest(".book-entry");
+  if (!card || !shelf.contains(card)) return;
+  const id = card.getAttribute("data-book-id");
+  if (id) openDetail(id);
+});
+shelf.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const card = e.target.closest(".book-entry");
+  if (!card || !shelf.contains(card)) return;
+  e.preventDefault();
+  const id = card.getAttribute("data-book-id");
+  if (id) openDetail(id);
+});
+
 filterButtons.forEach((btn) => btn.addEventListener("click", () => {
   state.filter = btn.dataset.filter;
   filterButtons.forEach((b) => b.classList.toggle("is-active", b === btn));
