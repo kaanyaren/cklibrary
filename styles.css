@@ -848,6 +848,17 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; letter
 
 /* ── KAPAK ÖNERİLERİ ────────────────────────────────── */
 .covers-body { display: grid; gap: .7rem; }
+.stage-log {
+  list-style: none; margin: 0; padding: .55rem .7rem;
+  display: grid; gap: .2rem;
+  max-height: 9rem; overflow-y: auto;
+  border: 1px dashed var(--line); border-radius: var(--r);
+  background: var(--paper);
+  font-size: .82rem; color: var(--ink-soft);
+}
+.stage-log:empty { display: none; }
+.stage-log li { overflow-wrap: anywhere; }
+.stage-log li:first-child { color: var(--ink); }
 .cover-row {
   display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto;
   gap: .7rem; align-items: center;

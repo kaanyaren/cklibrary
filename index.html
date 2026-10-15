@@ -25,7 +25,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Taviraj:ital,wght@0,400;0,700;1,400&family=Public+Sans:wght@400;600;700&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261014f" />
+  <link rel="stylesheet" href="styles.css?v=20261015a" />
 </head>
 <body>
   <noscript>
@@ -263,6 +263,7 @@
         <button type="button" class="detail-close" data-close-covers>Kapat</button>
       </div>
       <p id="covers-status" class="scan-status" role="status">Hazırlanıyor…</p>
+      <ul id="covers-log" class="stage-log" aria-label="Kapak arama aşamaları"></ul>
       <div id="covers-body" class="covers-body"></div>
       <div class="form-actions covers-actions">
         <label class="cover-all"><input type="checkbox" id="covers-select-all" checked disabled /> Tümünü seç</label>
@@ -279,6 +280,7 @@
         <button type="button" class="detail-close" data-close-summaries>Kapat</button>
       </div>
       <p id="summaries-status" class="scan-status" role="status">Hazırlanıyor…</p>
+      <ul id="summaries-log" class="stage-log" aria-label="Özet arama aşamaları"></ul>
       <div id="summaries-body" class="covers-body"></div>
       <div class="form-actions covers-actions">
         <label class="cover-all"><input type="checkbox" id="summaries-select-all" checked disabled /> Tümünü seç</label>
@@ -287,6 +289,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="app.js?v=20261014e"></script>
+  <script type="module" src="app.js?v=20261015a"></script>
 </body>
 </html>

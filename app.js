@@ -676,8 +676,8 @@ function renderDetail(bookId) {
       sumBtn.disabled = true;
       sumBtn.textContent = "Aranıyor…";
       sumOpts.innerHTML = "";
-      sumStatus.textContent = "";
-      const found = await searchSummaries(b);
+      sumStatus.textContent = "Hazırlanıyor…";
+      const found = await searchSummaries(b, 8, (m) => { sumStatus.textContent = m; });
       sumBtn.disabled = false;
       sumBtn.textContent = "Özet bul";
       if (!found.length) { sumStatus.textContent = "Özet bulunamadı."; return; }
@@ -720,7 +720,8 @@ function renderDetail(bookId) {
       searchBtn.disabled = true;
       searchBtn.textContent = "Aranıyor…";
       covOpts.innerHTML = "";
-      const urls = await searchCovers(b, 6);
+      covStatus.textContent = "Hazırlanıyor…";
+      const urls = await searchCovers(b, 6, (m) => { covStatus.textContent = m; });
       searchBtn.disabled = false;
       searchBtn.textContent = "Kapak ara";
       if (!urls.length) { covStatus.textContent = "Kapak bulunamadı."; return; }
@@ -1560,6 +1561,16 @@ function firstAuthorOf(b) {
   return String(b.creators || "").split(",")[0].trim().replace(/\bGreda\b/gi, "Gerda");
 }
 
+// Aşama günlüğü: toplu diyaloglardaki yan liste + tekil durum satırı birlikte beslenir.
+function stageLog(listEl, msg, keep = 40) {
+  if (!listEl) return;
+  const li = document.createElement("li");
+  li.textContent = msg;
+  listEl.prepend(li);
+  while (listEl.children.length > keep) listEl.lastChild.remove();
+}
+const shortTitle = (b) => String(b?.title || "(başlıksız)").slice(0, 40);
+
 // Open Library: önce başlık+yazar, boşsa başlıkla dene.
 async function olSearchCovers(b, n) {
   const queries = [];
@@ -1849,10 +1860,17 @@ function normSummary(s) {
 
 // Özet adayları: 5 kaynak paralel, kaynak başına 2, toplam en çok 8.
 // İlk 5'i boşsa son çare: Kitapyurdu + D&R (CORS proxy üzerinden, sessizce boş dönebilir).
-async function searchSummaries(b, n = 8) {
+async function searchSummaries(b, n = 8, onStage = null) {
+  const say = (msg) => { try { onStage?.(msg); } catch { /* yoksay */ } };
+  say("5 kaynakta paralel aranıyor: Google, Open Library, Apple, Gutendex, Archive…");
+  const wrap = (label, p) => p.then((r) => {
+    say(`${label}: ${r.length ? `${r.length} aday` : "yok"}`);
+    return r;
+  });
   const [gb, ol, ap, gx, ar] = await Promise.all([
-    gbSearchSummaries(b, 2), olSearchSummaries(b, 2), appleSearchSummaries(b, 2),
-    gutendexSearchSummaries(b, 2), archiveSearchSummaries(b, 2),
+    wrap("Google Books", gbSearchSummaries(b, 2)), wrap("Open Library", olSearchSummaries(b, 2)),
+    wrap("Apple Books", appleSearchSummaries(b, 2)),
+    wrap("Gutendex", gutendexSearchSummaries(b, 2)), wrap("Archive.org", archiveSearchSummaries(b, 2)),
   ]);
   const out = [];
   const seen = new Set();
@@ -1866,6 +1884,7 @@ async function searchSummaries(b, n = 8) {
   }
   if (out.length) return out;
   // ponytail: KY/D&R kırılgan (proxy + HTML parse); sadece ilk 5 boşsa, hata = boş liste
+  say("Son çare: Kitapyurdu + D&R deneniyor…");
   for (const s of await trScrapeSummaries(b, 2)) {
     const key = normSummary(s.text);
     if (seen.has(key)) continue;
@@ -2031,18 +2050,28 @@ async function amazonSearchCovers(b, n) {
 
 // Başlık+yazara göre kapak adayları: 6 kaynak paralel,
 // yüklenebilenler, Open Library öncelikli, en çok n tane.
-async function searchCovers(b, n = 6) {
+async function searchCovers(b, n = 6, onStage = null) {
+  const say = (msg) => { try { onStage?.(msg); } catch { /* yoksay */ } };
+  say("6 kaynakta paralel aranıyor: Open Library, Google, Archive, Gutendex, Apple, Amazon…");
+  const wrap = (label, p) => p.then((r) => {
+    say(`${label}: ${r.length ? `${r.length} aday` : "yok"}`);
+    return r;
+  });
   const [ol, gb, ar, gx, ap, am] = await Promise.all([
-    olSearchCovers(b, n), gbSearchCovers(b, n), archiveSearchCovers(b, n),
-    gutendexSearchCovers(b, n), appleSearchCovers(b, n), amazonSearchCovers(b, n),
+    wrap("Open Library", olSearchCovers(b, n)), wrap("Google Books", gbSearchCovers(b, n)),
+    wrap("Archive.org", archiveSearchCovers(b, n)), wrap("Gutendex", gutendexSearchCovers(b, n)),
+    wrap("Apple Books", appleSearchCovers(b, n)), wrap("Amazon", amazonSearchCovers(b, n)),
   ]);
   const merged = [];
   for (const u of [...ol, ...gb, ...ar, ...gx, ...ap, ...am]) {
     if (!merged.includes(u)) merged.push(u);
     if (merged.length >= 12) break;
   }
+  if (!merged.length) { say("Hiç aday bulunamadı."); return []; }
+  say(`${merged.length} aday yüklenebilir mi diye denetleniyor…`);
   const good = new Set();
   await Promise.all(merged.map(async (u) => { if (await imageLoads(u)) good.add(u); }));
+  say(`${good.size} kapak yüklenebilir.`);
   return merged.filter((u) => good.has(u)).slice(0, n);
 }
 
@@ -2054,42 +2083,51 @@ async function searchCovers(b, n = 6) {
 // 5. Archive.org
 // 6. Gutendex
 // İlk çalışan kapak bulunduğu an sonraki kaynaklara sorgu atılmaz.
-async function findFirstCover(b) {
+async function findFirstCover(b, onStage = null) {
+  const say = (msg) => { try { onStage?.(msg); } catch { /* yoksay */ } };
   if (b.isbn13) {
+    say("ISBN kapağı deneniyor (Open Library)…");
     const olUrl = `https://covers.openlibrary.org/b/isbn/${b.isbn13}-M.jpg`;
-    if (await imageLoads(olUrl)) return olUrl;
+    if (await imageLoads(olUrl)) { say("ISBN kapağı bulundu."); return olUrl; }
   }
   const isbn10 = isbn13to10(b.isbn10 || b.isbn13);
   if (isbn10) {
+    say("ISBN kapağı deneniyor (Amazon)…");
     const amzUrl = `https://images-na.ssl-images-amazon.com/images/P/${isbn10}.01._SCLZZZZZZZ_.jpg`;
-    if (await imageLoads(amzUrl)) return amzUrl;
+    if (await imageLoads(amzUrl)) { say("ISBN kapağı bulundu."); return amzUrl; }
   }
+  say("Open Library aranıyor…");
   const ol = await olSearchCover(b);
-  if (ol) return ol;
+  if (ol) { say("Open Library'de bulundu."); return ol; }
 
+  say("Google Books aranıyor…");
   const gb = (await gbSearchCovers(b, 1))[0];
-  if (gb && await imageLoads(gb)) return gb;
+  if (gb && await imageLoads(gb)) { say("Google Books'ta bulundu."); return gb; }
 
+  say("Apple Books aranıyor…");
   const ap = (await appleSearchCovers(b, 1))[0];
-  if (ap && await imageLoads(ap)) return ap;
+  if (ap && await imageLoads(ap)) { say("Apple Books'ta bulundu."); return ap; }
 
+  say("Archive.org aranıyor…");
   const ar = (await archiveSearchCovers(b, 1))[0];
-  if (ar && await imageLoads(ar)) return ar;
+  if (ar && await imageLoads(ar)) { say("Archive.org'da bulundu."); return ar; }
 
+  say("Gutendex aranıyor…");
   const gx = (await gutendexSearchCovers(b, 1))[0];
-  if (gx && await imageLoads(gx)) return gx;
+  if (gx && await imageLoads(gx)) { say("Gutendex'te bulundu."); return gx; }
 
+  say("Hiçbir kaynakta bulunamadı.");
   return null;
 }
 
 // Kapaklı kitap atlanır (ISBN kapağı canonical sayılır); kapaklı ama özel
 // cover_url'lu kitapta farklı kapak bulunursa değişiklik önerilir.
-async function proposeCover(b) {
+async function proposeCover(b, onStage = null) {
   const current = b.cover_url || null;
   const isbnUrl = b.isbn13 ? `https://covers.openlibrary.org/b/isbn/${b.isbn13}-M.jpg` : null;
   const isbnWorks = isbnUrl ? await imageLoads(isbnUrl) : false;
   if (isbnWorks && (!current || current === isbnUrl)) return null;
-  const alt = await findFirstCover(b);
+  const alt = await findFirstCover(b, onStage);
   if (!alt || alt === current) return null;
   return { id: b.id, title: b.title, creators: b.creators, url: alt, isNew: !current };
 }
@@ -2097,6 +2135,8 @@ async function proposeCover(b) {
 async function openCovers() {
   coverOffers = [];
   coversBody.innerHTML = "";
+  const coversLog = $("covers-log");
+  if (coversLog) coversLog.innerHTML = "";
   coversApply.disabled = true;
   coversSelectAll.disabled = true;
   coversStatus.textContent = "Hazırlanıyor…";
@@ -2105,12 +2145,26 @@ async function openCovers() {
   if (!cands.length) { coversStatus.textContent = "Kütüphane boş."; return; }
   let done = 0, found = 0;
   const queue = [...cands];
+  const paint = (current) => {
+    coversStatus.textContent = `Taranıyor… ${done}/${cands.length} · ${found} öneri` +
+      (current ? ` · şu an: “${shortTitle(current)}”` : "");
+  };
   const worker = async () => {
     while (queue.length) {
-      const p = await proposeCover(queue.pop());
-      if (p) { coverOffers.push(p); found++; }
+      const book = queue.pop();
+      paint(book);
+      stageLog(coversLog, `“${shortTitle(book)}” → ISBN denetleniyor…`);
+      const p = await proposeCover(book, (m) => {
+        coversStatus.textContent = `Taranıyor… ${done}/${cands.length} · ${found} öneri · “${shortTitle(book)}”: ${m}`;
+      });
+      if (p) {
+        coverOffers.push(p); found++;
+        stageLog(coversLog, `“${shortTitle(book)}” → öneri bulundu (${p.isNew ? "yeni" : "değişiklik"})`);
+      } else {
+        stageLog(coversLog, `“${shortTitle(book)}” → atlandı (kapaklı ya da bulunamadı)`);
+      }
       done++;
-      coversStatus.textContent = `Taranıyor… ${done}/${cands.length} · ${found} öneri`;
+      paint(null);
     }
   };
   await Promise.all([worker(), worker(), worker()]);
@@ -2230,9 +2284,9 @@ document.querySelectorAll("[data-close-summaries]").forEach((b) =>
   b.addEventListener("click", () => summariesDialog.close()));
 summariesDialog.addEventListener("click", (e) => { if (e.target === summariesDialog) summariesDialog.close(); });
 
-async function proposeSummary(b) {
+async function proposeSummary(b, onStage = null) {
   if (String(b.description || "").trim()) return null;
-  const found = await searchSummaries(b, 3);
+  const found = await searchSummaries(b, 3, onStage);
   const first = found[0];
   if (!first) return null;
   return { id: b.id, title: b.title, creators: b.creators, text: first.text, source: first.source };
@@ -2241,6 +2295,8 @@ async function proposeSummary(b) {
 async function openSummaries() {
   summaryOffers = [];
   summariesBody.innerHTML = "";
+  const summariesLog = $("summaries-log");
+  if (summariesLog) summariesLog.innerHTML = "";
   summariesApply.disabled = true;
   summariesSelectAll.disabled = true;
   summariesStatus.textContent = "Hazırlanıyor…";
@@ -2253,9 +2309,20 @@ async function openSummaries() {
   const worker = async () => {
     while (queue.length) {
       const b = queue.pop();
+      summariesStatus.textContent = `Taranıyor… ${done}/${cands.length} · ${found} öneri · şu an: “${shortTitle(b)}”`;
+      stageLog(summariesLog, `“${shortTitle(b)}” → kaynaklar taranıyor…`);
       let p = null;
-      try { p = await proposeSummary(b); } catch { p = null; }
-      if (p) { summaryOffers.push(p); found++; }
+      try {
+        p = await proposeSummary(b, (m) => {
+          summariesStatus.textContent = `Taranıyor… ${done}/${cands.length} · ${found} öneri · “${shortTitle(b)}”: ${m}`;
+        });
+      } catch { p = null; }
+      if (p) {
+        summaryOffers.push(p); found++;
+        stageLog(summariesLog, `“${shortTitle(b)}” → bulundu (${p.source}, ${p.text.length} karakter)`);
+      } else {
+        stageLog(summariesLog, `“${shortTitle(b)}” → bulunamadı`);
+      }
       done++;
       summariesStatus.textContent = `Taranıyor… ${done}/${cands.length} · ${found} öneri`;
     }
