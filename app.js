@@ -504,6 +504,44 @@ function renderShelf() {
   const frag = document.createDocumentFragment();
   for (const b of list) frag.append(bookCard(b));
   shelf.append(frag);
+  fitCardCovers();
+}
+
+// Kapak yüksekliği kart yüksekliğine eşit olsun ama 2:3 oranı bozulmasın:
+// genişlik = içerik yüksekliği × 2/3. Kart yüksekliği içeriğe (ve dolayısıyla
+// kapak genişliğine) bağlı olduğundan birkaç geçişte yakınsatılır.
+const COVER_MIN_CARD_W = 400;   // dar kartta (tek sütun mobil) kapak çok geniş kalır → varsayılan kapak
+const COVER_MAX_FRAC = 0.5;     // aşırı uzun başlıklarda kaçışı önleyen tavan
+function fitCardCovers() {
+  const cards = shelf.querySelectorAll(".book");
+  if (!cards.length) return;
+  const cs = getComputedStyle(cards[0]);
+  const padV = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+  // Ekran dışı kartlar content-visibility ile 120px varsayıldığından ölçüm için aç.
+  shelf.classList.add("is-fitting");
+  try {
+    for (let pass = 0; pass < 3; pass++) {
+      const widths = Array.from(cards, (card) => {
+        const cardW = card.getBoundingClientRect().width;
+        if (cardW < COVER_MIN_CARD_W) return null;
+        const contentH = card.clientHeight - padV;
+        return Math.max(16, Math.min(cardW * COVER_MAX_FRAC, Math.round(contentH * 2 / 3)));
+      });
+      let changed = false;
+      cards.forEach((card, i) => {
+        const w = widths[i];
+        if (w === null) {
+          if (card.style.getPropertyValue("--cover-w")) { card.style.removeProperty("--cover-w"); changed = true; }
+          return;
+        }
+        const v = w + "px";
+        if (card.style.getPropertyValue("--cover-w") !== v) { card.style.setProperty("--cover-w", v); changed = true; }
+      });
+      if (!changed) break;
+    }
+  } finally {
+    shelf.classList.remove("is-fitting");
+  }
 }
 
 function bookCard(b) {
@@ -524,13 +562,15 @@ function bookCard(b) {
   const publine = [b.publisher, b.publish_date].filter(Boolean).join(" · ");
   const addedBy = b.created_by ? displayName(b.created_by) : null;
 
+  const readFlag = el("span", { class: "read-flag is-" + myReadStatus(b.id),
+                 text: { read: "okudum", reading: "okuyorum", unread: "okumadım" }[myReadStatus(b.id)] });
+
   const card = el("article", { class: "book book-entry", role: "button", tabindex: "0",
                                "data-book-id": b.id, "aria-label": b.title },
-    el("span", { class: "read-flag is-" + myReadStatus(b.id),
-                 text: { read: "okudum", reading: "okuyorum", unread: "okumadım" }[myReadStatus(b.id)] }),
     coverNode(b, "S"),
     el("div", { class: "book-main" },
-      el("h3", { class: "book-title", text: b.title || "(başlıksız)" }),
+      // Bayrak başlığın içinde float: yalnızca ilk satırı daraltır, sağ boşluk rezervi gerekmez.
+      el("h3", { class: "book-title" }, readFlag, b.title || "(başlıksız)"),
       creators ? el("p", { class: "book-creators", text: creators }) : null,
       publine ? el("p", { class: "book-pub", text: publine }) : null,
       addedBy ? el("p", { class: "book-added", text: `Ekleyen: ${addedBy}` }) : null,
@@ -2765,6 +2805,15 @@ shelf.addEventListener("keydown", (e) => {
   const id = card.getAttribute("data-book-id");
   if (id) openDetail(id);
 });
+
+// Kapak genişlikleri kart genişliğine (dolayısıyla sütun sayısına) ve yazı tipi
+// ölçülerine bağlı; pencere değişince ve fontlar yüklenince yeniden hesapla.
+let coverFitTimer = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(coverFitTimer);
+  coverFitTimer = setTimeout(fitCardCovers, 150);
+});
+if (document.fonts?.ready) document.fonts.ready.then(() => fitCardCovers());
 
 filterButtons.forEach((btn) => btn.addEventListener("click", () => {
   state.filter = btn.dataset.filter;
