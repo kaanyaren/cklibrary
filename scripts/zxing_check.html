@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Barkod tarayıcı kontrolü</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; margin: 2rem; max-width: 42rem; }
+  .ok { color: #1a7f37; font-weight: 700; }
+  .fail { color: #b42318; font-weight: 700; }
+  dt { font-weight: 600; margin-top: .6rem; }
+  dd { margin: 0; font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<h1>Barkod tarayıcı kontrolü</h1>
+<p id="verdict">Çalışıyor…</p>
+<dl id="facts"></dl>
+<canvas id="barcode" hidden></canvas>
+
+<script type="module">
+// app.js'teki yedek tarayıcıyla AYNI kurulum: cihazda BarcodeDetector yoksa
+// (Safari/iPad) uygulama bu yolu kullanır. Bu sayfa iPad'de açılıp PASS verirse
+// canlı tarama yolu sağlam demektir. app.js'teki import/reader satırları
+// değişirse burayı da güncelle.
+const facts = (k, v) => {
+  const dt = document.createElement("dt"); dt.textContent = k;
+  const dd = document.createElement("dd"); dd.textContent = String(v);
+  document.getElementById("facts").append(dt, dd);
+};
+const verdict = document.getElementById("verdict");
+let pass = true;
+const check = (k, ok, v) => { facts(k, v); if (!ok) pass = false; };
+
+check("HTTPS (secure context)", window.isSecureContext, window.isSecureContext);
+check("Kamera API (getUserMedia)", !!navigator.mediaDevices?.getUserMedia, !!navigator.mediaDevices?.getUserMedia);
+check("BarcodeDetector (iOS'ta yok, normal)", "BarcodeDetector" in window, "BarcodeDetector" in window ? "var" : "yok → ZXing yedeği kullanılır");
+
+try {
+  const ZX = await import("https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm");
+  const reader = new ZX.BrowserMultiFormatOneDReader();
+  check("ZXing yüklendi + okuyucu kuruldu", true, "OK");
+
+  // EAN-13 kodlanıp canvas'a çizilir, sahte kamera akışı olarak okutulur.
+  const L = {0:"0001101",1:"0011001",2:"0010011",3:"0111101",4:"0100011",5:"0110001",6:"0101111",7:"0111011",8:"0110111",9:"0001011"};
+  const G = {0:"0100111",1:"0110011",2:"0011011",3:"0100001",4:"0011101",5:"0111001",6:"0000101",7:"0010001",8:"0001001",9:"0010111"};
+  const R = {0:"1110010",1:"1100110",2:"1101100",3:"1000010",4:"1011100",5:"1001110",6:"1010000",7:"1000100",8:"1001000",9:"1110100"};
+  const PAR = ["LLLLLL","LLGLGG","LLGGLG","LLGGGL","LGLLGG","LGGLLG","LGGGLL","LGLGLG","LGLGGL","LGGLGL"];
+  const digits = "9780306406157", par = PAR[+digits[0]];
+  let bits = "101";
+  for (let i = 1; i <= 6; i++) bits += ((par[i - 1] === "L") ? L : G)[digits[i]];
+  bits += "01010";
+  for (let i = 7; i <= 12; i++) bits += R[digits[i]];
+  bits += "101";
+  const scale = 4, quiet = 20, canvas = document.getElementById("barcode");
+  canvas.width = (bits.length + quiet * 2) * scale; canvas.height = 200;
+  const ctx = canvas.getContext("2d");
+  const draw = () => {
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#000";
+    for (let i = 0; i < bits.length; i++) if (bits[i] === "1") ctx.fillRect((quiet + i) * scale, 10, scale, 180);
+  };
+  draw(); const repaint = setInterval(draw, 100);
+  const video = document.createElement("video"); video.muted = true; video.playsInline = true;
+  const decoded = await new Promise(async (resolve) => {
+    const t = setTimeout(() => resolve(null), 8000);
+    try {
+      await reader.decodeFromStream(canvas.captureStream(5), video, (res) => { if (res) { clearTimeout(t); resolve(res.getText()); } });
+    } catch (e) { clearTimeout(t); resolve("HATA " + e.name + ": " + e.message); }
+  });
+  clearInterval(repaint);
+  try { reader.reset(); } catch { /* yoksay */ }
+  check("EAN-13 çözüldü", decoded === digits, (decoded ?? "okunamadı") + " (beklenen " + digits + ")");
+} catch (e) {
+  check("ZXing yüklendi + okuyucu kuruldu", false, e.name + ": " + e.message);
+}
+
+verdict.textContent = pass ? "PASS — tarama yolu bu cihazda çalışıyor." : "FAIL — yukarıdaki satıra bak.";
+verdict.className = pass ? "ok" : "fail";
+</script>
+</body>
+</html>

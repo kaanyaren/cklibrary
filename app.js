@@ -1204,7 +1204,7 @@ function alertWriteError(err) {
 
 // ── Barkod tarama (ISBN) ───────────────────────────────────────
 // Önce tarayıcının yerleşik BarcodeDetector'ı, yoksa ZXing (CDN, tembel yüklenir).
-// Okunan ISBN Open Library'de aranır, bulunan bilgi forma doldurulur.
+// Okunan ISBN sırayla Open Library → Google Books → Kitapyurdu/D&R'de aranır, bulunan bilgi forma doldurulur.
 const scanBtn = $("scan-btn");
 const scanDialog = $("scan-dialog");
 const scanVideo = $("scan-video");
@@ -1332,10 +1332,9 @@ async function handleScanFile() {
     }
     if (!raw) {
       const ZX = await import("https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm");
-      const reader = new ZX.BrowserMultiFormatReader(new Map([
-        [ZX.DecodeHintType.POSSIBLE_FORMATS,
-         [ZX.BarcodeFormat.EAN_13, ZX.BarcodeFormat.EAN_8, ZX.BarcodeFormat.UPC_A]],
-      ]));
+      // @zxing/browser DecodeHintType'ı export etmez (undefined → TypeError);
+      // 1D okuyucu EAN-13/EAN-8/UPC-A'yı zaten kapsar (Safari'de BarcodeDetector yok).
+      const reader = new ZX.BrowserMultiFormatOneDReader();
       try { raw = (await reader.decodeFromImageElement(img))?.getText() || null; }
       catch { raw = null; }
       finally { try { reader.reset(); } catch { /* yoksay */ } }
@@ -1374,10 +1373,7 @@ async function startNativeScan() {
 async function startZxingScan() {
   const ZX = await import("https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm");
   stopStream(); // ZXing kendi akışını açar
-  scanReader = new ZX.BrowserMultiFormatReader(new Map([
-    [ZX.DecodeHintType.POSSIBLE_FORMATS,
-     [ZX.BarcodeFormat.EAN_13, ZX.BarcodeFormat.EAN_8, ZX.BarcodeFormat.UPC_A]],
-  ]));
+  scanReader = new ZX.BrowserMultiFormatOneDReader();
   scanStatus.textContent = "Barkodu çerçevenin içine tut…";
   await scanReader.decodeFromConstraints(
     { video: { facingMode: { ideal: "environment" } }, audio: false },
@@ -1389,6 +1385,13 @@ async function startZxingScan() {
 }
 
 async function lookupIsbn(isbn) {
+  // Sıra: Open Library → Google Books (isbn:) → Kitapyurdu + D&R (proxy, sessizce boş dönebilir).
+  try { const ol = await lookupIsbnOL(isbn); if (ol?.title) return ol; } catch { /* sonraki kaynağa düş */ }
+  try { const gb = await lookupIsbnGB(isbn); if (gb?.title) return gb; } catch { /* sonraki kaynağa düş */ }
+  try { return await lookupIsbnTR(isbn); } catch { return null; }
+}
+
+async function lookupIsbnOL(isbn) {
   const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
   if (!res.ok) return null;
   const rec = (await res.json())[`ISBN:${isbn}`];
@@ -1400,6 +1403,97 @@ async function lookupIsbn(isbn) {
     publish_date: (String(rec.publish_date || "").match(/\d{4}/) || [""])[0],
     pages: Number.isInteger(rec.number_of_pages) ? rec.number_of_pages : null,
   };
+}
+
+// Google Books: q=isbn:… (anahtarsız, CORS serbest; özet/kapak aramalarındaki fetchJson kullanılır).
+async function lookupIsbnGB(isbn) {
+  const data = await fetchJson(
+    `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}&maxResults=1` +
+    `&fields=items(volumeInfo/title,volumeInfo/authors,volumeInfo/publisher,volumeInfo/publishedDate,volumeInfo/pageCount)`);
+  const v = data?.items?.[0]?.volumeInfo;
+  if (!v?.title) return null;
+  return {
+    title: v.title || "",
+    creators: (v.authors || []).filter(Boolean).join(", "),
+    publisher: v.publisher || "",
+    publish_date: (String(v.publishedDate || "").match(/\d{4}/) || [""])[0],
+    pages: Number.isInteger(v.pageCount) ? v.pageCount : null,
+  };
+}
+
+// Kitapyurdu + D&R: ISBN ile arama → ilk ürün → JSON-LD Book künyesi.
+// ponytail: arama sayfaları JS-render + proxy kırılgan; yanlış kitap engeli için isbn eşleşmesi şart, hata = null.
+async function lookupIsbnTR(isbn) {
+  const digits = String(isbn || "").replace(/\D/g, "");
+  if (!digits) return null;
+  for (const lookup of [kyIsbnBook, drIsbnBook]) {
+    try {
+      const b = await lookup(digits);
+      if (b?.title) return b;
+    } catch { /* sessizce sonrakine düş */ }
+  }
+  return null;
+}
+
+// Ürün HTML'indeki JSON-LD Book düğümünden künye (özet aramadaki parseProductDescription'ın künye karşılığı).
+function bookNodeFromHtml(html) {
+  const isBook = (t) => {
+    const types = Array.isArray(t) ? t : [t];
+    return types.some((x) => String(x || "").toLocaleLowerCase("tr").includes("book"));
+  };
+  for (const m of String(html || "").matchAll(
+    /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+    try {
+      const blocks = JSON.parse(m[1]);
+      for (const blk of (Array.isArray(blocks) ? blocks : [blocks])) {
+        const graphs = Array.isArray(blk["@graph"]) ? blk["@graph"] : [blk];
+        for (const node of graphs) {
+          if (isBook(node?.["@type"])) return node;
+        }
+      }
+    } catch { /* bozuk JSON-LD'yi atla */ }
+  }
+  return null;
+}
+
+function bookInfoFromNode(node) {
+  if (!node) return null;
+  const author = node.author;
+  const creators = Array.isArray(author)
+    ? author.map((a) => (typeof a === "string" ? a : a?.name)).filter(Boolean).join(", ")
+    : (author?.name || (typeof author === "string" ? author : ""));
+  const publisher = node.publisher?.name || (typeof node.publisher === "string" ? node.publisher : "");
+  const pages = Number.isInteger(node.numberOfPages) ? node.numberOfPages
+    : (Number.isInteger(parseInt(node.numberOfPages, 10)) ? parseInt(node.numberOfPages, 10) : null);
+  return {
+    title: node.name || "",
+    creators: creators || "",
+    publisher: publisher || "",
+    publish_date: (String(node.datePublished || "").match(/\d{4}/) || [""])[0],
+    pages,
+    isbn: String(node.isbn || "").replace(/\D/g, ""),
+  };
+}
+
+async function kyIsbnBook(digits) {
+  const searchHtml = await fetchTextViaProxy(
+    `https://www.kitapyurdu.com/index.php?route=product/list&filter_name=${encodeURIComponent(digits)}`);
+  const link = searchHtml?.match(/\/kitap\/[a-z0-9-]+\/\d+\.html/);
+  if (!link) return null;
+  const info = bookInfoFromNode(bookNodeFromHtml(await fetchTextViaProxy(`https://www.kitapyurdu.com${link[0]}`)));
+  if (!info?.title || (info.isbn && info.isbn !== digits)) return null;
+  return info;
+}
+
+async function drIsbnBook(digits) {
+  const searchHtml = await fetchTextViaProxy(
+    `https://www.dr.com.tr/search?q=${encodeURIComponent(digits)}`);
+  const link = searchHtml?.match(/\/[^"\s]*?urunno=\d+/);
+  if (!link) return null;
+  const url = link[0].startsWith("http") ? link[0] : `https://www.dr.com.tr${link[0]}`;
+  const info = bookInfoFromNode(bookNodeFromHtml(await fetchTextViaProxy(url)));
+  if (!info?.title || (info.isbn && info.isbn !== digits)) return null;
+  return info;
 }
 
 async function handleBarcode(raw) {
