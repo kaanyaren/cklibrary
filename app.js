@@ -10,10 +10,14 @@ import {
   doc, setDoc, addDoc, updateDoc, deleteDoc, deleteField,
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL,
+} from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 // CONTRACT: roller e-postadan türetilir (UID'den değil).
 const ROLES = {
@@ -167,6 +171,41 @@ function coverNode(book, size = "M") {
     wrap.append(letterTile(book.title));
   }
   return wrap;
+}
+
+// Detay kapakları: tıklayınca büyük sürüm lightbox'ta açılır (harf-kapak hariç).
+const lightboxDialog = $("cover-lightbox");
+const lightboxImg = $("cover-lightbox-img");
+const lightboxCap = $("cover-lightbox-cap");
+function largeCoverUrl(src) {
+  return String(src || "").replace(/-S\.jpg/, "-L.jpg").replace(/-M\.jpg/, "-L.jpg");
+}
+function openLightbox(book, src) {
+  if (!lightboxDialog || !lightboxImg || !src) return;
+  lightboxImg.alt = "";
+  lightboxCap.textContent = book?.title || "Kapak";
+  const big = largeCoverUrl(src);
+  lightboxImg.onerror = () => { lightboxImg.onerror = null; lightboxImg.src = src; };
+  lightboxImg.src = big;
+  if (!lightboxDialog.open) lightboxDialog.showModal();
+}
+document.querySelectorAll("[data-close-lightbox]").forEach((b) =>
+  b.addEventListener("click", () => lightboxDialog?.close()));
+lightboxDialog?.addEventListener("click", (e) => { if (e.target === lightboxDialog) lightboxDialog.close(); });
+function zoomableCover(coverEl, book) {
+  const img = coverEl.querySelector("img");
+  if (!img) return coverEl; // harf-kapak büyütülmez
+  coverEl.classList.add("is-zoomable");
+  coverEl.setAttribute("role", "button");
+  coverEl.setAttribute("tabindex", "0");
+  coverEl.setAttribute("aria-label", "Kapağı büyüt");
+  coverEl.title = "Büyütmek için dokun";
+  const open = (e) => { e.stopPropagation(); openLightbox(book, img.currentSrc || img.src); };
+  coverEl.addEventListener("click", open);
+  coverEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(e); }
+  });
+  return coverEl;
 }
 
 // ── Türetilmiş veri ────────────────────────────────────────────
@@ -559,7 +598,7 @@ function renderDetail(bookId) {
       b.cover_url ? el("span", { class: "cover-badge", text: "Onaylı kapak" }) : null,
       readStatus === "read" ? el("span", { class: "read-stamp", text: "okundu" })
       : readStatus === "reading" ? el("span", { class: "read-stamp is-reading", text: "okuyorum" }) : null),
-    el("div", { class: "detail-cover-note" }, coverNode(b)),
+    el("div", { class: "detail-cover-note" }, zoomableCover(coverNode(b), b)),
     el("div", { class: "detail-scorecard detail-score-line" },
       el("div", { class: "score-hero" },
         avg === null
@@ -716,6 +755,19 @@ function renderDetail(bookId) {
       : "Otomatik kapak (ISBN) veya harf-kapak gösteriliyor." });
     const covOpts = el("div", { class: "cover-opts" });
     const searchBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Kapak ara" });
+    const fileInput = el("input", { type: "file", accept: "image/*", hidden: true });
+    const camInput = el("input", { type: "file", accept: "image/*", capture: "environment", hidden: true });
+    const fileBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Dosyadan seç" });
+    const camBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Kamerayla çek" });
+    fileBtn.addEventListener("click", () => fileInput.click());
+    camBtn.addEventListener("click", () => camInput.click());
+    const onCoverFile = (e) => {
+      const f = e.target.files?.[0];
+      e.target.value = "";
+      if (f) handleCoverFile(bookId, f, covStatus, [fileBtn, camBtn, searchBtn]);
+    };
+    fileInput.addEventListener("change", onCoverFile);
+    camInput.addEventListener("change", onCoverFile);
     searchBtn.addEventListener("click", async () => {
       searchBtn.disabled = true;
       searchBtn.textContent = "Aranıyor…";
@@ -734,7 +786,7 @@ function renderDetail(bookId) {
         covOpts.append(pick);
       }
     });
-    const covBtns = el("div", { class: "cover-detail-btns" }, searchBtn);
+    const covBtns = el("div", { class: "cover-detail-btns" }, searchBtn, fileBtn, camBtn, fileInput, camInput);
     if (b.cover_url) {
       const clearBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Otomatik kapağa dön" });
       clearBtn.addEventListener("click", () => clearCover(bookId));
@@ -743,7 +795,7 @@ function renderDetail(bookId) {
     genel.append(
       el("section", { class: "section" },
         el("h3", { class: "section-title", text: "Kapak" }),
-        el("div", { class: "cover-detail-row" }, coverNode(b), covBtns),
+        el("div", { class: "cover-detail-row" }, zoomableCover(coverNode(b), b), covBtns),
         covStatus,
         covOpts));
   }
@@ -2231,6 +2283,70 @@ coversApply.addEventListener("click", async () => {
   coversStatus.textContent = `${n} kapak güncellendi.`;
   renderShelf();
 });
+
+// Cihazdan kapak yükleme: dosya seç veya kamerayla çek → küçült → Storage → cover_url.
+// ponytail: eski Storage dosyası silinmez; applyCover'daki Geri al eski URL'ye döner.
+function downscaleCover(file, maxDim = 1200) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(img.naturalWidth * scale));
+        c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob((b) => (b ? res(b) : rej(new Error("encode"))), "image/jpeg", 0.85);
+      } catch (e) { URL.revokeObjectURL(url); rej(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("decode")); };
+    img.src = url;
+  });
+}
+
+function storageErrorMessage(err) {
+  const c = err?.code || "";
+  if (c.includes("unauthorized") || c.includes("permission")) return "Yetkin yok. Bu işlemi yalnızca düzenleyiciler yapabilir.";
+  if (c.includes("canceled") || c.includes("retry-limit") || c.includes("unavailable"))
+    return "Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.";
+  return "Kapak yüklenemedi. Tekrar dene.";
+}
+
+async function handleCoverFile(bookId, file, statusEl, btns = []) {
+  if (!file || !String(file.type || "").startsWith("image/")) {
+    statusEl.textContent = "Bir resim dosyası seç.";
+    return;
+  }
+  if (file.size > 15 * 1024 * 1024) {
+    statusEl.textContent = "Dosya çok büyük (en çok 15 MB).";
+    return;
+  }
+  const key = `cover-upload:${bookId}`;
+  if (writeBusy.has(key)) return;
+  writeBusy.add(key);
+  btns.forEach((b) => { b.disabled = true; });
+  statusEl.textContent = "Hazırlanıyor…";
+  try {
+    const blob = await downscaleCover(file);
+    statusEl.textContent = "Yükleniyor…";
+    const r = ref(storage, `covers/${bookId}/${Date.now()}.jpg`);
+    await uploadBytes(r, blob, { contentType: "image/jpeg" });
+    const url = await getDownloadURL(r);
+    statusEl.textContent = "Kaydediliyor…";
+    await applyCover(bookId, url);
+  } catch (err) {
+    const msg = err?.message === "decode"
+      ? "Bu fotoğraf biçimi okunamadı. JPG/PNG olarak kaydetmeyi dene."
+      : storageErrorMessage(err);
+    statusEl.textContent = msg;
+    showDetailError(msg, null);
+  } finally {
+    btns.forEach((b) => { b.disabled = false; });
+    writeBusy.delete(key);
+  }
+}
 
 async function applyCover(bookId, url) {
   const key = `cover:${bookId}`;

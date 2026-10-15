@@ -25,7 +25,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Taviraj:ital,wght@0,400;0,700;1,400&family=Public+Sans:wght@400;600;700&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261015a" />
+  <link rel="stylesheet" href="styles.css?v=20261015b" />
 </head>
 <body>
   <noscript>
@@ -289,6 +289,17 @@
     </div>
   </dialog>
 
-  <script type="module" src="app.js?v=20261015a"></script>
+  <!-- ───────────── KAPAK BÜYÜTME ───────────── -->
+  <dialog id="cover-lightbox" class="sheet sheet-lightbox" aria-label="Kapak büyütme">
+    <div class="lightbox-body">
+      <div class="detail-top">
+        <h2 id="cover-lightbox-cap" class="sheet-title">Kapak</h2>
+        <button type="button" class="detail-close" data-close-lightbox>Kapat</button>
+      </div>
+      <img id="cover-lightbox-img" class="lightbox-img" alt="" />
+    </div>
+  </dialog>
+
+  <script type="module" src="app.js?v=20261015b"></script>
 </body>
 </html>
