@@ -260,6 +260,109 @@ function parseVolumeNumber(val) {
   return tot || null;
 }
 
+// Bilinen Popüler Edebiyat Serileri Kataloğu
+const KNOWN_SERIES = [
+  {
+    name: "Dune",
+    authors: ["frank herbert"],
+    items: [
+      { match: "dune tanri imparatoru", vol: "4" },
+      { match: "dune cocuklari", vol: "3" },
+      { match: "dune mesihi", vol: "2" },
+      { match: "dune sapkinlari", vol: "5" },
+      { match: "dune rahibeler meclisi", vol: "6" },
+      { match: "dune", vol: "1" },
+    ]
+  },
+  {
+    name: "Bayan Peregrine'in Tuhaf Çocukları",
+    authors: ["ransom riggs"],
+    items: [
+      { match: "golge sehir", vol: "2" },
+      { match: "ruhlar kutuphanesi", vol: "3" },
+      { match: "gunler haritasi", vol: "4" },
+      { match: "kuslar meclisi", vol: "5" },
+      { match: "yoklar sehri", vol: "6" },
+      { match: "tuhaf cocuklar", vol: "1" },
+      { match: "bayan peregrine", vol: "1" },
+    ]
+  },
+  {
+    name: "The Expanse",
+    authors: ["corey"],
+    items: [
+      { match: "leviathan uyaniyor", vol: "1" },
+      { match: "caliban", vol: "2" },
+      { match: "abaddon", vol: "3" },
+      { match: "cibola", vol: "4" },
+      { match: "intikam oyunlari", vol: "5" },
+      { match: "kuller sehri", vol: "6" },
+      { match: "persepolis", vol: "7" },
+      { match: "tiamat", vol: "8" },
+      { match: "leviathan dusuyor", vol: "9" },
+    ]
+  },
+  {
+    name: "Katilbot Günlükleri",
+    authors: ["wells", "karamanci"],
+    items: [
+      { match: "tum sistemler coktu", vol: "1" },
+      { match: "kacak protokol", vol: "2" },
+      { match: "yapay durum", vol: "3" },
+      { match: "cikis stratejisi", vol: "4" },
+      { match: "sebeke etkisi", vol: "5" },
+      { match: "kacak telemetri", vol: "6" },
+      { match: "sistem cokusu", vol: "7" },
+    ]
+  },
+  {
+    name: "Buz ve Ateşin Şarkısı",
+    authors: ["george r. r. martin", "martin"],
+    items: [
+      { match: "taht oyunlari", vol: "1" },
+      { match: "krallarin carpismasi", vol: "2" },
+      { match: "kiliclarin firtinasi", vol: "3" },
+      { match: "kargalarin ziyafeti", vol: "4" },
+      { match: "ejderhalarin dansi", vol: "5" },
+    ]
+  },
+  {
+    name: "Wool",
+    authors: ["hugh howey", "howey"],
+    items: [
+      { match: "silo", vol: "1" },
+      { match: "vardiya", vol: "2" },
+      { match: "toz", vol: "3" },
+    ]
+  },
+  {
+    name: "Yerdeniz",
+    authors: ["le guin"],
+    items: [
+      { match: "yerdeniz buyucusu", vol: "1" },
+      { match: "atuan mezarlari", vol: "2" },
+      { match: "en uzak sahil", vol: "3" },
+      { match: "tehanu", vol: "4" },
+      { match: "yerdeniz oykuleri", vol: "5" },
+      { match: "oteki ruzgar", vol: "6" },
+    ]
+  },
+  {
+    name: "Vakıf",
+    authors: ["asimov"],
+    items: [
+      { match: "vakif ve imparatorluk", vol: "2" },
+      { match: "ikinci vakif", vol: "3" },
+      { match: "vakifin siniri", vol: "4" },
+      { match: "vakif ve dunya", vol: "5" },
+      { match: "vakif kurulurken", vol: "6" },
+      { match: "vakif ileri", vol: "7" },
+      { match: "vakif", vol: "1" },
+      { match: "foundation", vol: "1" },
+    ]
+  }
+];
+
 function detectBookSeries(b) {
   if (!b) return null;
   const title = (b.title || "").trim();
@@ -271,6 +374,25 @@ function detectBookSeries(b) {
       volume: b.volume || b.series_index || null,
       order: parseVolumeNumber(b.volume || b.series_index),
     };
+  }
+
+  const normTitle = normalizeKey(title);
+  const normCreators = normalizeKey(b.creators || "");
+
+  // 0. Bilinen Seriler Kataloğu (Dune, The Expanse, Bayan Peregrine, Katilbot vb.)
+  for (const s of KNOWN_SERIES) {
+    const authorOk = s.authors.length === 0 || s.authors.some((a) => normCreators.includes(normalizeKey(a)));
+    if (authorOk) {
+      for (const item of s.items) {
+        if (normTitle.includes(normalizeKey(item.match))) {
+          return {
+            name: s.name,
+            volume: item.vol,
+            order: parseVolumeNumber(item.vol),
+          };
+        }
+      }
+    }
   }
 
   // 1. Parantez içi seri ifadeleri: (Hanımın Çiftliği, #1), (Vakıf Serisi 1), (Buz ve Ateşin Şarkısı, #2)
@@ -312,21 +434,7 @@ function detectBookSeries(b) {
     return { name: mBookOf[2].trim(), volume: mBookOf[1], order: parseVolumeNumber(mBookOf[1]) };
   }
 
-  // 5. Katilbot Günlükleri
-  const mKatil = title.match(/Katilbot Günlükleri\s*([0-9]+)?/i);
-  if (mKatil) {
-    return { name: "Katilbot Günlükleri", volume: mKatil[1] || null, order: parseVolumeNumber(mKatil[1]) };
-  }
-
-  // 6. Wool / Silo
-  const mWool = title.match(/\bWool(?:\s+Serisi)?(?:\s*([0-9]+))?(?:\.\s*Kitap)?/i);
-  if (mWool || (/silo/i.test(title) && /wool/i.test(title))) {
-    const volM = title.match(/\b(?:wool\s*([0-9]+)|([0-9]+)\.\s*kitap)\b/i);
-    const vol = volM ? (volM[1] || volM[2]) : null;
-    return { name: "Wool", volume: vol, order: parseVolumeNumber(vol) };
-  }
-
-  // 7. Harry Potter
+  // 5. Harry Potter
   const mHp = title.match(/Harry Potter(?:\s*([0-9]+))?/i);
   if (mHp) {
     const hpMap = {
@@ -340,15 +448,14 @@ function detectBookSeries(b) {
     };
     let vol = mHp[1] || null;
     if (!vol) {
-      const nTitle = normalizeKey(title);
       for (const [k, v] of Object.entries(hpMap)) {
-        if (nTitle.includes(k)) { vol = v; break; }
+        if (normTitle.includes(k)) { vol = v; break; }
       }
     }
     return { name: "Harry Potter", volume: vol, order: parseVolumeNumber(vol) };
   }
 
-  // 8. Sherlock Holmes Vol. X
+  // 6. Sherlock Holmes Vol. X
   const mSh = title.match(/Sherlock Holmes.*?\bvol(?:ume)?\.?\s*([0-9]+|[ivxlcdm]+)/i);
   if (mSh) {
     return { name: "Sherlock Holmes", volume: mSh[1], order: parseVolumeNumber(mSh[1]) };
