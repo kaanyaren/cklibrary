@@ -1294,3 +1294,6 @@ html, body { overflow-x: clip; }
 .breakdown { order: -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; }
 /* Puan space-between ile sağa yaslanır (dar kartta alt satıra geçse de sağda kalır). */
 .book-foot .score { margin-left: auto; }
+
+/* ── Kart kapağı (2026-10-15): kapak yüksekliği kart yüksekliğine eşit (kartın iç boşluğu kadar) ── */
+.book > .cover { height: 100%; }
