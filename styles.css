@@ -577,15 +577,7 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; letter
 }
 @media (min-width: 720px) {
   .shelf-meta { flex-wrap: nowrap; }
-  /* grid-auto-rows: 1fr → her satır en uzun karta eşitlenir; böylece çok sütunlu
-     düzende tüm kartlar (en uzun başlığa göre) aynı boyutta olur. */
-  .shelf { grid-template-columns: repeat(auto-fill, minmax(23rem, 1fr)); gap: 14px; grid-auto-rows: 1fr; }
-  /* content-visibility: auto ekran dışı kartları 120px varsayıp en uzun başlığı
-     ıskalıyordu → yukarıdaki 1fr eşitleme için gerçek yükseklikler şart.
-     `.shelf .book` ile özgüllük artırıldı (temel .book kuralı dosyada sonra geliyor). */
-  .shelf .book { content-visibility: visible; }
-  /* Eşit kartlarda puan satırı dibe yaslanır; boşluk üstte toplanır, kart dengeli durur. */
-  .shelf .book .book-foot { margin-top: auto; }
+  .shelf { grid-template-columns: repeat(auto-fill, minmax(23rem, 1fr)); gap: 14px; }
 }
 
 .book {
