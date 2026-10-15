@@ -135,21 +135,25 @@ function isbn13to10(isbn) {
   const check = rem === 10 ? "X" : String(rem);
   return core + check;
 }
-function coverNode(book, size = "M") {
+function highResCoverUrl(src) {
+  return String(src || "").replace(/-[SM]\.jpg(?=(\?|$))/, "-L.jpg");
+}
+function coverNode(book, size = "L") {
   const wrap = el("div", { class: "cover" });
   // ?default=false: olmayan kapakta 404 dönsün ki harf-kapak devreye girsin.
-  // Liste (S) küçük resim çeker (~4rem genişlik); detay (M) büyüğünü kullanır.
+  // Liste ve detay kartları retina ekranda net görünmesi için yüksek çözünürlük (L) kullanır.
   const isbn10 = isbn13to10(book.isbn10 || book.isbn13);
   const amzUrl = isbn10 ? `https://images-na.ssl-images-amazon.com/images/P/${isbn10}.01._SCLZZZZZZZ_.jpg` : null;
   const olUrl = book.isbn13 ? `https://covers.openlibrary.org/b/isbn/${book.isbn13}-${size}.jpg?default=false` : null;
-  let current = book.cover_url || olUrl || amzUrl;
+  const initialCover = highResCoverUrl(book.cover_url);
+  let current = initialCover || olUrl || amzUrl;
   if (current) {
     const img = el("img", { src: current,
                             alt: book?.title ? `${book.title} kapağı` : "Kapak", loading: "lazy", decoding: "async",
-                            fetchpriority: size === "S" ? "low" : "auto" });
+                            fetchpriority: "auto" });
     // Onaylı kapak ölürse ISBN kaynaklarına düş, hepsi biterse harf-kapak.
     const nextSource = () => {
-      if (current === book.cover_url && olUrl && olUrl !== current) return olUrl;
+      if (current === initialCover && olUrl && olUrl !== current) return olUrl;
       if (amzUrl && current !== amzUrl) return amzUrl;
       return null;
     };
@@ -181,7 +185,7 @@ const lightboxDialog = $("cover-lightbox");
 const lightboxImg = $("cover-lightbox-img");
 const lightboxCap = $("cover-lightbox-cap");
 function largeCoverUrl(src) {
-  return String(src || "").replace(/-S\.jpg/, "-L.jpg").replace(/-M\.jpg/, "-L.jpg");
+  return highResCoverUrl(src);
 }
 function openLightbox(book, src) {
   if (!lightboxDialog || !lightboxImg || !src) return;
