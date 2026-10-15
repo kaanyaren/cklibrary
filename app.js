@@ -481,6 +481,8 @@ function bookCard(b) {
   const addedBy = b.created_by ? displayName(b.created_by) : null;
 
   const card = el("article", { class: "book book-entry", role: "button", tabindex: "0", "aria-label": b.title },
+    el("span", { class: "read-flag is-" + myReadStatus(b.id),
+                 text: { read: "okudum", reading: "okuyorum", unread: "okumadım" }[myReadStatus(b.id)] }),
     coverNode(b, "S"),
     el("div", { class: "book-main" },
       el("h3", { class: "book-title", text: b.title || "(başlıksız)" }),
@@ -491,9 +493,7 @@ function bookCard(b) {
         el("div", { class: "score" },
           avgNode,
           el("span", { class: "score-of", text: "/10" }),
-          el("span", { class: "score-count", text: count ? `${count} oy` : "oy yok" }),
-          myRead(b.id) ? el("span", { class: "read-stamp", text: "okundu" })
-          : myReadStatus(b.id) === "reading" ? el("span", { class: "read-stamp is-reading", text: "okuyorum" }) : null),
+          el("span", { class: "score-count", text: count ? `${count} oy` : "oy yok" })),
         breakdown)));
 
   const open = () => openDetail(b.id);

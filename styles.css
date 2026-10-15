@@ -617,7 +617,7 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; letter
   color: rgba(33, 27, 22, .72);
 }
 
-.book-main { min-width: 0; display: flex; flex-direction: column; gap: .3rem; }
+.book-main { min-width: 0; display: flex; flex-direction: column; gap: .3rem; padding-right: 4rem; }
 .book-title { font-size: 1.22rem; line-height: 1.2; }
 .book-creators { margin: 0; color: var(--ink-soft); font-size: .98rem; overflow-wrap: anywhere; }
 .book-pub {
@@ -914,6 +914,16 @@ h1, h2, h3 { font-family: var(--font-serif); font-weight: 700; margin: 0; letter
 }
 .read-stamp.is-reading { border-style: dashed; }
 
+/* ── Kart sağ-üst okuma bayrağı ── */
+.read-flag {
+  position: absolute; top: .5rem; right: .6rem;
+  font-size: .68rem; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-faint); white-space: nowrap;
+}
+.read-flag.is-read { color: var(--accent-deep); }
+.read-flag.is-reading { color: var(--accent-deep); font-style: italic; }
+
 /* ── TEMA DÜĞMESİ ───────────────────────────────────── */
 .theme-toggle {
   width: 34px; height: 34px; flex: none;
@@ -1090,6 +1100,7 @@ html, body { overflow-x: clip; }
 
 /* ── Shelf · Catalogue: hairline rows, tabular counts ── */
 .book-entry {
+  position: relative;
   background: var(--paper);
   border-left-width: 2px;
   box-shadow: none;
