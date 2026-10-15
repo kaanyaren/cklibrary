@@ -2271,9 +2271,10 @@ coversApply.addEventListener("click", async () => {
   let n = 0;
   for (const o of sel) {
     try {
-      await updateDoc(doc(db, "books", o.id), { cover_url: o.url });
+      const finalUrl = await mirrorCoverToStorage(o.id, o.url);
+      await updateDoc(doc(db, "books", o.id), { cover_url: finalUrl });
       const b = getBook(o.id);
-      if (b) b.cover_url = o.url;
+      if (b) b.cover_url = finalUrl;
       o._done = true;
       n++;
     } catch { /* tekil hata diğerlerini durdurmasın */ }
@@ -2348,6 +2349,23 @@ async function handleCoverFile(bookId, file, statusEl, btns = []) {
   }
 }
 
+// Onaylanan dış kapağı Storage'a kopyala; olmazsa orijinal URL (sessiz geri dönüş).
+// ponytail: Amazon CORS vermez → o kapaklar dış URL kalır, akış bozulmaz.
+async function mirrorCoverToStorage(bookId, url) {
+  if (!url || String(url).includes("firebasestorage")) return url;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return url;
+    const blob = await res.blob();
+    if (!blob.size || blob.size > 5 * 1024 * 1024) return url;
+    const file = blob.type.startsWith("image/")
+      ? blob : blob.slice(0, blob.size, "image/jpeg");
+    const r = ref(storage, `covers/${bookId}/${Date.now()}.jpg`);
+    await uploadBytes(r, file, { contentType: file.type || "image/jpeg" });
+    return await getDownloadURL(r);
+  } catch { return url; }
+}
+
 async function applyCover(bookId, url) {
   const key = `cover:${bookId}`;
   if (writeBusy.has(key)) return;
@@ -2362,6 +2380,7 @@ async function applyCover(bookId, url) {
     return;
   }
   confirmPending.delete(key);
+  url = await mirrorCoverToStorage(bookId, url);
   writeBusy.add(key);
   b.cover_url = url;
   rerenderDetailPreserving(bookId);
