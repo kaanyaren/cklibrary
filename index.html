@@ -18,12 +18,14 @@
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
   <title>CK Kütüphanesi</title>
 
+  <link rel="preconnect" href="https://covers.openlibrary.org" />
+  <link rel="preconnect" href="https://images-na.ssl-images-amazon.com" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Taviraj:ital,wght@0,400;0,700;1,400&family=Public+Sans:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Taviraj:ital,wght@0,400;0,700;1,400&family=Public+Sans:wght@400;600;700&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261014e" />
+  <link rel="stylesheet" href="styles.css?v=20261014f" />
 </head>
 <body>
   <noscript>
@@ -121,7 +123,7 @@
   <!-- ───────────── UYGULAMA ───────────── -->
   <div id="app-view" hidden>
     <header class="topbar">
-      <p class="welcome" id="welcome" aria-live="polite"></p>
+      <h1 class="welcome" id="welcome" aria-live="polite"></h1>
       <div class="topbar-right">
         <p class="user-chip">
           <span id="user-role" class="user-role"></span>
@@ -140,9 +142,10 @@
             </div>
             <div class="toolbar-actions">
               <button type="button" id="add-book" class="btn btn-primary add-btn">Kitap ekle</button>
-              <details class="editor-overflow">
+              <details class="editor-overflow" id="bulk-menu">
                 <summary class="editor-overflow-summary">Toplu işlemler</summary>
                 <div class="editor-overflow-body">
+                  <button type="button" id="batch-scan" class="btn btn-ghost btn-tiny">Toplu Barkod Tara</button>
                   <button type="button" id="find-covers" class="btn btn-ghost btn-tiny" hidden>Tüm Kapakları Bul</button>
                   <button type="button" id="find-summaries" class="btn btn-ghost btn-tiny" hidden>Tüm Özetleri Bul</button>
                 </div>
@@ -154,8 +157,9 @@
             <button type="button" class="chip" data-filter="rated">Puanlanan</button>
             <button type="button" class="chip" data-filter="unrated">Puanlanmayan</button>
             <button type="button" class="chip" data-filter="mine">Eklediklerim</button>
-            <button type="button" class="chip" data-filter="read">Okuduklarım</button>
-            <button type="button" class="chip" data-filter="unread">Okumadıklarım</button>
+            <button type="button" class="chip" data-filter="read">Okudum</button>
+            <button type="button" class="chip" data-filter="reading">Okuyorum</button>
+            <button type="button" class="chip" data-filter="unread">Okumadım</button>
             <label class="addedby">Ekleyen:<select class="addedby-select" aria-label="Ekleyene göre filtrele"><option value="all">Tümü</option><option value="kaan">Kaan</option><option value="ceyda">Ceyda</option><option value="lena">Lena</option></select></label>
           </div>
         </section>
@@ -165,6 +169,7 @@
     </div>
     <main id="shelf" class="shelf" aria-label="Kitap listesi"></main>
     <p id="shelf-error" class="load-error" role="alert" hidden></p>
+    <p class="shelf-retry-wrap"><button type="button" id="shelf-retry" class="btn btn-ghost" hidden>Tekrar dene</button></p>
   </div>
 
   <!-- ───────────── DETAY ───────────── -->
@@ -240,9 +245,13 @@
         <button type="button" class="detail-close" data-close-scan>Kapat</button>
       </div>
       <div class="scan-frame">
-        <video id="scan-video" playsinline muted></video>
+        <video id="scan-video" playsinline webkit-playsinline muted autoplay></video>
       </div>
       <p id="scan-status" class="scan-status" role="status">Kamera açılıyor…</p>
+      <p id="scan-count" class="scan-status" role="status" hidden></p>
+      <ul id="scan-items" class="note-list"></ul>
+      <input id="scan-file" type="file" accept="image/*" capture="environment" hidden />
+      <button type="button" id="scan-photo-btn" class="btn btn-ghost btn-block">Fotoğrafla tara (kamera açılmazsa)</button>
     </div>
   </dialog>
 

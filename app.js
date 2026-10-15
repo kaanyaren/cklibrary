@@ -128,16 +128,18 @@ function isbn13to10(isbn) {
   const check = rem === 10 ? "X" : String(rem);
   return core + check;
 }
-function coverNode(book) {
+function coverNode(book, size = "M") {
   const wrap = el("div", { class: "cover" });
   // ?default=false: olmayan kapakta 404 dönsün ki harf-kapak devreye girsin.
+  // Liste (S) küçük resim çeker (~4rem genişlik); detay (M) büyüğünü kullanır.
   const isbn10 = isbn13to10(book.isbn10 || book.isbn13);
   const amzUrl = isbn10 ? `https://images-na.ssl-images-amazon.com/images/P/${isbn10}.01._SCLZZZZZZZ_.jpg` : null;
-  const olUrl = book.isbn13 ? `https://covers.openlibrary.org/b/isbn/${book.isbn13}-M.jpg?default=false` : null;
+  const olUrl = book.isbn13 ? `https://covers.openlibrary.org/b/isbn/${book.isbn13}-${size}.jpg?default=false` : null;
   let current = book.cover_url || olUrl || amzUrl;
   if (current) {
     const img = el("img", { src: current,
-                            alt: "", loading: "lazy", decoding: "async" });
+                            alt: "", loading: "lazy", decoding: "async",
+                            fetchpriority: size === "S" ? "low" : "auto" });
     // Onaylı kapak ölürse ISBN kaynaklarına düş, hepsi biterse harf-kapak.
     const nextSource = () => {
       if (current === book.cover_url && olUrl && olUrl !== current) return olUrl;
@@ -172,7 +174,13 @@ const getBook = (id) => state.books.find((b) => b.id === id);
 const ratingsOf = (id) => state.ratings.get(id) || new Map();
 const notesOf = (id) => state.notes.get(id) || [];
 const readsOf = (id) => state.reads.get(id) || new Map();
-const myRead = (id) => readsOf(id).get(state.user.uid)?.read === true;
+// Eski boolean kayıtlar: true -> "read", yok/false -> "unread".
+const myReadStatus = (id) => {
+  const r = readsOf(id).get(state.user.uid);
+  if (r?.status) return r.status;
+  return r?.read === true ? "read" : "unread";
+};
+const myRead = (id) => myReadStatus(id) === "read";
 const activityOf = (id) => state.activity.filter((a) => a.bookId === id);
 
 function averageOf(id) {
@@ -335,13 +343,13 @@ async function loadAll() {
   try {
     const timeout = new Promise((_, rej) =>
       setTimeout(() => rej({ code: "unavailable" }), 20000));
-    const [booksSnap, ratingsSnap, notesSnap, readsSnap, activitySnap] = await Promise.race([
+    const activityPromise = getDocs(collection(db, "activity"));
+    const [booksSnap, ratingsSnap, notesSnap, readsSnap] = await Promise.race([
       Promise.all([
         getDocs(collection(db, "books")),
         getDocs(collectionGroup(db, "ratings")),
         getDocs(collectionGroup(db, "notes")),
         getDocs(collectionGroup(db, "reads")),
-        getDocs(collection(db, "activity")),
       ]),
       timeout,
     ]);
@@ -372,11 +380,16 @@ async function loadAll() {
       state.reads.get(bookId).set(d.id, d.data());
     }
 
-    state.activity = activitySnap.docs
-      .map((d) => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => String(b.at || "").localeCompare(String(a.at || "")));
+    state.activity = [];
 
     renderShelf();
+
+    try {
+      const activitySnap = await activityPromise;
+      state.activity = activitySnap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => String(b.at || "").localeCompare(String(a.at || "")));
+    } catch { /* non-critical */ }
   } catch (err) {
     shelf.innerHTML = "";
     shelfError.hidden = false;
@@ -413,8 +426,9 @@ function visibleBooks() {
       if (state.filter === "unrated" && r > 0) return false;
       if (state.filter === "mine" && b.created_by !== state.user.name) return false;
       if (state.addedBy !== "all" && b.created_by !== state.addedBy) return false;
-      if (state.filter === "read" && !myRead(b.id)) return false;
-      if (state.filter === "unread" && myRead(b.id)) return false;
+      if (state.filter === "read" && myReadStatus(b.id) !== "read") return false;
+      if (state.filter === "reading" && myReadStatus(b.id) !== "reading") return false;
+      if (state.filter === "unread" && myReadStatus(b.id) !== "unread") return false;
       if (!q) return true;
       const hay = trLower([b.title, b.creators, b.publisher].filter(Boolean).join(" "));
       return hay.includes(q);
@@ -467,7 +481,7 @@ function bookCard(b) {
   const addedBy = b.created_by ? displayName(b.created_by) : null;
 
   const card = el("article", { class: "book book-entry", role: "button", tabindex: "0", "aria-label": b.title },
-    coverNode(b),
+    coverNode(b, "S"),
     el("div", { class: "book-main" },
       el("h3", { class: "book-title", text: b.title || "(başlıksız)" }),
       creators ? el("p", { class: "book-creators", text: creators }) : null,
@@ -478,7 +492,8 @@ function bookCard(b) {
           avgNode,
           el("span", { class: "score-of", text: "/10" }),
           el("span", { class: "score-count", text: count ? `${count} oy` : "oy yok" }),
-          myRead(b.id) ? el("span", { class: "read-stamp", text: "okundu" }) : null),
+          myRead(b.id) ? el("span", { class: "read-stamp", text: "okundu" })
+          : myReadStatus(b.id) === "reading" ? el("span", { class: "read-stamp is-reading", text: "okuyorum" }) : null),
         breakdown)));
 
   const open = () => openDetail(b.id);
@@ -501,7 +516,7 @@ function renderDetail(bookId) {
   const { avg, count } = averageOf(bookId);
   const isEditor = state.user.role === "editor";
   const myRating = ratingsOf(bookId).get(state.user.uid)?.value ?? null;
-  const iRead = readsOf(bookId).get(state.user.uid)?.read === true;
+  const readStatus = myReadStatus(bookId);
   const notes = notesOf(bookId);
   const acts = activityOf(bookId);
 
@@ -542,7 +557,8 @@ function renderDetail(bookId) {
         : (b.isbn13 ? el("ul", { class: "meta-chips meta-plain-row" },
             el("li", { class: "meta-chip meta-plain is-dim", text: `ISBN ${b.isbn13}` })) : null),
       b.cover_url ? el("span", { class: "cover-badge", text: "Onaylı kapak" }) : null,
-      iRead ? el("span", { class: "read-stamp", text: "okundu" }) : null),
+      readStatus === "read" ? el("span", { class: "read-stamp", text: "okundu" })
+      : readStatus === "reading" ? el("span", { class: "read-stamp is-reading", text: "okuyorum" }) : null),
     el("div", { class: "detail-cover-note" }, coverNode(b)),
     el("div", { class: "detail-scorecard detail-score-line" },
       el("div", { class: "score-hero" },
@@ -603,10 +619,12 @@ function renderDetail(bookId) {
           : null),
       el("section", { class: "action-card", "aria-label": "Okuma durumu" },
         el("h3", { class: "section-title", text: "Okuma durumu" }),
-        el("p", { class: "read-desc", text: iRead ? "Bu kitabı okudun." : "Bu kitabı henüz okumadın." }),
-        el("button", { class: "btn btn-ghost read-toggle", type: "button",
-                       text: iRead ? "Okumadı olarak işaretle" : "Okudum olarak işaretle",
-                       onclick: () => submitRead(bookId, !iRead) }))));
+        el("div", { class: "rate-row", role: "group", "aria-label": "Okuma durumu seç" },
+          ...[["read", "Okudum"], ["reading", "Okuyorum"], ["unread", "Okumadım"]].map(([v, label]) =>
+            el("button", { class: "rate-btn read-toggle" + (readStatus === v ? " is-current" : ""),
+                           type: "button", text: label,
+                           "aria-pressed": String(readStatus === v),
+                           onclick: () => submitRead(bookId, v) }))))));
 
   // ── Sekmeler: Genel / Notlar / Geçmiş ──
   const tabBar = el("div", { class: "detail-tabs", role: "tablist", "aria-label": "Detay bölümleri" });
@@ -946,23 +964,25 @@ async function clearRating(bookId) {
   rerenderDetailPreserving(bookId);
 }
 
-async function submitRead(bookId, read) {
+async function submitRead(bookId, status) {
   const key = `read:${bookId}`;
   if (writeBusy.has(key)) return;
+  if (!["read", "reading", "unread"].includes(status)) return;
+  if (myReadStatus(bookId) === status) return;
   writeBusy.add(key);
   const prevEntry = readsOf(bookId).get(state.user.uid) || null;
   const updatedAt = new Date().toISOString();
   if (!state.reads.has(bookId)) state.reads.set(bookId, new Map());
-  state.reads.get(bookId).set(state.user.uid, { read, name: state.user.name, updatedAt });
+  state.reads.get(bookId).set(state.user.uid, { status, read: status === "read", name: state.user.name, updatedAt });
   rerenderDetailPreserving(bookId);
   try {
     await setDoc(doc(db, "books", bookId, "reads", state.user.uid),
-      { read, name: state.user.name, updatedAt });
+      { status, read: status === "read", name: state.user.name, updatedAt });
   } catch (err) {
     if (prevEntry) state.reads.get(bookId).set(state.user.uid, prevEntry);
     else state.reads.get(bookId).delete(state.user.uid);
     rerenderDetailPreserving(bookId);
-    showDetailError(writeErrorMessage(err), () => submitRead(bookId, read));
+    showDetailError(writeErrorMessage(err), () => submitRead(bookId, status));
     writeBusy.delete(key); return;
   }
   writeBusy.delete(key);
@@ -1150,6 +1170,16 @@ scanBtn.addEventListener("click", () => { clearFormNote(); formError.hidden = tr
 scanPhotoBtn?.addEventListener("click", () => scanFile?.click());
 scanFile?.addEventListener("change", handleScanFile);
 $("batch-scan")?.addEventListener("click", openBatchScanner);
+// Kart menü: seçince, dışarı dokununca, Esc ile kapanır.
+const bulkMenu = $("bulk-menu");
+bulkMenu?.querySelectorAll("button").forEach((b) =>
+  b.addEventListener("click", () => bulkMenu.removeAttribute("open")));
+document.addEventListener("click", (e) => {
+  if (bulkMenu?.open && !bulkMenu.contains(e.target)) bulkMenu.removeAttribute("open");
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") bulkMenu?.removeAttribute("open");
+});
 document.querySelectorAll("[data-close-scan]").forEach((b) =>
   b.addEventListener("click", () => scanDialog.close()));
 

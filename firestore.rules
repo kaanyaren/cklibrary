@@ -41,7 +41,8 @@ service cloud.firestore {
     match /{path=**}/reads/{uid} {
       allow read: if signedIn();
       allow write: if signedIn() && request.auth.uid == uid
-                   && request.resource.data.read is bool;
+                   && (request.resource.data.status in ["read", "reading", "unread"]
+                       || request.resource.data.read is bool);
     }
 
     match /activity/{docId} {

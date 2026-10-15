@@ -28,7 +28,7 @@ Confirmed: vanilla JS + Firebase modular v11 CDN; `dialog` sheet kalabilir ama l
 
 ## Brand Commitments
 
-Sıcak kâğıt zemin (`--paper #ece3d0`, raise/recess), mürekkep metin, tek vurgu bordo oxblood (`--accent #7c2d2c`), serif başlık Caudex + sans Public Sans, büyük rakam puan (emoji yıldız yok). Mor-mavi gradyan, cam kart, emoji-başlık yasak. Mevcut dünya korunur; dark theme aynı dilin koyu karşılığı olur, yeni kimlik değil.
+Sıcak kâğıt zemin (`--paper #ece3d0`, raise/recess), mürekkep metin, tek vurgu bordo oxblood (`--accent #7c2d2c`), serif başlık Taviraj + sans Public Sans, büyük rakam puan (emoji yıldız yok). Mor-mavi gradyan, cam kart, emoji-başlık yasak. Mevcut dünya korunur; dark theme aynı dilin koyu karşılığı olur, yeni kimlik değil.
 
 ## Evidence on Hand
 
