@@ -145,7 +145,7 @@ function coverNode(book, size = "M") {
   let current = book.cover_url || olUrl || amzUrl;
   if (current) {
     const img = el("img", { src: current,
-                            alt: "", loading: "lazy", decoding: "async",
+                            alt: book?.title ? `${book.title} kapağı` : "Kapak", loading: "lazy", decoding: "async",
                             fetchpriority: size === "S" ? "low" : "auto" });
     // Onaylı kapak ölürse ISBN kaynaklarına düş, hepsi biterse harf-kapak.
     const nextSource = () => {
@@ -185,7 +185,7 @@ function largeCoverUrl(src) {
 }
 function openLightbox(book, src) {
   if (!lightboxDialog || !lightboxImg || !src) return;
-  lightboxImg.alt = "";
+  lightboxImg.alt = book?.title ? `${book.title} kapağı büyütülmüş` : "Büyütülmüş kapak";
   lightboxCap.textContent = book?.title || "Kapak";
   const big = largeCoverUrl(src);
   lightboxImg.onerror = () => { lightboxImg.onerror = null; lightboxImg.src = src; };
@@ -1103,7 +1103,7 @@ async function submitNote(bookId, box, btn) {
   }
   writeBusy.delete(key);
   await logActivity(b, "note", text.slice(0, 60));
-  renderDetail(bookId);
+  rerenderDetailPreserving(bookId);
 }
 
 // ── Kitap ekle / düzenle / sil ─────────────────────────────────
