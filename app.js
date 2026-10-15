@@ -235,6 +235,148 @@ function valueForName(id, name) {
   return null;
 }
 
+// ── Seri Algılama ve İlişkilendirme ────────────────────────────
+function normalizeKey(s) {
+  if (!s) return "";
+  const tr = { "ı": "i", "İ": "i", "ğ": "g", "Ğ": "g", "ü": "u", "Ü": "u", "ş": "s", "Ş": "s", "ö": "o", "Ö": "o", "ç": "c", "Ç": "c" };
+  return String(s).toLowerCase().replace(/[ıİğĞüÜşŞöÖçÇ]/g, (c) => tr[c] || c).replace(/[^a-z0-9]/g, "");
+}
+
+function parseVolumeNumber(val) {
+  if (!val) return null;
+  val = String(val).trim();
+  const n = parseInt(val, 10);
+  if (!Number.isNaN(n)) return n;
+  const roman = { i: 1, v: 5, x: 10, l: 50, c: 100, d: 500, m: 1000 };
+  const r = val.toLowerCase();
+  let tot = 0, prev = 0;
+  for (let i = r.length - 1; i >= 0; i--) {
+    const curr = roman[r[i]];
+    if (!curr) return null;
+    if (curr < prev) tot -= curr;
+    else tot += curr;
+    prev = curr;
+  }
+  return tot || null;
+}
+
+function detectBookSeries(b) {
+  if (!b) return null;
+  const title = (b.title || "").trim();
+  if (!title) return null;
+
+  if (b.series) {
+    return {
+      name: String(b.series).trim(),
+      volume: b.volume || b.series_index || null,
+      order: parseVolumeNumber(b.volume || b.series_index),
+    };
+  }
+
+  // 1. Parantez içi seri ifadeleri: (Hanımın Çiftliği, #1), (Vakıf Serisi 1), (Buz ve Ateşin Şarkısı, #2)
+  const mParen = title.match(/\(([^)]*?(?:#\s*\d+|serisi(?:\s*\d+)?|cilt\s*(?:[0-9]+|[ivxlcdm]+)|vol\.?\s*[0-9]+|book\s*[0-9]+)[^)]*)\)/i);
+  if (mParen) {
+    const content = mParen[1].trim();
+    const mHash = content.match(/^(.*?)[,\s]+#\s*(\d+)$/i);
+    if (mHash) {
+      const sName = mHash[1].replace(/\s*serisi$/i, "").trim();
+      return { name: sName, volume: mHash[2], order: parseVolumeNumber(mHash[2]) };
+    }
+    const mSeri = content.match(/^(.*?)\s*serisi\s*(\d+)?$/i);
+    if (mSeri) {
+      const sName = mSeri[1].trim() || title.substring(0, title.indexOf("(")).replace(/[\s\-:,;]+$/, "");
+      return { name: sName, volume: mSeri[2] || null, order: parseVolumeNumber(mSeri[2]) };
+    }
+    const mCilt = content.match(/\b(?:cilt|vol\.?|book)\s*([0-9]+|[ivxlcdm]+)\b/i);
+    if (mCilt) {
+      const sName = title.substring(0, title.indexOf("(")).replace(/[\s\-:,;]+$/, "");
+      return { name: sName, volume: mCilt[1], order: parseVolumeNumber(mCilt[1]) };
+    }
+  }
+
+  // 2. Cilt X örn. Tek Adam Cilt 1, Kavgam Cilt I
+  const mCiltTitle = title.match(/^(.*?)\s+cilt\s+([0-9]+|[ivxlcdm]+)\b/i);
+  if (mCiltTitle && mCiltTitle[1].length < 60) {
+    return { name: mCiltTitle[1].replace(/[\s\-:,;]+$/, ""), volume: mCiltTitle[2], order: parseVolumeNumber(mCiltTitle[2]) };
+  }
+
+  // 3. X. Cilt örn. Akl-i Kemal 1. Cilt
+  const mNumCilt = title.match(/^(.*?)\s+([0-9]+)\.\s*cilt\b/i);
+  if (mNumCilt && mNumCilt[1].length < 60) {
+    return { name: mNumCilt[1].replace(/[\s\-:,;]+$/, ""), volume: mNumCilt[2], order: parseVolumeNumber(mNumCilt[2]) };
+  }
+
+  // 4. Book X of Y örn. Persepolis Rising: Book 7 of the Expanse
+  const mBookOf = title.match(/Book\s+([0-9]+)\s+of\s+(?:the\s+)?([^,(\n]+)/i);
+  if (mBookOf) {
+    return { name: mBookOf[2].trim(), volume: mBookOf[1], order: parseVolumeNumber(mBookOf[1]) };
+  }
+
+  // 5. Katilbot Günlükleri
+  const mKatil = title.match(/Katilbot Günlükleri\s*([0-9]+)?/i);
+  if (mKatil) {
+    return { name: "Katilbot Günlükleri", volume: mKatil[1] || null, order: parseVolumeNumber(mKatil[1]) };
+  }
+
+  // 6. Wool / Silo
+  const mWool = title.match(/\bWool(?:\s+Serisi)?(?:\s*([0-9]+))?(?:\.\s*Kitap)?/i);
+  if (mWool || (/silo/i.test(title) && /wool/i.test(title))) {
+    const volM = title.match(/\b(?:wool\s*([0-9]+)|([0-9]+)\.\s*kitap)\b/i);
+    const vol = volM ? (volM[1] || volM[2]) : null;
+    return { name: "Wool", volume: vol, order: parseVolumeNumber(vol) };
+  }
+
+  // 7. Harry Potter
+  const mHp = title.match(/Harry Potter(?:\s*([0-9]+))?/i);
+  if (mHp) {
+    const hpMap = {
+      felsefetasi: "1", sorcerer: "1", philosopher: "1",
+      sirlarodasi: "2", chamber: "2",
+      azkaban: "3", prisoner: "3",
+      ateskadehi: "4", goblet: "4",
+      zumruduanka: "5", phoenix: "5",
+      melezprens: "6", halfblood: "6", halbblut: "6",
+      olumyadigarlari: "7", deathlyhallows: "7"
+    };
+    let vol = mHp[1] || null;
+    if (!vol) {
+      const nTitle = normalizeKey(title);
+      for (const [k, v] of Object.entries(hpMap)) {
+        if (nTitle.includes(k)) { vol = v; break; }
+      }
+    }
+    return { name: "Harry Potter", volume: vol, order: parseVolumeNumber(vol) };
+  }
+
+  // 8. Sherlock Holmes Vol. X
+  const mSh = title.match(/Sherlock Holmes.*?\bvol(?:ume)?\.?\s*([0-9]+|[ivxlcdm]+)/i);
+  if (mSh) {
+    return { name: "Sherlock Holmes", volume: mSh[1], order: parseVolumeNumber(mSh[1]) };
+  }
+
+  return null;
+}
+
+function getSeriesBooks(seriesName, currentBookId) {
+  if (!seriesName) return [];
+  const targetKey = normalizeKey(seriesName);
+  const found = [];
+  for (const b of state.books) {
+    const s = detectBookSeries(b);
+    if (s && normalizeKey(s.name) === targetKey) {
+      found.push({ book: b, seriesInfo: s, isCurrent: b.id === currentBookId });
+    }
+  }
+  // Cilt numarasına veya başlığa göre sırala
+  found.sort((a, b) => {
+    const ordA = a.seriesInfo.order ?? 9999;
+    const ordB = b.seriesInfo.order ?? 9999;
+    if (ordA !== ordB) return ordA - ordB;
+    return (a.book.title || "").localeCompare(b.book.title || "", "tr");
+  });
+  return found;
+}
+
 // ── Giriş ekranı ───────────────────────────────────────────────
 function showLoginError(msg) {
   loginError.textContent = msg;
@@ -565,12 +707,20 @@ function bookCard(b) {
   const readFlag = el("span", { class: "read-flag is-" + myReadStatus(b.id),
                  text: { read: "okudum", reading: "okuyorum", unread: "okumadım" }[myReadStatus(b.id)] });
 
+  const seriesInfo = detectBookSeries(b);
+  const seriesBadge = seriesInfo
+    ? el("span", { class: "series-badge", title: `${seriesInfo.name}${seriesInfo.volume ? ` #${seriesInfo.volume}` : ""}` },
+        el("span", { class: "series-badge-icon", "aria-hidden": "true", text: "◈" }),
+        "Bir Serinin Parçası")
+    : null;
+
   const card = el("article", { class: "book book-entry", role: "button", tabindex: "0",
                                "data-book-id": b.id, "aria-label": b.title },
     coverNode(b, "S"),
     el("div", { class: "book-main" },
       // Bayrak başlığın içinde float: yalnızca ilk satırı daraltır, sağ boşluk rezervi gerekmez.
       el("h3", { class: "book-title" }, readFlag, b.title || "(başlıksız)"),
+      seriesBadge,
       creators ? el("p", { class: "book-creators", text: creators }) : null,
       publine ? el("p", { class: "book-pub", text: publine }) : null,
       addedBy ? el("p", { class: "book-added", text: `Ekleyen: ${addedBy}` }) : null,
@@ -657,6 +807,48 @@ function renderDetail(bookId) {
       el("span", { class: "my-pill" + (myRating !== null ? " is-rated" : ""),
                    text: myRating !== null ? `Senin puanın: ${myRating}` : "Henüz puanlamadın" })));
   detailBody.append(hero);
+
+  // ── Seri Bölümü: Serinin Parçası ve Diğer Kitaplara Bağlantılar ──
+  const seriesInfo = detectBookSeries(b);
+  if (seriesInfo) {
+    const seriesBooks = getSeriesBooks(seriesInfo.name, bookId);
+    const seriesSection = el("div", { class: "detail-series-box" },
+      el("div", { class: "detail-series-head" },
+        el("div", { class: "detail-series-title-row" },
+          el("span", { class: "series-badge" },
+            el("span", { class: "series-badge-icon", "aria-hidden": "true", text: "◈" }),
+            "Bir Serinin Parçası"),
+          el("h3", { class: "detail-series-name", text: `${seriesInfo.name} Serisi` })),
+        seriesInfo.volume ? el("span", { class: "detail-series-vol", text: `${seriesInfo.volume}. Kitap / Cilt` }) : null),
+      seriesBooks.length > 1
+        ? el("div", { class: "detail-series-list-wrap" },
+            el("p", { class: "detail-series-subhead", text: "Kütüphanedeki Serinin Diğer Kitapları:" }),
+            el("div", { class: "detail-series-chips" },
+              ...seriesBooks.map(({ book: sb, seriesInfo: sInfo, isCurrent }) => {
+                const volTag = sInfo.volume ? `#${sInfo.volume} ` : "";
+                if (isCurrent) {
+                  return el("span", {
+                    class: "series-chip is-current",
+                    "aria-current": "true",
+                    title: "Şu an görüntülenen kitap",
+                    text: `${volTag}${sb.title || "(başlıksız)"}`
+                  });
+                }
+                const btn = el("button", {
+                  type: "button",
+                  class: "series-chip",
+                  title: `${sb.title} detayına git`,
+                  text: `${volTag}${sb.title || "(başlıksız)"}`
+                });
+                btn.addEventListener("click", () => {
+                  renderDetail(sb.id);
+                  detailDialog.scrollTop = 0;
+                });
+                return btn;
+              })))
+        : el("p", { class: "detail-series-alone", text: "Bu seriden kütüphanede kayıtlı başka kitap bulunmuyor." }));
+    detailBody.append(seriesSection);
+  }
 
   // ── Birincil işlemler: her zaman sekmelerin üstünde ──
   const rateRow = el("div", { class: "rate-row" });
