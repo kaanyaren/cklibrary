@@ -61,6 +61,9 @@ const bookForm = $("book-form");
 const formTitle = $("form-title");
 const formError = $("form-error");
 const formSubmit = $("form-submit");
+const formDup = $("form-dup");
+const formDupMsg = $("form-dup-msg");
+let formDupOk = false; // Kullanıcı "Yine de ekle" dedi mi
 
 let selectedEmail = null;
 
@@ -1072,6 +1075,8 @@ function openForm(bookId = null) {
   formTitle.textContent = b ? "Kitabı düzenle" : "Kitap ekle";
   formSubmit.textContent = b ? "Değişiklikleri kaydet" : "Kaydet";
   formError.hidden = true;
+  formDup.hidden = true;
+  formDupOk = false;
   $("f-title").value = b?.title || "";
   $("f-creators").value = b?.creators || "";
   $("f-publisher").value = b?.publisher || "";
@@ -1108,6 +1113,11 @@ bookForm.addEventListener("submit", async (e) => {
     description: $("f-description").value.trim(),
     pages: Number.isFinite(pages) ? pages : null,
   };
+
+  if (!state.editingId && !formDupOk) {
+    const dup = findDuplicateBook(fields.isbn13, fields.isbn10);
+    if (dup) { showDupConfirm(dup); return; }
+  }
 
   formSubmit.disabled = true;
   formSubmit.textContent = "Kaydediliyor…";
@@ -1218,6 +1228,32 @@ let scanSeen = new Set(), scanLast = { code: "", at: 0 };
 
 function showFormNote(msg) { formNote.textContent = msg; formNote.hidden = false; }
 function clearFormNote() { formNote.hidden = true; formNote.textContent = ""; }
+
+// Kütüphanede aynı ISBN ile kayıtlı kitap var mı (toplu tarama + tekli kayıt aynı kuralı kullanır).
+function findDuplicateBook(isbn13, isbn10) {
+  const a = String(isbn13 || ""), b = String(isbn10 || "");
+  if (!a && !b) return null;
+  return state.books.find((x) =>
+    (a && (x.isbn13 === a || x.isbn10 === a)) ||
+    (b && (x.isbn13 === b || x.isbn10 === b))) || null;
+}
+
+function showDupConfirm(dup) {
+  formDupMsg.textContent = `“${dup.title || "Bu kayıt"}” zaten kütüphanede. Yine de eklensin mi?`;
+  formDup.hidden = false;
+  // Uyarı uzun formda ekran altında kalabilir; odak kaydırarak görünür yapar.
+  $("form-dup-ok").focus();
+}
+
+// Duvarına takılan uyarı, ISBN değişirse geçersiz kalır.
+["f-isbn13", "f-isbn10"].forEach((id) =>
+  $(id).addEventListener("input", () => { formDup.hidden = true; }));
+$("form-dup-ok").addEventListener("click", () => {
+  formDup.hidden = true;
+  formDupOk = true; // onay verildi, form yeniden gönderilsin
+  bookForm.requestSubmit();
+});
+$("form-dup-no").addEventListener("click", () => { formDup.hidden = true; });
 
 scanBtn.addEventListener("click", () => { clearFormNote(); formError.hidden = true; openScanner(); });
 scanPhotoBtn?.addEventListener("click", () => scanFile?.click());
@@ -1637,7 +1673,7 @@ async function handleBatchBarcode(digits) {
   scanBusy = true;
   scanLast = { code: digits, at: now };
   const dup = scanSeen.has(digits)
-    || state.books.some((b) => b.isbn13 === digits || b.isbn10 === digits);
+    || !!findDuplicateBook(digits.length === 13 ? digits : "", digits.length === 10 ? digits : "");
   if (dup) {
     scanSkipped++;
     addScanRow(`${digits} — zaten var, atlandı`);
