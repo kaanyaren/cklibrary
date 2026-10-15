@@ -18,5 +18,9 @@ node_modules/
 # Logs
 *.log
 
+# Ajan / tarayıcı tool çıktıları (kaynak kod değil)
+.playwright-mcp/
+.impeccable/
+
 # Environment
 .env*
