@@ -25,7 +25,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Taviraj:ital,wght@0,400;0,700;1,400&family=Public+Sans:wght@400;600;700&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261017a" />
+  <link rel="stylesheet" href="styles.css?v=20261016a" />
 </head>
 <body>
   <noscript>
@@ -137,7 +137,7 @@
           <div class="toolbar-top">
             <div class="search-wrap">
               <label class="visually-hidden" for="search">Ara</label>
-              <input id="search" type="search" class="search" placeholder="Başlık, yazar veya yayınevi ara… ( / )"
+              <input id="search" type="search" class="search" placeholder="Başlık, yazar veya yayınevi ara…"
                      autocomplete="off" spellcheck="false" />
             </div>
             <div class="toolbar-actions">
@@ -161,7 +161,6 @@
             <button type="button" class="chip" data-filter="reading">Okuyorum</button>
             <button type="button" class="chip" data-filter="unread">Okumadım</button>
             <label class="addedby">Ekleyen:<select class="addedby-select" aria-label="Ekleyene göre filtrele"><option value="all">Tümü</option><option value="kaan">Kaan</option><option value="ceyda">Ceyda</option><option value="lena">Lena</option></select></label>
-            <label class="addedby">Sırala:<select class="sort-select" aria-label="Sıralama"><option value="title">İsim (A–Z)</option><option value="author">Yazar (A–Z)</option><option value="newest">En yeni eklenen</option><option value="updated">Son düzenlenen</option></select></label>
           </div>
         </section>
 
@@ -193,7 +192,7 @@
       <p id="form-note" class="form-note" role="status" hidden></p>
       <input type="hidden" id="f-cover-url" name="cover_url" />
       <div id="form-cover-preview" class="form-cover-preview" hidden>
-        <div class="cover"><img id="form-cover-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Kapak önizlemesi" /></div>
+        <div class="cover"><img id="form-cover-img" src="" alt="Kapak önizlemesi" /></div>
         <div class="form-cover-info">
           <span class="form-cover-label">Bulunan Kapak</span>
           <button type="button" id="form-cover-remove" class="btn btn-ghost btn-tiny">Kapağı kaldır</button>
@@ -317,10 +316,10 @@
         <h2 id="cover-lightbox-cap" class="sheet-title">Kapak</h2>
         <button type="button" class="detail-close" data-close-lightbox>Kapat</button>
       </div>
-      <img id="cover-lightbox-img" class="lightbox-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" />
+      <img id="cover-lightbox-img" class="lightbox-img" alt="" />
     </div>
   </dialog>
 
-  <script type="module" src="app.js?v=20261017b"></script>
+  <script type="module" src="app.js?v=20261015i"></script>
 </body>
 </html>
