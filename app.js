@@ -1200,6 +1200,7 @@ function renderDetail(bookId) {
     ["Fiş №", shortId],
     ["Ekleyen", b.created_by ? displayName(b.created_by) : null],
     ["Eklenme", b.added_at ? fmtDate(b.added_at, false) : null],
+    ["Tarama", b.scanned_at ? fmtDate(b.scanned_at, true) : null],
     ["ISBN-13", b.isbn13],
     ["ISBN-10", b.isbn10],
   ].filter(([, v]) => v);
@@ -1213,16 +1214,16 @@ function renderDetail(bookId) {
 
   // ── 8. Hareket Geçmişi (Kompakt akış, >3 kayıt varsa katlanır) ──
   const bookAddedAt = b.created_at || (b.added_at ? `${b.added_at}T00:00:00.000Z` : null);
-  const hasAddActivity = acts.some((a) => a.action === "add");
+  const hasAddActivity = acts.some((a) => a.action === "add" || a.action === "scan");
   const allActs = [...acts];
   if (!hasAddActivity && bookAddedAt) {
     allActs.push({
       id: `add-${b.id}`,
       bookId: b.id,
       name: b.created_by || "kütüphane",
-      action: "add",
+      action: b.scanned_at ? "scan" : "add",
       detail: "",
-      at: bookAddedAt,
+      at: b.scanned_at || bookAddedAt,
     });
   }
   allActs.sort((x, y) => String(y.at || "").localeCompare(String(x.at || "")));
@@ -1292,7 +1293,7 @@ function renderDetail(bookId) {
 }
 
 function actionLabel(action) {
-  return ({ add: "ekledi", edit: "düzenledi", delete: "sildi", rate: "puanladı", note: "not ekledi" })[action]
+  return ({ add: "ekledi", scan: "taradı", edit: "düzenledi", delete: "sildi", rate: "puanladı", note: "not ekledi" })[action]
     || action;
 }
 
@@ -1494,6 +1495,7 @@ function openForm(bookId = null) {
   formError.hidden = true;
   formDup.hidden = true;
   formDupOk = false;
+  lastScanTimestamp = null;
   $("lookup-isbn-input").value = "";
   clearFormNote();
   $("f-title").value = b?.title || "";
@@ -1545,6 +1547,7 @@ bookForm.addEventListener("submit", async (e) => {
     description: fixTurkishMojibake($("f-description").value.trim()),
     pages: Number.isFinite(pages) ? pages : null,
     ...(coverUrlVal ? { cover_url: coverUrlVal } : {}),
+    ...(lastScanTimestamp ? { scanned_at: lastScanTimestamp } : {}),
   };
 
   if (!state.editingId && !formDupOk) {
@@ -1594,8 +1597,9 @@ async function saveNew(fields) {
   const ref = await addDoc(collection(db, "books"), data);
   const book = { id: ref.id, ...data };
   state.books.push(book);
-  await logActivity(book, "add", "");
+  await logActivity(book, fields.scanned_at ? "scan" : "add", "");
   state.editingId = null;
+  lastScanTimestamp = null;
 }
 
 async function saveEdit(bookId, fields) {
@@ -1673,6 +1677,7 @@ const formNote = $("form-note");
 let scanStream = null, scanTimer = 0, scanReader = null, scanDone = false;
 let scanBatch = false, scanBusy = false, scanAdded = 0, scanSkipped = 0;
 let scanSeen = new Set(), scanLast = { code: "", at: 0 };
+let lastScanTimestamp = null;
 
 function showFormNote(msg) { formNote.textContent = msg; formNote.hidden = false; }
 function clearFormNote() { formNote.hidden = true; formNote.textContent = ""; }
@@ -2020,6 +2025,7 @@ async function applyIsbnLookup(raw) {
     return;
   }
   formError.hidden = true;
+  lastScanTimestamp = new Date().toISOString();
   $("lookup-isbn-input").value = digits;
   if (digits.length === 13) {
     $("f-isbn13").value = digits;
@@ -2222,6 +2228,7 @@ async function handleBatchBarcode(digits) {
       isbn10: digits.length === 10 ? digits : "",
       description: "",
       pages: info?.pages ?? null,
+      scanned_at: new Date().toISOString(),
     });
     scanSeen.add(digits);
     scanAdded++;
