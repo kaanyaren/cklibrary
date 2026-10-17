@@ -238,6 +238,15 @@ function valueForName(id, name) {
   for (const r of ratingsOf(id).values()) if (r.name === name) return Number(r.value);
   return null;
 }
+function readStatusForName(id, name) {
+  for (const r of readsOf(id).values()) {
+    if (r.name === name) {
+      if (r.status) return r.status;
+      return r.read === true ? "read" : "unread";
+    }
+  }
+  return "unread";
+}
 
 // ── Seri Algılama ve İlişkilendirme ────────────────────────────
 function normalizeKey(s) {
@@ -807,15 +816,40 @@ function bookCard(b) {
   return card;
 }
 
-// ── Detay ──────────────────────────────────────────────────────
+// ── Detay (Long Document 02 — tek akışlı katalog fişi) ─────────
+let currentDetailBookId = null;
+let returnToDetailId = null;
+
 function openDetail(bookId) {
+  currentDetailBookId = bookId;
   renderDetail(bookId);
-  detailDialog.showModal();
+  if (!detailDialog.open) detailDialog.showModal();
+  detailDialog.scrollTop = 0;
+}
+
+detailDialog.addEventListener("keydown", (e) => {
+  if (!detailDialog.open || !currentDetailBookId) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = e.target?.tagName;
+  if (tag === "TEXTAREA" || tag === "INPUT" || tag === "SELECT" || e.target?.isContentEditable) return;
+  const n = e.key === "0" ? 10 : Number(e.key);
+  if (!Number.isInteger(n) || n < 1 || n > 10) return;
+  e.preventDefault();
+  submitRating(currentDetailBookId, n);
+});
+
+function captureDetailFocus() {
+  const active = document.activeElement;
+  if (!active || !detailBody.contains(active)) return null;
+  if (active.dataset?.focusKey) return `[data-focus-key="${active.dataset.focusKey}"]`;
+  if (active.id) return `#${CSS.escape(active.id)}`;
+  return null;
 }
 
 function renderDetail(bookId) {
   const b = getBook(bookId);
   if (!b) return;
+  currentDetailBookId = bookId;
   const { avg, count } = averageOf(bookId);
   const isEditor = state.user.role === "editor";
   const myRating = ratingsOf(bookId).get(state.user.uid)?.value ?? null;
@@ -823,46 +857,129 @@ function renderDetail(bookId) {
   const notes = notesOf(bookId);
   const acts = activityOf(bookId);
 
-  const prevTab = currentDetailTabKey();
   const prevScroll = detailDialog.scrollTop;
+  const focusSelector = captureDetailFocus();
+  const wasActionsOpen = detailBody.querySelector(".detail-actions-disclosure")?.open;
+  const wasCoverToolsOpen = detailBody.querySelector(".detail-cover-tools")?.open;
+  const wasHistoryMoreOpen = detailBody.querySelector(".activity-more")?.open;
   detailBody.innerHTML = "";
 
-  // ── Yapışkan üst bar: fiş no + hızlı işlem + kapat ──
+  // ── 1. Yapışkan üst bar: görünür fiş numarası + başlık + güvenli eylemler ──
+  const shortId = String(b.id || "").slice(0, 6).toUpperCase();
   const topActions = el("div", { class: "detail-top-actions" });
   if (isEditor) {
     topActions.append(
-      el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Düzenle",
-                     onclick: () => { detailDialog.close(); openForm(bookId); } }),
-      el("button", { class: "btn btn-danger btn-tiny", type: "button", text: "Sil",
-                     onclick: () => removeBook(bookId) }));
+      el("button", {
+        class: "btn btn-ghost btn-tiny",
+        type: "button",
+        text: "Düzenle",
+        "data-focus-key": "top-edit",
+        onclick: () => openFormFromDetail(bookId),
+      }));
   }
   topActions.append(
-    el("button", { class: "detail-close", type: "button", text: "Kapat",
-                   onclick: () => detailDialog.close() }));
+    el("button", {
+      class: "detail-close",
+      type: "button",
+      text: "Kapat",
+      "data-focus-key": "top-close",
+      onclick: () => detailDialog.close(),
+    }));
+
   detailBody.append(
     el("div", { class: "detail-top is-sticky" },
       el("div", { class: "detail-top-left" },
-        el("span", { class: "catalog-no", text: "Fiş", title: `Fiş № ${String(b.id).toUpperCase()}` }),
+        el("span", {
+          class: "catalog-no",
+          text: `Fiş № ${shortId}`,
+          title: `Tam fiş kimliği: ${b.id}`,
+        }),
         el("p", { class: "detail-top-title", text: b.title || "(başlıksız)" })),
       topActions));
 
-  // ── Kahraman: kapak + başlık + çipler + skor kartı ──
-  const chips = [b.publisher, b.publish_date, b.pages ? `${b.pages} s.` : null]
-    .filter(Boolean);
+  // ── 2. Kahraman: tipografik başlık + sağda kapak notu + 3 kişilik aile skoru ──
+  const bylineParts = [
+    b.publisher,
+    b.publish_date,
+    b.pages ? `${b.pages} s.` : null,
+  ].filter(Boolean);
+
+  const coverWrap = el("div", { class: "detail-cover-note" },
+    zoomableCover(coverNode(b), b),
+    b.cover_url ? el("span", { class: "cover-badge", text: "Onaylı kapak" }) : null);
+
+  if (isEditor) {
+    const covStatus = el("p", {
+      class: "rate-help",
+      role: "status",
+      "aria-live": "polite",
+      text: b.cover_url
+        ? "Onaylı kapak kullanılıyor."
+        : "Otomatik kapak (ISBN) veya harf-kapak gösteriliyor.",
+    });
+    const covOpts = el("div", { class: "cover-opts" });
+    const searchBtn = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Kapak ara" });
+    const fileInput = el("input", { type: "file", accept: "image/*", hidden: true });
+    const camInput = el("input", { type: "file", accept: "image/*", capture: "environment", hidden: true });
+    const fileBtn = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Dosyadan seç" });
+    const camBtn = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Kamerayla çek" });
+    fileBtn.addEventListener("click", () => fileInput.click());
+    camBtn.addEventListener("click", () => camInput.click());
+    const onCoverFile = (e) => {
+      const f = e.target.files?.[0];
+      e.target.value = "";
+      if (f) handleCoverFile(bookId, f, covStatus, [fileBtn, camBtn, searchBtn]);
+    };
+    fileInput.addEventListener("change", onCoverFile);
+    camInput.addEventListener("change", onCoverFile);
+    searchBtn.addEventListener("click", async () => {
+      searchBtn.disabled = true;
+      searchBtn.textContent = "Aranıyor…";
+      covOpts.innerHTML = "";
+      covStatus.textContent = "Hazırlanıyor…";
+      const urls = await searchCovers(b, 6, (m) => { covStatus.textContent = m; });
+      searchBtn.disabled = false;
+      searchBtn.textContent = "Kapak ara";
+      if (!urls.length) { covStatus.textContent = "Kapak bulunamadı."; return; }
+      covStatus.textContent = "Birine dokun — hemen uygulanır.";
+      for (const u of urls) {
+        const pick = el("button", {
+          class: "cover-opt",
+          type: "button",
+          "aria-label": "Bu kapağı uygula",
+        }, el("img", { src: u, alt: "", loading: "lazy" }));
+        pick.addEventListener("click", () => applyCover(bookId, u));
+        covOpts.append(pick);
+      }
+    });
+    const covBtns = el("div", { class: "cover-detail-btns" }, searchBtn, fileBtn, camBtn, fileInput, camInput);
+    if (b.cover_url) {
+      const clearBtn = el("button", {
+        class: "btn btn-ghost btn-tiny",
+        type: "button",
+        text: "Otomatik kapağa dön",
+        onclick: () => clearCover(bookId),
+      });
+      covBtns.append(clearBtn);
+    }
+    const coverTools = el("details", { class: "detail-cover-tools" },
+      el("summary", { class: "detail-cover-summary", "data-focus-key": "cover-tools-toggle", text: "Kapağı değiştir" }),
+      el("div", { class: "detail-cover-drawer" }, covBtns, covStatus, covOpts));
+    if (wasCoverToolsOpen) coverTools.open = true;
+    coverWrap.append(coverTools);
+  }
+
+  const readStatusLabels = { read: "Okudu", reading: "Okuyor", unread: "Okumadı" };
+  const myStatusLabels = { read: "Okudum", reading: "Okuyorum", unread: "Okumadım" };
+
   const hero = el("div", { class: "detail-hero" },
     el("div", { class: "detail-titleblock" },
       el("h2", { id: "detail-title", text: b.title || "(başlıksız)" }),
       b.creators ? el("p", { class: "detail-creators", text: b.creators }) : null,
-      chips.length
-        ? el("ul", { class: "meta-chips meta-plain-row" },
-            ...chips.map((t) => el("li", { class: "meta-chip meta-plain", text: t })),
-            ...(b.isbn13 ? [el("li", { class: "meta-chip meta-plain is-dim", text: `ISBN ${b.isbn13}` })] : []))
-        : (b.isbn13 ? el("ul", { class: "meta-chips meta-plain-row" },
-            el("li", { class: "meta-chip meta-plain is-dim", text: `ISBN ${b.isbn13}` })) : null),
-      b.cover_url ? el("span", { class: "cover-badge", text: "Onaylı kapak" }) : null,
-      readStatus === "read" ? el("span", { class: "read-stamp", text: "okundu" })
-      : readStatus === "reading" ? el("span", { class: "read-stamp is-reading", text: "okuyorum" }) : null),
-    el("div", { class: "detail-cover-note" }, zoomableCover(coverNode(b), b)),
+      bylineParts.length
+        ? el("p", { class: "detail-byline", text: bylineParts.join(" · ") })
+        : null),
+    coverWrap,
     el("div", { class: "detail-scorecard detail-score-line" },
       el("div", { class: "score-hero" },
         avg === null
@@ -870,153 +987,37 @@ function renderDetail(bookId) {
           : el("span", { class: "score-avg", text: avg.toFixed(1) }),
         el("span", { class: "score-of", text: "/10" }),
         el("span", { class: "score-count", text: count ? `${count} oy` : "oy yok" })),
-      el("ul", { class: "mini-breakdown" },
+      el("ul", { class: "mini-breakdown", "aria-label": "Aile puanları ve okuma durumları" },
         ...PEOPLE.map((name) => {
           const v = valueForName(bookId, name);
-          return el("li", { class: name === state.user.name ? "is-mine" : "" },
-            el("span", { class: "who", text: displayName(name) }),
-            el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) }));
-        })),
-      el("span", { class: "my-pill" + (myRating !== null ? " is-rated" : ""),
-                   text: myRating !== null ? `Senin puanın: ${myRating}` : "Henüz puanlamadın" })));
-  detailBody.append(hero);
+          const rStat = readStatusForName(bookId, name);
+          const isMe = name === state.user.name;
+          const rLabel = isMe ? myStatusLabels[rStat] : readStatusLabels[rStat];
+          return el("li", { class: isMe ? "is-mine" : "" },
+            el("div", { class: "member-top" },
+              el("span", { class: "who", text: displayName(name) }),
+              el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) })),
+            el("span", {
+              class: `member-read is-${rStat}`,
+              text: rLabel,
+            }));
+        }))));
 
-  // ── Seri Bölümü: Serinin Parçası ve Diğer Kitaplara Bağlantılar ──
-  const seriesInfo = detectBookSeries(b);
-  if (seriesInfo) {
-    const seriesBooks = getSeriesBooks(seriesInfo.name, bookId);
-    const seriesSection = el("div", { class: "detail-series-box" },
-      el("div", { class: "detail-series-head" },
-        el("div", { class: "detail-series-title-row" },
-          el("span", { class: "series-badge" },
-            el("span", { class: "series-badge-icon", "aria-hidden": "true", text: "◈" }),
-            "Bir Serinin Parçası"),
-          el("h3", { class: "detail-series-name", text: `${seriesInfo.name} Serisi` })),
-        seriesInfo.volume ? el("span", { class: "detail-series-vol", text: `${seriesInfo.volume}. Kitap / Cilt` }) : null),
-      seriesBooks.length > 1
-        ? el("div", { class: "detail-series-list-wrap" },
-            el("p", { class: "detail-series-subhead", text: "Kütüphanedeki Serinin Diğer Kitapları:" }),
-            el("div", { class: "detail-series-chips" },
-              ...seriesBooks.map(({ book: sb, seriesInfo: sInfo, isCurrent }) => {
-                const volTag = sInfo.volume ? `#${sInfo.volume} ` : "";
-                if (isCurrent) {
-                  return el("span", {
-                    class: "series-chip is-current",
-                    "aria-current": "true",
-                    title: "Şu an görüntülenen kitap",
-                    text: `${volTag}${sb.title || "(başlıksız)"}`
-                  });
-                }
-                const btn = el("button", {
-                  type: "button",
-                  class: "series-chip",
-                  title: `${sb.title} detayına git`,
-                  text: `${volTag}${sb.title || "(başlıksız)"}`
-                });
-                btn.addEventListener("click", () => {
-                  renderDetail(sb.id);
-                  detailDialog.scrollTop = 0;
-                });
-                return btn;
-              })))
-        : el("p", { class: "detail-series-alone", text: "Bu seriden kütüphanede kayıtlı başka kitap bulunmuyor." }));
-    detailBody.append(seriesSection);
-  }
+  // ── 3. Açıklama (Synopsis): ilk ekranda hemen okunabilir ──
+  const docFlow = el("div", { class: "detail-doc" });
 
-  // ── Birincil işlemler: her zaman sekmelerin üstünde ──
-  const rateRow = el("div", { class: "rate-row" });
-  for (const [rangeLabel, from, to] of [["1–5", 1, 5], ["6–10", 6, 10]]) {
-    const group = el("div", { class: "rate-group", role: "group", "aria-label": rangeLabel });
-    group.append(el("span", { class: "rate-range", "aria-hidden": "true", text: rangeLabel }));
-    for (let v = from; v <= to; v++) {
-      group.append(el("button", {
-        type: "button",
-        class: "rate-btn" + (myRating === v ? " is-current" : ""),
-        text: String(v),
-        "aria-label": myRating === v ? `${v} puan, şu anki puanın` : `${v} puan ver`,
-        "aria-pressed": String(myRating === v),
-        onclick: () => submitRating(bookId, v),
-      }));
-    }
-    rateRow.append(group);
-  }
-  rateRow.addEventListener("keydown", (e) => {
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    const n = e.key === "0" ? 10 : Number(e.key);
-    if (!Number.isInteger(n) || n < 1 || n > 10) return;
-    e.preventDefault();
-    submitRating(bookId, n);
+  const descPara = el("p", {
+    class: "prose" + (b.description ? "" : " is-empty"),
+    text: b.description || "Açıklama girilmemiş.",
   });
-  const rateHelp = el("p", { class: "rate-help", "aria-live": "polite", text: myRating !== null
-    ? "Başka sayıya dokunursan değişir; Puanı kaldırırsan ortalamadan çıkarsın. Klavyeden 1–9, 10 için 0."
-    : "1–10 arası bir sayıya dokun; ortalamaya eklenir. Klavyeden 1–9, 10 için 0." });
-  detailBody.append(
-    el("div", { class: "detail-actions" },
-      el("section", { class: "action-card", "aria-label": "Puan ver" },
-        el("h3", { class: "section-title", text: "Puan ver" }),
-        rateRow,
-        rateHelp,
-        myRating !== null
-          ? el("button", { class: "btn btn-ghost rate-clear", type: "button",
-                           text: "Puanı kaldır",
-                           "aria-label": `Puanını kaldır (${myRating}/10)`,
-                           onclick: () => clearRating(bookId) })
-          : null),
-      el("section", { class: "action-card", "aria-label": "Okuma durumu" },
-        el("h3", { class: "section-title", text: "Okuma durumu" }),
-        el("div", { class: "rate-row", role: "group", "aria-label": "Okuma durumu seç" },
-          ...[["read", "Okudum"], ["reading", "Okuyorum"], ["unread", "Okumadım"]].map(([v, label]) =>
-            el("button", { class: "rate-btn read-toggle" + (readStatus === v ? " is-current" : ""),
-                           type: "button", text: label,
-                           "aria-pressed": String(readStatus === v),
-                           onclick: () => submitRead(bookId, v) }))))));
-
-  // ── Sekmeler: Genel / Notlar / Geçmiş ──
-  const tabBar = el("div", { class: "detail-tabs", role: "tablist", "aria-label": "Detay bölümleri" });
-  const panels = el("div", { class: "detail-panels" });
-  const tabs = [];
-  function addTab(key, label, panelNode) {
-    panelNode.setAttribute("role", "tabpanel");
-    panelNode.id = `panel-${key}-${bookId}`;
-    const btn = el("button", { class: "tab-btn", type: "button", role: "tab",
-                               id: `tab-${key}-${bookId}`,
-                               "aria-selected": "false",
-                               "aria-controls": panelNode.id,
-                               html: `${label}` });
-    btn.addEventListener("click", () => selectTab(key));
-    btn.addEventListener("keydown", (e) => {
-      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-      e.preventDefault();
-      const idx = tabs.findIndex((t) => t.key === key);
-      const next = tabs[(idx + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
-      next.btn.focus();
-      selectTab(next.key);
-    });
-    tabs.push({ key, btn, panel: panelNode });
-    tabBar.append(btn);
-    panels.append(panelNode);
-    return btn;
-  }
-  function selectTab(key) {
-    for (const t of tabs) {
-      const on = t.key === key;
-      t.btn.setAttribute("aria-selected", String(on));
-      t.btn.tabIndex = on ? 0 : -1;
-      t.panel.hidden = !on;
-    }
-  }
-
-  // — Genel: açıklama + künye + kapak (editor) —
-  const genel = el("div", {});
-  const descPara = el("p", { class: "prose" + (b.description ? "" : " is-empty"),
-                             text: b.description || "Açıklama girilmemiş." });
-  const descSec = el("section", { class: "section" },
+  const descSec = el("section", { class: "section detail-section-first" },
     el("h3", { class: "section-title", text: "Açıklama" }),
     descPara);
+
   if (isEditor) {
-    const sumStatus = el("p", { class: "rate-help", text: "" });
+    const sumStatus = el("p", { class: "rate-help", role: "status", "aria-live": "polite", text: "" });
     const sumOpts = el("div", {});
-    const sumBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Özet bul" });
+    const sumBtn = el("button", { class: "btn btn-ghost btn-tiny detail-inline-cta", type: "button", text: "Özet bul" });
     sumBtn.addEventListener("click", async () => {
       sumBtn.disabled = true;
       sumBtn.textContent = "Aranıyor…";
@@ -1039,79 +1040,140 @@ function renderDetail(bookId) {
     });
     descSec.append(sumBtn, sumStatus, sumOpts);
   }
-  genel.append(descSec);
+  docFlow.append(descSec);
 
-  const facts = [
-    ["Yayınevi", b.publisher], ["Yayın tarihi", b.publish_date],
-    ["Sayfa", b.pages ? String(b.pages) : null],
-    ["ISBN-13", b.isbn13], ["ISBN-10", b.isbn10],
-    ["Ekleyen", b.created_by ? displayName(b.created_by) : null],
-  ].filter(([, v]) => v);
-  if (facts.length) {
-    genel.append(
-      el("section", { class: "section" },
-        el("h3", { class: "section-title", text: "Künye" }),
-        el("dl", { class: "fact-grid" },
-          ...facts.flatMap(([k, v]) => [el("dt", { text: k }), el("dd", { text: v })]))));
-  }
-
-  if (isEditor) {
-    const covStatus = el("p", { class: "rate-help", text: b.cover_url
-      ? "Onaylı kapak kullanılıyor."
-      : "Otomatik kapak (ISBN) veya harf-kapak gösteriliyor." });
-    const covOpts = el("div", { class: "cover-opts" });
-    const searchBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Kapak ara" });
-    const fileInput = el("input", { type: "file", accept: "image/*", hidden: true });
-    const camInput = el("input", { type: "file", accept: "image/*", capture: "environment", hidden: true });
-    const fileBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Dosyadan seç" });
-    const camBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Kamerayla çek" });
-    fileBtn.addEventListener("click", () => fileInput.click());
-    camBtn.addEventListener("click", () => camInput.click());
-    const onCoverFile = (e) => {
-      const f = e.target.files?.[0];
-      e.target.value = "";
-      if (f) handleCoverFile(bookId, f, covStatus, [fileBtn, camBtn, searchBtn]);
-    };
-    fileInput.addEventListener("change", onCoverFile);
-    camInput.addEventListener("change", onCoverFile);
-    searchBtn.addEventListener("click", async () => {
-      searchBtn.disabled = true;
-      searchBtn.textContent = "Aranıyor…";
-      covOpts.innerHTML = "";
-      covStatus.textContent = "Hazırlanıyor…";
-      const urls = await searchCovers(b, 6, (m) => { covStatus.textContent = m; });
-      searchBtn.disabled = false;
-      searchBtn.textContent = "Kapak ara";
-      if (!urls.length) { covStatus.textContent = "Kapak bulunamadı."; return; }
-      covStatus.textContent = "Birine dokun — hemen uygulanır.";
-      for (const u of urls) {
-        const pick = el("button", { class: "cover-opt", type: "button",
-                                    "aria-label": "Bu kapağı uygula" },
-          el("img", { src: u, alt: "", loading: "lazy" }));
-        pick.addEventListener("click", () => applyCover(bookId, u));
-        covOpts.append(pick);
-      }
-    });
-    const covBtns = el("div", { class: "cover-detail-btns" }, searchBtn, fileBtn, camBtn, fileInput, camInput);
-    if (b.cover_url) {
-      const clearBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Otomatik kapağa dön" });
-      clearBtn.addEventListener("click", () => clearCover(bookId));
-      covBtns.append(clearBtn);
+  // ── 4. Puan & Okuma Durumu (Katlanabilir / Collapsible eylem şeridi) ──
+  const rateRow = el("div", { class: "rate-row" });
+  for (const [rangeLabel, from, to] of [["1–5", 1, 5], ["6–10", 6, 10]]) {
+    const group = el("div", { class: "rate-group", role: "group", "aria-label": `${rangeLabel} arası puanlar` });
+    group.append(el("span", { class: "rate-range", "aria-hidden": "true", text: rangeLabel }));
+    for (let v = from; v <= to; v++) {
+      group.append(el("button", {
+        type: "button",
+        class: "rate-btn" + (myRating === v ? " is-current" : ""),
+        text: String(v),
+        "data-focus-key": `rate-${v}`,
+        "aria-label": myRating === v ? `${v} puan, şu anki puanın` : `${v} puan ver`,
+        "aria-pressed": String(myRating === v),
+        onclick: () => submitRating(bookId, v),
+      }));
     }
-    genel.append(
-      el("section", { class: "section" },
-        el("h3", { class: "section-title", text: "Kapak" }),
-        el("div", { class: "cover-detail-row" }, zoomableCover(coverNode(b), b), covBtns),
-        covStatus,
-        covOpts));
+    rateRow.append(group);
   }
 
-  // — Notlar: form üstte, liste altta —
-  const notlar = el("div", {});
-  const noteBox = el("textarea", { rows: "3", placeholder: "Bu kitap hakkında bir not yaz…",
-                                   "aria-label": "Not" });
-  const noteBtn = el("button", { class: "btn btn-primary", type: "button", text: "Notu ekle" });
+  const rateHelp = el("p", {
+    class: "rate-help",
+    role: "status",
+    "aria-live": "polite",
+    text: myRating !== null
+      ? `Şu anki puanın ${myRating}/10. Başka sayıya dokunursan değişir.`
+      : "1–10 arası bir sayıya dokun; ortalamaya eklenir.",
+  });
+  const kbdHint = el("span", { class: "rate-kbd-hint", text: " (Klavye: 1–9, 10 için 0)" });
+  rateHelp.append(kbdHint);
+
+  const defaultActionsOpen = wasActionsOpen !== undefined
+    ? wasActionsOpen
+    : (myRating === null && readStatus === "unread");
+
+  const summaryStatusText = [
+    myRating !== null ? `Puanın: ${myRating}/10` : "Puan verilmedi",
+    myStatusLabels[readStatus],
+  ].join(" · ");
+
+  const actionsDisclosure = el("details", { class: "section detail-actions-disclosure" },
+    el("summary", { class: "detail-actions-summary", "data-focus-key": "actions-toggle" },
+      el("span", { class: "section-title detail-summary-label", text: "Senin Kaydın" }),
+      el("span", { class: "detail-summary-val", text: summaryStatusText }),
+      el("span", { class: "detail-summary-cta", text: "Puanla / Değiştir" })),
+    el("div", { class: "detail-actions" },
+      el("div", { class: "action-card", role: "region", "aria-label": "Puan ver" },
+        el("h4", { class: "action-subtitle", text: "Puan ver" }),
+        rateRow,
+        rateHelp,
+        myRating !== null
+          ? el("button", {
+              class: "btn btn-ghost btn-tiny rate-clear",
+              type: "button",
+              text: "Puanı kaldır",
+              "data-focus-key": "rate-clear",
+              "aria-label": `Puanını kaldır (${myRating}/10)`,
+              onclick: () => clearRating(bookId),
+            })
+          : null),
+      el("div", { class: "action-card", role: "region", "aria-label": "Okuma durumu" },
+        el("h4", { class: "action-subtitle", text: "Okuma durumu" }),
+        el("div", { class: "rate-row", role: "group", "aria-label": "Okuma durumu seç" },
+          ...[["read", "Okudum"], ["reading", "Okuyorum"], ["unread", "Okumadım"]].map(([v, label]) =>
+            el("button", {
+              class: "rate-btn read-toggle" + (readStatus === v ? " is-current" : ""),
+              type: "button",
+              text: label,
+              "data-focus-key": `read-${v}`,
+              "aria-pressed": String(readStatus === v),
+              onclick: () => submitRead(bookId, v),
+            }))))));
+  if (defaultActionsOpen) actionsDisclosure.open = true;
+  docFlow.append(actionsDisclosure);
+
+  // ── 5. Seri Bilgisi (Varsa, Long Document akışında) ──
+  const seriesInfo = detectBookSeries(b);
+  if (seriesInfo) {
+    const seriesBooks = getSeriesBooks(seriesInfo.name, bookId);
+    const seriesSection = el("section", { class: "section detail-series-section" },
+      el("h3", { class: "section-title", text: "Seri" }),
+      el("div", { class: "detail-series-box" },
+        el("div", { class: "detail-series-head" },
+          el("div", { class: "detail-series-title-row" },
+            el("span", { class: "series-badge" },
+              el("span", { class: "series-badge-icon", "aria-hidden": "true", text: "◈" }),
+              "Seri"),
+            el("h4", { class: "detail-series-name", text: `${seriesInfo.name} Serisi` })),
+          seriesInfo.volume ? el("span", { class: "detail-series-vol", text: `${seriesInfo.volume}. Kitap` }) : null),
+        seriesBooks.length > 1
+          ? el("div", { class: "detail-series-list-wrap" },
+              el("p", { class: "detail-series-subhead", text: "Kütüphanedeki diğer kitapları:" }),
+              el("div", { class: "detail-series-chips" },
+                ...seriesBooks.map(({ book: sb, seriesInfo: sInfo, isCurrent }) => {
+                  const volTag = sInfo.volume ? `#${sInfo.volume} ` : "";
+                  if (isCurrent) {
+                    return el("span", {
+                      class: "series-chip is-current",
+                      "aria-current": "true",
+                      title: "Şu an görüntülenen kitap",
+                      text: `${volTag}${sb.title || "(başlıksız)"}`,
+                    });
+                  }
+                  return el("button", {
+                    type: "button",
+                    class: "series-chip",
+                    title: `${sb.title} detayına git`,
+                    text: `${volTag}${sb.title || "(başlıksız)"}`,
+                    onclick: () => {
+                      renderDetail(sb.id);
+                      detailDialog.scrollTop = 0;
+                    },
+                  });
+                })))
+          : el("p", { class: "detail-series-alone", text: "Bu seriden kütüphanede kayıtlı başka kitap bulunmuyor." })));
+    docFlow.append(seriesSection);
+  }
+
+  // ── 6. Aile Notları (Tek akışta doğrudan görünür) ──
+  const noteBox = el("textarea", {
+    rows: "2",
+    placeholder: "Bu kitap hakkında bir aile notu bırak…",
+    "aria-label": "Not",
+    "data-focus-key": "note-input",
+  });
+  const noteBtn = el("button", {
+    class: "btn btn-primary",
+    type: "button",
+    text: "Notu ekle",
+    "data-focus-key": "note-submit",
+  });
   noteBtn.addEventListener("click", () => submitNote(bookId, noteBox, noteBtn));
+
   const noteList = el("ul", { class: "note-list" });
   if (!notes.length) {
     noteList.append(el("li", { class: "prose is-empty", text: "Henüz not yok. İlk notu sen ekle." }));
@@ -1124,60 +1186,94 @@ function renderDetail(bookId) {
         el("p", { class: "note-text", text: n.text })));
     }
   }
-  notlar.append(
+  docFlow.append(
     el("section", { class: "section" },
-      el("h3", { class: "section-title", text: "Notlar" }),
-      el("div", { class: "note-form" }, noteBox, noteBtn),
-      noteList));
+      el("h3", {
+        class: "section-title",
+        text: notes.length ? `Notlar · ${notes.length}` : "Notlar",
+      }),
+      noteList,
+      el("div", { class: "note-form" }, noteBox, noteBtn)));
 
-  // — Geçmiş: kırılım + hareketler —
-  const gecmis = el("div", {});
-  gecmis.append(
-    el("section", { class: "section" },
-      el("h3", { class: "section-title", text: "Kim kaç verdi" }),
-      el("ul", { class: "breakdown breakdown-lg" },
-        ...PEOPLE.map((name) => {
-          const v = valueForName(bookId, name);
-          return el("li", { class: name === state.user.name ? "is-mine" : "" },
-            el("span", { class: "who", text: displayName(name) }),
-            el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) }));
-        }))));
-  const actList = el("ul", { class: "activity-list" });
+  // ── 7. Künye (Tekrarsız katalog kimlik verileri) ──
+  const facts = [
+    ["Fiş №", shortId],
+    ["Ekleyen", b.created_by ? displayName(b.created_by) : null],
+    ["Eklenme", b.added_at ? fmtDate(b.added_at, false) : null],
+    ["ISBN-13", b.isbn13],
+    ["ISBN-10", b.isbn10],
+  ].filter(([, v]) => v);
+  if (facts.length) {
+    docFlow.append(
+      el("section", { class: "section" },
+        el("h3", { class: "section-title", text: "Künye" }),
+        el("dl", { class: "fact-grid" },
+          ...facts.flatMap(([k, v]) => [el("dt", { text: k }), el("dd", { text: v })]))));
+  }
+
+  // ── 8. Hareket Geçmişi (Kompakt akış, >3 kayıt varsa katlanır) ──
+  const renderActItem = (a) => el("li", { class: "activity-entry" },
+    el("span", { class: "activity-name", text: displayName(a.name) || "?" }),
+    el("span", { class: "activity-what" },
+      document.createTextNode(`${actionLabel(a.action)}`),
+      a.detail ? el("strong", { text: ` ${a.detail}` }) : null),
+    el("span", { class: "activity-at", text: fmtDate(a.at, true) }));
+
+  const actSec = el("section", { class: "section" },
+    el("h3", {
+      class: "section-title",
+      text: acts.length ? `Hareket geçmişi · ${acts.length}` : "Hareket geçmişi",
+    }));
+
   if (!acts.length) {
-    actList.append(el("li", { class: "prose is-empty", text: "Kayıtlı hareket yok." }));
+    actSec.append(el("p", { class: "prose is-empty", text: "Kayıtlı hareket yok." }));
   } else {
-    for (const a of acts) {
-      actList.append(el("li", { class: "activity-entry" },
-        el("span", { class: "activity-name", text: displayName(a.name) || "?" }),
-        el("span", { class: "activity-what" },
-          document.createTextNode(`${actionLabel(a.action)}`),
-          a.detail ? el("strong", { text: ` ${a.detail}` }) : null),
-        el("span", { class: "activity-at", text: fmtDate(a.at, true) })));
+    const visibleActs = acts.slice(0, 3);
+    const hiddenActs = acts.slice(3);
+    actSec.append(el("ul", { class: "activity-list" }, ...visibleActs.map(renderActItem)));
+    if (hiddenActs.length) {
+      const moreDetails = el("details", { class: "activity-more" },
+        el("summary", {
+          class: "activity-more-summary",
+          "data-focus-key": "activity-more-toggle",
+          text: `Tüm hareketleri göster (+${hiddenActs.length})`,
+        }),
+        el("ul", { class: "activity-list activity-list-more" }, ...hiddenActs.map(renderActItem)));
+      if (wasHistoryMoreOpen) moreDetails.open = true;
+      actSec.append(moreDetails);
     }
   }
-  gecmis.append(
-    el("section", { class: "section" },
-      el("h3", { class: "section-title", text: "Hareket geçmişi" }),
-      actList));
+  docFlow.append(actSec);
 
+  // ── 9. Yıkıcı işlem (Sil) yalnız fişin en altında, Kapat'tan uzakta ──
   if (isEditor) {
-    gecmis.append(
+    docFlow.append(
       el("div", { class: "editor-bar" },
-        el("button", { class: "btn btn-ghost", type: "button", text: "Düzenle",
-                       onclick: () => { detailDialog.close(); openForm(bookId); } }),
-        el("button", { class: "btn btn-danger", type: "button", text: "Sil",
-                       onclick: () => removeBook(bookId) })));
+        el("button", {
+          class: "btn btn-ghost",
+          type: "button",
+          text: "Fişi düzenle",
+          "data-focus-key": "bottom-edit",
+          onclick: () => openFormFromDetail(bookId),
+        }),
+        el("button", {
+          class: "btn btn-danger",
+          type: "button",
+          text: "Kitabı sil",
+          "data-focus-key": "bottom-delete",
+          onclick: () => removeBook(bookId),
+        })));
   }
 
-  addTab("genel", "Genel", genel);
-  const notesBtn = addTab("notlar", "Notlar", notlar);
-  const histBtn = addTab("gecmis", "Geçmiş", gecmis);
-  notesBtn.innerHTML = `Notlar <span class="tab-count">${notes.length ? `· ${notes.length}` : ""}</span>`;
-  histBtn.innerHTML = `Geçmiş <span class="tab-count">${acts.length ? `· ${acts.length}` : ""}</span>`;
-
-  detailBody.append(tabBar, panels);
-  selectTab(prevTab || "genel");
+  detailBody.append(hero, docFlow);
   detailDialog.scrollTop = prevScroll || 0;
+
+  if (focusSelector) {
+    const target = detailBody.querySelector(focusSelector);
+    if (target && typeof target.focus === "function") {
+      target.focus({ preventScroll: true });
+    }
+  }
 }
 
 function actionLabel(action) {
@@ -1205,12 +1301,6 @@ function writeErrorMessage(err) {
   }
 }
 
-function currentDetailTabKey() {
-  const cur = detailBody.querySelector('.tab-btn[aria-selected="true"]');
-  const m = String(cur?.id || "").match(/^tab-(genel|notlar|gecmis)-/);
-  return m ? m[1] : null;
-}
-
 function rerenderDetailPreserving(bookId) {
   renderDetail(bookId);
   renderShelf();
@@ -1232,6 +1322,7 @@ function showDetailError(msg, onRetry) {
 
 function showConfirmRow(msg, confirmLabel, onConfirm, onCancel) {
   detailBody.querySelector(".detail-write-error")?.remove();
+  document.querySelectorAll(".undo-bar").forEach((n) => n.remove());
   const ok = el("button", { class: "btn btn-danger btn-tiny", type: "button", text: confirmLabel });
   const no = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Vazgeç" });
   const row = el("div", { class: "detail-write-error is-confirm", role: "alert" },
@@ -1246,6 +1337,7 @@ function showConfirmRow(msg, confirmLabel, onConfirm, onCancel) {
 
 function showUndo(message, onUndo) {
   document.querySelectorAll(".undo-bar").forEach((n) => n.remove());
+  detailBody.querySelector(".detail-write-error.is-confirm")?.remove();
   clearTimeout(undoTimer);
   const btn = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Geri al" });
   const bar = el("div", { class: "undo-bar", role: "status" },
@@ -1296,7 +1388,7 @@ async function submitRating(bookId, value) {
   }
   writeBusy.delete(key);
   await logActivity(b, "rate", prev ? `${prev} → ${value}` : `${value}`);
-  rerenderDetailPreserving(bookId);
+  if (detailDialog.open && currentDetailBookId === bookId) renderDetail(bookId);
 }
 
 async function clearRating(bookId) {
@@ -1320,7 +1412,7 @@ async function clearRating(bookId) {
   }
   writeBusy.delete(key);
   await logActivity(b, "rate", `${prev} → –`);
-  rerenderDetailPreserving(bookId);
+  if (detailDialog.open && currentDetailBookId === bookId) renderDetail(bookId);
 }
 
 async function submitRead(bookId, status) {
@@ -1372,7 +1464,14 @@ async function submitNote(bookId, box, btn) {
 }
 
 // ── Kitap ekle / düzenle / sil ─────────────────────────────────
+function openFormFromDetail(bookId) {
+  returnToDetailId = bookId;
+  detailDialog.close();
+  openForm(bookId);
+}
+
 function openForm(bookId = null) {
+  if (!bookId) returnToDetailId = null;
   state.editingId = bookId;
   const b = bookId ? getBook(bookId) : null;
   formTitle.textContent = b ? "Kitabı düzenle" : "Kitap ekle";
@@ -1404,6 +1503,14 @@ $("add-book").addEventListener("click", () => openForm(null));
 document.querySelectorAll("[data-close-form]").forEach((b) =>
   b.addEventListener("click", () => formDialog.close()));
 
+formDialog.addEventListener("close", () => {
+  if (returnToDetailId && getBook(returnToDetailId)) {
+    const reopenId = returnToDetailId;
+    returnToDetailId = null;
+    openDetail(reopenId);
+  }
+});
+
 bookForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const title = $("f-title").value.trim();
@@ -1433,11 +1540,11 @@ bookForm.addEventListener("submit", async (e) => {
   formSubmit.disabled = true;
   formSubmit.textContent = "Kaydediliyor…";
   try {
-    if (state.editingId) await saveEdit(state.editingId, fields);
+    const editedId = state.editingId;
+    if (editedId) await saveEdit(editedId, fields);
     else await saveNew(fields);
-    formDialog.close();
     renderShelf();
-    if (detailDialog.open && state.editingId) renderDetail(state.editingId);
+    formDialog.close();
   } catch (err) {
     showFormError(err?.code === "permission-denied"
       ? "Yetkin yok. Bu işlemi yalnızca düzenleyiciler yapabilir."
@@ -1458,7 +1565,7 @@ function setFormCover(url) {
     img.src = clean;
     preview.hidden = false;
   } else {
-    img.src = "";
+    img.removeAttribute("src");
     preview.hidden = true;
   }
 }

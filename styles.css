@@ -1446,3 +1446,327 @@ html, body { overflow-x: clip; }
 .breakdown { order: -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; }
 /* Puan space-between ile sağa yaslanır (dar kartta alt satıra geçse de sağda kalır). */
 .book-foot .score { margin-left: auto; }
+
+/* ── Detail · Long Document (2026-10-17): tek akışlı katalog fişi, aile okuma durumu & 44px hedefler ── */
+.editor-overflow-body {
+  box-shadow: var(--shadow-lift);
+}
+:root .btn-primary,
+:root .rate-btn.is-current {
+  color: var(--paper-raise);
+}
+:root[data-theme="dark"] .btn-primary,
+:root[data-theme="dark"] .btn-danger:hover,
+:root[data-theme="dark"] .rate-btn.is-current,
+:root[data-theme="dark"] ::selection {
+  color: var(--paper);
+}
+
+.detail-top-actions {
+  gap: var(--space-xs);
+}
+
+.detail-hero,
+.detail-doc {
+  max-width: 72ch;
+}
+.detail-hero {
+  grid-template-columns: minmax(0, 1fr) 6rem;
+  gap: var(--space-md);
+  padding: var(--space-md) clamp(1.1rem, 4vw, 2rem) var(--space-sm);
+}
+.detail-cover-note {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-3xs);
+}
+.detail-cover-note .cover {
+  width: 6rem;
+}
+.detail-cover-note .cover-tile {
+  font-size: 2.6rem;
+}
+.detail-byline {
+  margin: var(--space-2xs) 0 0;
+  font-size: .88rem;
+  color: var(--ink-faint);
+  line-height: 1.45;
+}
+
+/* Kapak düzenleme çekmecesi (ikinci büyük kapağı kaldırır, kahraman kapağın altında açılır) */
+.detail-cover-tools {
+  width: 100%;
+  margin-top: var(--space-3xs);
+}
+.detail-cover-summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 36px;
+  padding: var(--space-3xs) var(--space-2xs);
+  font-family: var(--font-sans);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--paper);
+  cursor: pointer;
+  position: relative;
+}
+.detail-cover-summary::-webkit-details-marker { display: none; }
+.detail-cover-summary::after {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
+}
+.detail-cover-summary:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.detail-cover-tools[open] {
+  grid-column: 1 / -1;
+}
+.detail-cover-drawer {
+  margin-top: var(--space-xs);
+  padding: var(--space-xs);
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-card);
+}
+.cover-detail-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+.cover-opts .cover-opt img {
+  width: 5.2rem;
+}
+
+/* 3 Kişilik Aile Skor Kartı + Okuma Durumları */
+.detail-scorecard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  padding: var(--space-xs) 0;
+}
+.mini-breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2xs);
+  width: 100%;
+}
+.mini-breakdown li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3xs);
+  padding: var(--space-2xs) var(--space-xs);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-card);
+  background: var(--paper);
+}
+.member-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+   gap: var(--space-2xs);
+  width: 100%;
+}
+.member-read {
+  font-family: var(--font-sans);
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  line-height: 1.2;
+}
+.member-read.is-read {
+  color: var(--ok);
+}
+.member-read.is-reading {
+  color: var(--accent-deep);
+  font-style: italic;
+}
+
+/* Tek akışlı Long Document gövdesi */
+.detail-doc {
+  padding: 0 clamp(1.1rem, 4vw, 2rem) var(--space-lg);
+  display: grid;
+  gap: var(--space-md);
+}
+.detail-doc .section {
+  margin-top: 0;
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--line-soft);
+}
+.detail-doc .detail-section-first {
+  padding-top: var(--space-xs);
+  border-top: 0;
+}
+.detail-inline-cta {
+  margin-top: var(--space-xs);
+}
+
+/* Katlanabilir Puan & Okuma Durumu şeridi */
+.detail-actions-disclosure {
+  border-bottom: 0;
+}
+.detail-actions-summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2xs) var(--space-sm);
+  min-height: 44px;
+  padding: var(--space-2xs) var(--space-xs);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  cursor: pointer;
+  user-select: none;
+}
+.detail-actions-summary::-webkit-details-marker { display: none; }
+.detail-actions-summary:hover {
+  border-color: var(--accent);
+}
+.detail-summary-label {
+  border-bottom: 0;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+.detail-summary-val {
+  font-family: var(--font-serif);
+  font-size: .98rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-right: auto;
+}
+.detail-summary-cta {
+  font-family: var(--font-sans);
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+}
+.detail-actions-disclosure[open] .detail-summary-cta {
+  color: var(--ink-faint);
+}
+.detail-actions-disclosure > .detail-actions {
+  padding: var(--space-sm) 0 0;
+}
+.action-subtitle {
+  margin: 0 0 var(--space-2xs);
+  font-family: var(--font-sans);
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.read-toggle.is-current {
+  background: var(--accent-wash);
+  border-color: var(--accent);
+  color: var(--accent-deep);
+  outline: none;
+}
+:root[data-theme="dark"] .read-toggle.is-current {
+  color: var(--accent-deep);
+}
+@media (pointer: coarse) {
+  .rate-kbd-hint { display: none; }
+}
+
+/* Seri kutusu: Long Document çizgileri + ≥44px dokunma hedefleri */
+.detail-series-box {
+  margin: 0;
+  padding: var(--space-sm);
+  gap: var(--space-xs);
+  border-color: var(--line-soft);
+}
+.detail-series-head,
+.detail-series-title-row {
+  gap: var(--space-xs);
+}
+.detail-series-subhead {
+  margin: var(--space-3xs) 0 var(--space-2xs);
+}
+.detail-series-chips {
+  gap: var(--space-2xs);
+}
+.series-chip {
+  min-height: 44px;
+  padding: var(--space-2xs) var(--space-sm);
+  border-radius: var(--radius-card);
+  font-size: .85rem;
+}
+
+/* Notlar: önce mevcut notlar, altında hızlı ekleme */
+.note-list {
+  margin-bottom: var(--space-sm);
+}
+.note-form {
+  margin-bottom: 0;
+}
+
+/* Hareket geçmişi katlama kontrolü */
+.activity-more {
+  margin-top: var(--space-2xs);
+}
+.activity-more-summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--space-3xs) var(--space-xs);
+  font-family: var(--font-sans);
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--paper);
+  cursor: pointer;
+}
+.activity-more-summary::-webkit-details-marker { display: none; }
+.activity-more-summary:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.activity-list-more {
+  margin-top: var(--space-2xs);
+  border-top: 1px solid var(--line-soft);
+}
+
+.editor-bar {
+  justify-content: space-between;
+  margin-top: var(--space-sm);
+  padding-top: var(--space-md);
+}
+
+@media (max-width: 520px) {
+  .detail-hero {
+    grid-template-columns: minmax(0, 1fr) 5.2rem;
+    gap: var(--space-xs);
+  }
+  .detail-cover-note .cover {
+    width: 5.2rem;
+  }
+  .detail-scorecard {
+    grid-template-columns: 1fr;
+    gap: var(--space-xs);
+  }
+}
+
