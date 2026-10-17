@@ -318,5 +318,1245 @@
   "0cn3jk5dcu": {
     "old": "https://covers.openlibrary.org/b/id/12307761-M.jpg",
     "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F0cn3jk5dcu%2Fmirrored.jpg?alt=media&token=35ccaade-d84f-4ddc-ba3b-3c75ec76602a"
+  },
+  "yw1lf8ir71": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786050925357-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fyw1lf8ir71%2Fmirrored.jpg?alt=media&token=809024a6-ab44-4da6-89b9-88969fff1e30"
+  },
+  "yw1ioh6r71": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789755702063-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fyw1ioh6r71%2Fmirrored.jpg?alt=media&token=8cd126c9-32bb-434f-ad82-2220fc9b4af1"
+  },
+  "yw1l56jr71": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780747561071-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fyw1l56jr71%2Fmirrored.jpg?alt=media&token=22f16504-beea-4e0d-9f2f-da6a0452c1bb"
+  },
+  "yw1lftjr71": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750831751-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fyw1lftjr71%2Fmirrored.jpg?alt=media&token=ede2224b-ad1e-4548-b0c6-572bdaed9ded"
+  },
+  "yw1iofdr71": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750724756-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fyw1iofdr71%2Fmirrored.jpg?alt=media&token=10d7546b-76f0-4918-8a54-58a7ffac373f"
+  },
+  "xlsh5orjps": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789753420921-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fxlsh5orjps%2Fmirrored.jpg?alt=media&token=fb44df46-bcdd-40b2-b656-9399820601ec"
+  },
+  "xlsh2yfjps": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053329695-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fxlsh2yfjps%2Fmirrored.jpg?alt=media&token=20f2c076-c12b-46e7-934f-495608e822f6"
+  },
+  "yw1id72r71": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780553212419-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fyw1id72r71%2Fmirrored.jpg?alt=media&token=106118e1-c5ef-4e4d-8915-256e89882cd1"
+  },
+  "xlsh2l6jps": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789944824354-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fxlsh2l6jps%2Fmirrored.jpg?alt=media&token=febc8ee4-6938-496f-91bc-ef4f193b6f64"
+  },
+  "xlsh2fgjps": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789752637061-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fxlsh2fgjps%2Fmirrored.jpg?alt=media&token=13716fff-c09d-4d77-a200-3d9a306c418d"
+  },
+  "xlsh29pjps": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786254053702-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fxlsh29pjps%2Fmirrored.jpg?alt=media&token=64c58c68-866f-47ff-947b-328364e196e7"
+  },
+  "xls7g8djps": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051982199-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fxls7g8djps%2Fmirrored.jpg?alt=media&token=254866e7-17ae-4cef-a7b6-783cef538306"
+  },
+  "xls7d7fjps": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789758440757-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fxls7d7fjps%2Fmirrored.jpg?alt=media&token=c94a5923-10a6-40d2-8d5e-865f223dd18a"
+  },
+  "xls70rljps": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789751619594-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fxls70rljps%2Fmirrored.jpg?alt=media&token=36256ac1-a678-4052-9eb2-b4e91171b593"
+  },
+  "xTyjt8fHMHGDjLjT8ZQb": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051738406-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2FxTyjt8fHMHGDjLjT8ZQb%2Fmirrored.jpg?alt=media&token=7a52a400-dabd-4638-ad54-36265b63ea09"
+  },
+  "wH70lusnyVVRRKGoSTKC": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781800783157-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2FwH70lusnyVVRRKGoSTKC%2Fmirrored.jpg?alt=media&token=d833b44e-fee9-41df-bdc3-114237294e7d"
+  },
+  "w15zmveisd": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781785042188-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fw15zmveisd%2Fmirrored.jpg?alt=media&token=fbd8a6bf-49d5-4412-aa04-db9a4798afd8"
+  },
+  "w15zbyyisd": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786052955680-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fw15zbyyisd%2Fmirrored.jpg?alt=media&token=bd6b8059-b911-4252-9a4e-aceda23f0075"
+  },
+  "w15zb11isd": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786052221860-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fw15zb11isd%2Fmirrored.jpg?alt=media&token=f2afabb6-8b68-452f-bffb-13ed675502e3"
+  },
+  "w15zb22isd": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750724992-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fw15zb22isd%2Fmirrored.jpg?alt=media&token=074e57b0-b7c0-4641-84ee-3b524a16e297"
+  },
+  "w15stukisd": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789753427913-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fw15stukisd%2Fmirrored.jpg?alt=media&token=878d9433-67e1-459f-8ec5-4fc702d50a12"
+  },
+  "w15stgyisd": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780141187068-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fw15stgyisd%2Fmirrored.jpg?alt=media&token=04476313-2c25-486e-9d1f-906e85503f14"
+  },
+  "w15s6x1isd": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786056949524-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fw15s6x1isd%2Fmirrored.jpg?alt=media&token=0d066baa-87fc-4f2b-88ae-6950df6c84d5"
+  },
+  "w15s60aisd": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053755456-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fw15s60aisd%2Fmirrored.jpg?alt=media&token=3d605a53-7156-44d4-9b21-0041f5ecca32"
+  },
+  "v8goxhj26q": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786056685897-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fv8goxhj26q%2Fmirrored.jpg?alt=media&token=8b9f1df9-5a5b-416e-9319-6d2b9fc759fc"
+  },
+  "v8goqm826q": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051711645-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fv8goqm826q%2Fmirrored.jpg?alt=media&token=1ee3edc5-6473-43b8-b070-67ea6b26a897"
+  },
+  "v8goq4g26q": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789759917951-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fv8goq4g26q%2Fmirrored.jpg?alt=media&token=b944994a-c0ee-4855-b8d5-9630bb8a4314"
+  },
+  "v8g0mkj26q": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786055675707-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fv8g0mkj26q%2Fmirrored.jpg?alt=media&token=05c1ae4a-75db-4e99-9db6-5065cb77a1fa"
+  },
+  "v8g0m4x26q": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754700060-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fv8g0m4x26q%2Fmirrored.jpg?alt=media&token=142bf44c-a6b3-441e-b615-b3e1417b7aca"
+  },
+  "v8g0a4y26q": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789753639101-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fv8g0a4y26q%2Fmirrored.jpg?alt=media&token=9f7b847b-4233-4c32-810a-306001801677"
+  },
+  "v8g0a1s26q": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754586367-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fv8g0a1s26q%2Fmirrored.jpg?alt=media&token=dfcdc587-ce9a-496d-826e-74d730a5a8e4"
+  },
+  "u3kpxlignz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780199536436-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fu3kpxlignz%2Fmirrored.jpg?alt=media&token=b48aaf7c-5095-4901-9eb4-6957bd8965d7"
+  },
+  "u3kpx7lgnz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789757004745-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fu3kpx7lgnz%2Fmirrored.jpg?alt=media&token=2459ccca-62d3-4783-b233-7a80ec091dbf"
+  },
+  "u3kpx1hgnz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750835292-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fu3kpx1hgnz%2Fmirrored.jpg?alt=media&token=a6cd58e3-6a4a-457d-a4cf-4f5e74b89271"
+  },
+  "u3kpqshgnz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780375714573-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fu3kpqshgnz%2Fmirrored.jpg?alt=media&token=d7b580b6-ee22-4ab7-b6f8-8253eab6f6fc"
+  },
+  "u3kpqijgnz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786059702614-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fu3kpqijgnz%2Fmirrored.jpg?alt=media&token=5fdb4c7f-ae99-4f7b-aeb0-d7392d78f95b"
+  },
+  "u3kpqd8gnz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051980386-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fu3kpqd8gnz%2Fmirrored.jpg?alt=media&token=055d8d70-f75b-4f1c-a502-2db21d74ae2e"
+  },
+  "u3kafskgnz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789756165492-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fu3kafskgnz%2Fmirrored.jpg?alt=media&token=0ecf2a67-0f4a-4963-9055-47e808ea3f5a"
+  },
+  "u3kafqbgnz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053758464-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fu3kafqbgnz%2Fmirrored.jpg?alt=media&token=0211e89e-e147-4587-b8cd-17f902fbab5b"
+  },
+  "u3kafimgnz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754340457-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fu3kafimgnz%2Fmirrored.jpg?alt=media&token=78845fe4-cdba-4a06-956a-a1c6d51a08d9"
+  },
+  "t0cunyd93y": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786052997642-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Ft0cunyd93y%2Fmirrored.jpg?alt=media&token=6ce5a002-f6c5-4f93-8521-3d1c04abfde7"
+  },
+  "t0cunxg93y": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750803116-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Ft0cunxg93y%2Fmirrored.jpg?alt=media&token=ae22cf37-ccbe-475f-ac55-8b777bfb246b"
+  },
+  "t0cunm293y": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786050815085-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Ft0cunm293y%2Fmirrored.jpg?alt=media&token=40d8058b-4e4a-4276-9e37-71ae159d78ed"
+  },
+  "t0cunjb93y": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780963270702-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Ft0cunjb93y%2Fmirrored.jpg?alt=media&token=5c5ca94a-a7bf-4baa-9d58-c2d270dcffa6"
+  },
+  "t0cunfr93y": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780241956533-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Ft0cunfr93y%2Fmirrored.jpg?alt=media&token=af76a258-22ad-4f04-82f0-317dc6382251"
+  },
+  "t0cdqc793y": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6053751677.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Ft0cdqc793y%2Fmirrored.jpg?alt=media&token=e94098f1-df17-486a-9c44-6ba40c98c477"
+  },
+  "t0cdjea93y": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786054729333-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Ft0cdjea93y%2Fmirrored.jpg?alt=media&token=6f20ab53-1e4c-48ea-80a3-120772a584b7"
+  },
+  "rizlu20xoz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789756287996-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Frizlu20xoz%2Fmirrored.jpg?alt=media&token=baf5384c-2ba9-4b58-a81b-b3bef8a4fabb"
+  },
+  "rizl0ajxoz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750726439-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Frizl0ajxoz%2Fmirrored.jpg?alt=media&token=84e38658-9424-4530-9741-8150994044a2"
+  },
+  "rizloyhxoz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789756461075-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Frizloyhxoz%2Fmirrored.jpg?alt=media&token=09b0f9a5-0197-4c0e-b202-b712307f9c86"
+  },
+  "riz7vnfxoz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786059908740-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Friz7vnfxoz%2Fmirrored.jpg?alt=media&token=48cdc1af-2cf3-4ff7-bb1e-a6f6d29cd265"
+  },
+  "riz7vyvxoz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750743214-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Friz7vyvxoz%2Fmirrored.jpg?alt=media&token=ce8e9196-a192-4e0d-b842-73be3f981c4c"
+  },
+  "riz7v1gxoz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780099535256-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Friz7v1gxoz%2Fmirrored.jpg?alt=media&token=0728c705-e385-488e-942f-04ea38a988ee"
+  },
+  "riz7e8jxoz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786054729395-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Friz7e8jxoz%2Fmirrored.jpg?alt=media&token=e7c9773a-9f10-4c1f-9a52-7aee8d86423e"
+  },
+  "riz7e0wxoz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750722479-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Friz7e0wxoz%2Fmirrored.jpg?alt=media&token=7dcb9efb-db97-43c6-b6ec-da6d276263a7"
+  },
+  "riz72orxoz": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6053148121.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Friz72orxoz%2Fmirrored.jpg?alt=media&token=3ee37968-ae2a-4275-933e-f042c91c18c1"
+  },
+  "qhez9qfwe4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789753424691-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fqhez9qfwe4%2Fmirrored.jpg?alt=media&token=5084a0f9-e7b8-47d2-88ac-6480dfbf67f8"
+  },
+  "qhez9jswe4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053759362-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fqhez9jswe4%2Fmirrored.jpg?alt=media&token=3bfd1996-c1f3-4df4-b013-f256be792e4c"
+  },
+  "qhez95dwe4": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/9759920085.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fqhez95dwe4%2Fmirrored.jpg?alt=media&token=2cdf1ebf-201e-4f40-bbb7-f2a3fdf41ab5"
+  },
+  "qhez9bywe4": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/9754030901.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fqhez9bywe4%2Fmirrored.jpg?alt=media&token=40579a1c-a815-4f9d-b29d-b63409ceda71"
+  },
+  "qhez2uywe4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789753631570-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fqhez2uywe4%2Fmirrored.jpg?alt=media&token=74541bdc-f740-449f-a155-935a10896653"
+  },
+  "qhez90pwe4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781408704202-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fqhez90pwe4%2Fmirrored.jpg?alt=media&token=2d529f38-339f-4713-a6cf-52ae9072dc80"
+  },
+  "qhez2onwe4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786057635457-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fqhez2onwe4%2Fmirrored.jpg?alt=media&token=05eb35c2-d86c-47b6-b490-4e56bfb2c507"
+  },
+  "qhe1g7hwe4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789751419552-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fqhe1g7hwe4%2Fmirrored.jpg?alt=media&token=7d82c3c2-9a50-4bfb-8f1b-8f9c0ca17e1f"
+  },
+  "qhe1ukrwe4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750800016-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fqhe1ukrwe4%2Fmirrored.jpg?alt=media&token=06677243-a64c-4d29-b768-5d3b3656425c"
+  },
+  "qhe1cbgwe4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780692417706-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fqhe1cbgwe4%2Fmirrored.jpg?alt=media&token=d597d081-793b-4b03-ab67-69b72c509c83"
+  },
+  "prix670no7": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/0091923727.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fprix670no7%2Fmirrored.jpg?alt=media&token=d57f6c89-3bfb-45f7-afe7-99d825b64f92"
+  },
+  "prixt7uno7": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789753426725-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fprixt7uno7%2Fmirrored.jpg?alt=media&token=5faf791f-3215-4ad8-b8f4-914410d36d97"
+  },
+  "prix66kno7": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786057762757-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fprix66kno7%2Fmirrored.jpg?alt=media&token=5ea52455-1d40-4031-b7b2-1203659897b5"
+  },
+  "prixtb7no7": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780356510323-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fprixtb7no7%2Fmirrored.jpg?alt=media&token=055f5014-6330-47ee-946e-6fcb36887189"
+  },
+  "prix653no7": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781509848621-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fprix653no7%2Fmirrored.jpg?alt=media&token=e78ceddb-6567-40fd-8ce2-abe88a7d628d"
+  },
+  "prix2mzno7": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786257999144-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fprix2mzno7%2Fmirrored.jpg?alt=media&token=6e9f581c-6aa5-47b4-b14c-be1b0e813212"
+  },
+  "prijzjcno7": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6057301811.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fprijzjcno7%2Fmirrored.jpg?alt=media&token=030d0e22-5114-45d3-8e53-c51f2bd7cc34"
+  },
+  "prijhewno7": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786057635310-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fprijhewno7%2Fmirrored.jpg?alt=media&token=35199ed5-1146-4062-bf14-74359255e396"
+  },
+  "obpmxkt0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780486292564-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpmxkt0an%2Fmirrored.jpg?alt=media&token=0c848079-0708-424b-b9f0-522c9a5d1436"
+  },
+  "obpmrnp0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754704532-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpmrnp0an%2Fmirrored.jpg?alt=media&token=272a066b-711e-4691-98e4-44fcb690e236"
+  },
+  "obpmrqj0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786057995162-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpmrqj0an%2Fmirrored.jpg?alt=media&token=89259034-1661-4835-a0bd-066d490b1f7f"
+  },
+  "obpmrcb0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789759960292-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpmrcb0an%2Fmirrored.jpg?alt=media&token=7c7cec74-85f5-4d90-b07f-17a06a74385b"
+  },
+  "obpmra50an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789756006474-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpmra50an%2Fmirrored.jpg?alt=media&token=ef90538f-a591-4bf7-89a6-a95465029600"
+  },
+  "obpmr6q0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750751134-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpmr6q0an%2Fmirrored.jpg?alt=media&token=0ef440fe-fc9a-4264-9e4b-bcb571c9886a"
+  },
+  "obpmr3m0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786052997185-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpmr3m0an%2Fmirrored.jpg?alt=media&token=8fa35a93-af63-4b44-b034-00052845b832"
+  },
+  "obpmr2v0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789752751675-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpmr2v0an%2Fmirrored.jpg?alt=media&token=2d64afb5-5bf4-4d6d-a9ea-0d4b3edcaa05"
+  },
+  "obpmr2r0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053754961-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpmr2r0an%2Fmirrored.jpg?alt=media&token=284bb0b5-1abe-4768-822b-c6b2621d25c8"
+  },
+  "obpmr1h0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786052994108-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpmr1h0an%2Fmirrored.jpg?alt=media&token=16ec29d2-6947-421e-a249-7493ebef2198"
+  },
+  "obpch4d0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051717326-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpch4d0an%2Fmirrored.jpg?alt=media&token=3393353b-572b-496e-b5bb-e2866605ea20"
+  },
+  "obpc7vl0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053752790-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpc7vl0an%2Fmirrored.jpg?alt=media&token=5e9a6bd2-d5fd-4dbc-8aec-67366a8aa470"
+  },
+  "obpc7380an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789753637695-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpc7380an%2Fmirrored.jpg?alt=media&token=25eddd35-642f-4c44-be84-0de7318ed54a"
+  },
+  "obpc74u0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781593081638-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpc74u0an%2Fmirrored.jpg?alt=media&token=92094b7a-2ba7-4525-a6a4-11fb3c0234f6"
+  },
+  "obpc1xs0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786054584499-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpc1xs0an%2Fmirrored.jpg?alt=media&token=99e1b686-e91c-4c3f-8d04-aa2d81b060ad"
+  },
+  "obpc1y10an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780141315188-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpc1y10an%2Fmirrored.jpg?alt=media&token=4b190e3b-7ef9-49f3-ab8e-efe5e96c3c62"
+  },
+  "obpc1nl0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789755393636-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpc1nl0an%2Fmirrored.jpg?alt=media&token=6ca4258b-fc85-4b0d-a26d-71c424b33fe7"
+  },
+  "obpc1mj0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750708275-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpc1mj0an%2Fmirrored.jpg?alt=media&token=73cb11c6-ab9f-49ba-aa35-d8e463a15feb"
+  },
+  "obpc1iv0an": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051067582-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fobpc1iv0an%2Fmirrored.jpg?alt=media&token=08cc9986-61e3-4afe-bffe-9ae4e180d508"
+  },
+  "nxlqs8e41p": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750741203-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fnxlqs8e41p%2Fmirrored.jpg?alt=media&token=4eb5e51f-1044-46e7-83b9-fbb950c156d9"
+  },
+  "nxlq15141p": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789755395906-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fnxlq15141p%2Fmirrored.jpg?alt=media&token=bc969b5c-129a-42a9-9661-5e9a852d1e11"
+  },
+  "nxlj8z341p": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/9758434578.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fnxlj8z341p%2Fmirrored.jpg?alt=media&token=f58c433e-6f63-47dc-8d55-82fe0f464e74"
+  },
+  "nxlj9x041p": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781444775815-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fnxlj9x041p%2Fmirrored.jpg?alt=media&token=0cb5871b-41cd-4db8-86ee-b93547d45272"
+  },
+  "nxlj8wd41p": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6055752409.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fnxlj8wd41p%2Fmirrored.jpg?alt=media&token=63e565f4-8bd1-41f7-963a-6cc189361cf4"
+  },
+  "njjVtmRBf1KXv6DxpVme": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/0593813189.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2FnjjVtmRBf1KXv6DxpVme%2Fmirrored.jpg?alt=media&token=9c567c2b-308f-4c61-adcc-cde2869a2b69"
+  },
+  "m4jyiza31h": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/975458673X.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fm4jyiza31h%2Fmirrored.jpg?alt=media&token=48f03bed-0324-4e17-9230-78668b93bedb"
+  },
+  "m4jyifn31h": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786054630240-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fm4jyifn31h%2Fmirrored.jpg?alt=media&token=1b9e2de1-3f7e-4048-bc8b-e9321e1a7819"
+  },
+  "m4jyi5k31h": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750721571-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fm4jyi5k31h%2Fmirrored.jpg?alt=media&token=c7022099-1bd4-4364-b8d5-7210c182ac52"
+  },
+  "m4jyie431h": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780194232005-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fm4jyie431h%2Fmirrored.jpg?alt=media&token=8e4f0a98-d2bb-4cd2-8551-fc1315abb450"
+  },
+  "m4jy7ul31h": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750744730-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fm4jy7ul31h%2Fmirrored.jpg?alt=media&token=4391b429-1d5a-47b5-9096-3c7801f24594"
+  },
+  "m4jy7mz31h": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750725708-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fm4jy7mz31h%2Fmirrored.jpg?alt=media&token=4d06abe3-0c36-4bf3-bf12-a3d0c25447ae"
+  },
+  "m4jy7fa31h": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750809958-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fm4jy7fa31h%2Fmirrored.jpg?alt=media&token=10670d37-4530-44a1-ab75-fbdd84822f88"
+  },
+  "m4jy7ep31h": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786059851985-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fm4jy7ep31h%2Fmirrored.jpg?alt=media&token=1ac5526a-f9e5-4c78-ba9a-ddb8579ad3ca"
+  },
+  "m4jy78j31h": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786054729241-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fm4jy78j31h%2Fmirrored.jpg?alt=media&token=65d6e117-dcf7-4fb9-8e72-a019156a1cd2"
+  },
+  "m4jk5d431h": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6052654406.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fm4jk5d431h%2Fmirrored.jpg?alt=media&token=b662fde3-743f-41b4-8c68-7e997889c9a0"
+  },
+  "m4jk5w531h": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786056950483-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fm4jk5w531h%2Fmirrored.jpg?alt=media&token=c875002e-243d-4f15-a50b-6e71b4539b45"
+  },
+  "m4jk2jz31h": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789755104348-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fm4jk2jz31h%2Fmirrored.jpg?alt=media&token=fae34039-c6ee-4bc2-854e-92a6091e24d3"
+  },
+  "ls2fcqb7b9": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053116806-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fls2fcqb7b9%2Fmirrored.jpg?alt=media&token=7a17a34c-cff5-4eef-af16-0505844b2a31"
+  },
+  "ls2faoi7b9": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786056812378-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fls2faoi7b9%2Fmirrored.jpg?alt=media&token=de64196b-54ce-4196-870a-9d1144addffc"
+  },
+  "ls2eoxp7b9": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754589597-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fls2eoxp7b9%2Fmirrored.jpg?alt=media&token=96e8cb55-4205-4d3a-a3e8-295303c9b751"
+  },
+  "ls2fa2r7b9": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750740800-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fls2fa2r7b9%2Fmirrored.jpg?alt=media&token=f93aa131-8afb-45c8-9d5c-b3de9bfba1db"
+  },
+  "ls2f3tj7b9": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754032710-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fls2f3tj7b9%2Fmirrored.jpg?alt=media&token=02ac0069-759b-43db-9e33-76c0dd38cfec"
+  },
+  "ls2eofl7b9": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750815546-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fls2eofl7b9%2Fmirrored.jpg?alt=media&token=ffd5ba2e-730f-4412-8532-1f9d49927327"
+  },
+  "ls2e6mu7b9": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781785042737-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fls2e6mu7b9%2Fmirrored.jpg?alt=media&token=43119748-3213-4929-bbb6-bf8277e71429"
+  },
+  "kqhw6nfysl": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789751040022-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fkqhw6nfysl%2Fmirrored.jpg?alt=media&token=2da7ae00-f3d4-4ddd-9e2d-e5bee56396db"
+  },
+  "kqhis97ysl": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789758434565-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fkqhis97ysl%2Fmirrored.jpg?alt=media&token=ed8040e2-e3d8-496c-a829-5f57be8a41d9"
+  },
+  "kqhw023ysl": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786057635402-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fkqhw023ysl%2Fmirrored.jpg?alt=media&token=f1c3b7c2-69cc-4029-91f2-165e711c99c9"
+  },
+  "kqhis6hysl": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053754992-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fkqhis6hysl%2Fmirrored.jpg?alt=media&token=f098c949-e54b-40e6-9a60-923e83798798"
+  },
+  "kqhien6ysl": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780141983769-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fkqhien6ysl%2Fmirrored.jpg?alt=media&token=be108061-4c11-45f6-9978-a9195f45f2e3"
+  },
+  "kqhieatysl": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789752733732-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fkqhieatysl%2Fmirrored.jpg?alt=media&token=f443a67a-7866-4125-aa09-04ac4802a104"
+  },
+  "kqhie7aysl": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789755390895-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fkqhie7aysl%2Fmirrored.jpg?alt=media&token=b1c4f0e8-fbfc-47f0-8c72-00845355d5f4"
+  },
+  "j7fhbvxqlq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750509803-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fj7fhbvxqlq%2Fmirrored.jpg?alt=media&token=994749c9-d8e7-44e6-84fc-04e2da3a68a9"
+  },
+  "j7fhbo7qlq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789751035301-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fj7fhbo7qlq%2Fmirrored.jpg?alt=media&token=905cf392-4ab1-4801-8b73-25bad4556ec7"
+  },
+  "j7fhbd1qlq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053756026-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fj7fhbd1qlq%2Fmirrored.jpg?alt=media&token=12ed34df-ef80-47c9-a7e1-497233dc3bd2"
+  },
+  "j7fhb9wqlq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053755555-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fj7fhb9wqlq%2Fmirrored.jpg?alt=media&token=93600c8a-7600-455c-9d47-fb0d5025bca1"
+  },
+  "j7f1vu0qlq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781785042201-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fj7f1vu0qlq%2Fmirrored.jpg?alt=media&token=31742ca1-b91d-4b98-9fd8-fca832987c97"
+  },
+  "j7f1v08qlq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780571200832-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fj7f1v08qlq%2Fmirrored.jpg?alt=media&token=9df1b25f-37fe-48b7-b013-d723bcb31044"
+  },
+  "j7f1tmuqlq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786054729326-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fj7f1tmuqlq%2Fmirrored.jpg?alt=media&token=13648f0f-3cbd-472e-b709-7d8a33602969"
+  },
+  "j7f1tkaqlq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051737690-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fj7f1tkaqlq%2Fmirrored.jpg?alt=media&token=95ba4627-ffe5-42bf-83be-791757c2ec09"
+  },
+  "j7f1tfhqlq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750506093-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fj7f1tfhqlq%2Fmirrored.jpg?alt=media&token=9ca03bde-be56-4cf5-a538-e2bd00f75fac"
+  },
+  "j7f1t09qlq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750812989-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fj7f1t09qlq%2Fmirrored.jpg?alt=media&token=d5c7d6a7-ec6a-47f0-ba2c-50b7ec5413d7"
+  },
+  "j7f1t5zqlq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789752201279-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fj7f1t5zqlq%2Fmirrored.jpg?alt=media&token=c1a55052-0523-4dff-b482-0351fd756898"
+  },
+  "izvsc9hlqm": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754701258-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fizvsc9hlqm%2Fmirrored.jpg?alt=media&token=8e3bf9a6-f40e-4c6e-a9ec-342f88a5edd2"
+  },
+  "izvsc74lqm": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750735639-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fizvsc74lqm%2Fmirrored.jpg?alt=media&token=ace8f258-49c5-40e9-b72b-5326780c881f"
+  },
+  "izvs3tilqm": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051066752-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fizvs3tilqm%2Fmirrored.jpg?alt=media&token=5e56264b-5831-49b3-964a-2669c77abf02"
+  },
+  "izvs3dslqm": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781861972781-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fizvs3dslqm%2Fmirrored.jpg?alt=media&token=d579ac27-470c-4259-a223-b158dc72b623"
+  },
+  "izvs3cvlqm": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750806049-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fizvs3cvlqm%2Fmirrored.jpg?alt=media&token=c31df410-b5ec-441d-be04-838c9971832e"
+  },
+  "izvf9gglqm": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750747847-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fizvf9gglqm%2Fmirrored.jpg?alt=media&token=8897967c-d824-4f1f-9a1b-4679b62c1bce"
+  },
+  "izvf8xylqm": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789755095622-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fizvf8xylqm%2Fmirrored.jpg?alt=media&token=b25a2263-abab-443a-bc01-654cdcb47b9b"
+  },
+  "izvf8velqm": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754707113-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fizvf8velqm%2Fmirrored.jpg?alt=media&token=2015d25f-84f2-49c5-8421-47e067fe4e07"
+  },
+  "he9voad19k": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6051924736.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fhe9voad19k%2Fmirrored.jpg?alt=media&token=0f0adc87-9f20-48ae-a7d3-b4551ca33baf"
+  },
+  "izvf8qxlqm": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786055029364-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fizvf8qxlqm%2Fmirrored.jpg?alt=media&token=d85f842e-885d-4313-a370-9a4395012a66"
+  },
+  "izvf8jrlqm": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051419480-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fizvf8jrlqm%2Fmirrored.jpg?alt=media&token=859a7507-4db4-4212-b04a-70600fc510f4"
+  },
+  "he9vdqa19k": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786054849796-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fhe9vdqa19k%2Fmirrored.jpg?alt=media&token=d47a2f0c-0e2c-40af-93ae-7294c89a3d44"
+  },
+  "he9vdp019k": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786052990186-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fhe9vdp019k%2Fmirrored.jpg?alt=media&token=4df5b753-67a4-494e-a230-3dddac7e02a3"
+  },
+  "he9vdl419k": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786052250686-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fhe9vdl419k%2Fmirrored.jpg?alt=media&token=eb50abdf-7992-4bb9-b32b-0dba4d6efdf6"
+  },
+  "he95npf19k": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789756165836-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fhe95npf19k%2Fmirrored.jpg?alt=media&token=bcdf5718-6c8d-458d-b665-58755bbd8588"
+  },
+  "he9vdin19k": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053115557-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fhe9vdin19k%2Fmirrored.jpg?alt=media&token=1e1af767-7ab5-488e-bd7c-6af2f25fced6"
+  },
+  "he953qd19k": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786050918120-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fhe953qd19k%2Fmirrored.jpg?alt=media&token=1d52fb1b-bd9a-4113-ae90-17e996b21b0e"
+  },
+  "gaypsqybt4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786059397056-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fgaypsqybt4%2Fmirrored.jpg?alt=media&token=92292a78-d69b-4c2e-a11c-48b0fc4aa6e3"
+  },
+  "gaypey3bt4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789753430197-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fgaypey3bt4%2Fmirrored.jpg?alt=media&token=6189447d-3b49-4632-987e-415cd239aa53"
+  },
+  "gaypeiybt4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786059692663-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fgaypeiybt4%2Fmirrored.jpg?alt=media&token=e5046c6b-2158-422b-b831-fd0dc0247def"
+  },
+  "gaype1qbt4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053162704-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fgaype1qbt4%2Fmirrored.jpg?alt=media&token=94c6562a-b8b7-4629-99c0-2f7c314ce95c"
+  },
+  "gayperabt4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786057635433-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fgayperabt4%2Fmirrored.jpg?alt=media&token=45817078-224f-416e-853f-9a7bd959283c"
+  },
+  "gaypeflbt4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789756165935-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fgaypeflbt4%2Fmirrored.jpg?alt=media&token=94d39957-fa36-40d0-9e93-7aa764e7329e"
+  },
+  "gaynwg3bt4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780099511434-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fgaynwg3bt4%2Fmirrored.jpg?alt=media&token=ff4e0bd3-876b-4917-a494-81ab364b7b39"
+  },
+  "gaynwnrbt4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780141394817-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fgaynwnrbt4%2Fmirrored.jpg?alt=media&token=3df5b31d-881f-4465-aa00-c86359822d66"
+  },
+  "gaynwetbt4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786057628398-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fgaynwetbt4%2Fmirrored.jpg?alt=media&token=a4913fd2-7e55-4101-b3e6-efa93284741a"
+  },
+  "gaynw4xbt4": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789759038458-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fgaynw4xbt4%2Fmirrored.jpg?alt=media&token=182153ca-3e7d-4091-b7c8-fa03bb2f4f3c"
+  },
+  "ft09rkce5y": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789756006498-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fft09rkce5y%2Fmirrored.jpg?alt=media&token=a22952ec-77e3-4281-928c-7d670f543b63"
+  },
+  "ft09rute5y": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789756006054-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fft09rute5y%2Fmirrored.jpg?alt=media&token=ea023d2f-f24a-4822-bffa-61b1f9112d2e"
+  },
+  "ft09ktfe5y": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786056732249-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fft09ktfe5y%2Fmirrored.jpg?alt=media&token=0ef55112-eeb7-4f51-b250-3dbafa75a2b1"
+  },
+  "ft09kg8e5y": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780141029191-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fft09kg8e5y%2Fmirrored.jpg?alt=media&token=0675b5e4-7c02-4722-9707-24ac8fa11695"
+  },
+  "ft06mbme5y": {
+    "old": "https://covers.openlibrary.org/b/id/12199177-L.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fft06mbme5y%2Fmirrored.jpg?alt=media&token=5bfecbb9-9cf1-459a-a772-9857bd623269"
+  },
+  "e9d8msf5u2": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786052952528-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fe9d8msf5u2%2Fmirrored.jpg?alt=media&token=c69b7412-42c8-4bc4-81be-673fa09543af"
+  },
+  "e9d8mrx5u2": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789752978614-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fe9d8mrx5u2%2Fmirrored.jpg?alt=media&token=0dec1fd4-dd0f-4e08-93db-f296cf84675f"
+  },
+  "ft06gnxe5y": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780099549482-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fft06gnxe5y%2Fmirrored.jpg?alt=media&token=013a2f07-68c5-4ab8-b981-1f1d06b55d99"
+  },
+  "e9d8mfe5u2": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789759893743-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fe9d8mfe5u2%2Fmirrored.jpg?alt=media&token=aebb661a-a2b2-4769-9b04-a6dd97b05032"
+  },
+  "e9d8m4k5u2": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780747591054-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fe9d8m4k5u2%2Fmirrored.jpg?alt=media&token=193e286a-baaf-4bc3-bd2d-633f0ca96795"
+  },
+  "e9d8m1z5u2": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789751409904-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fe9d8m1z5u2%2Fmirrored.jpg?alt=media&token=1054a052-7dd3-4ef9-995d-ba7174c20f58"
+  },
+  "e9d6xuv5u2": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786052993019-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fe9d6xuv5u2%2Fmirrored.jpg?alt=media&token=fd3d58e9-ffdf-40a5-a4c6-5b371753c796"
+  },
+  "e9d6xkg5u2": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053757207-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fe9d6xkg5u2%2Fmirrored.jpg?alt=media&token=93133e83-ae71-407e-93e7-776a34be08c0"
+  },
+  "e9d6x385u2": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786257797740-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fe9d6x385u2%2Fmirrored.jpg?alt=media&token=90d5b809-ce34-429e-9775-9016f5746c73"
+  },
+  "e9d6khj5u2": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781786495259-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fe9d6khj5u2%2Fmirrored.jpg?alt=media&token=e649ede5-ec68-46a8-acd4-67a17aad4f3b"
+  },
+  "e9d6k1q5u2": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750505386-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fe9d6k1q5u2%2Fmirrored.jpg?alt=media&token=4d46befd-ae6e-45ff-b967-f45061c4ffde"
+  },
+  "dm4arieu84": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053758488-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fdm4arieu84%2Fmirrored.jpg?alt=media&token=e1d951e3-507a-4494-bf7b-ef257db774aa"
+  },
+  "dm4ajaru84": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/1784879126.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fdm4ajaru84%2Fmirrored.jpg?alt=media&token=dd22d1be-336d-4585-973c-3791c5f7d487"
+  },
+  "dm4ajocu84": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754707069-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fdm4ajocu84%2Fmirrored.jpg?alt=media&token=10ab0ca9-b7c0-439b-9216-3b0fba58b44c"
+  },
+  "dm4aj0mu84": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6057762878.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fdm4aj0mu84%2Fmirrored.jpg?alt=media&token=5bb9ddcc-a2c8-4377-89d3-fee1d3e88e9e"
+  },
+  "dm43srnu84": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780140007466-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fdm43srnu84%2Fmirrored.jpg?alt=media&token=baee6043-0e10-417c-b3c6-7d3185eb825b"
+  },
+  "dm43shwu84": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053755319-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fdm43shwu84%2Fmirrored.jpg?alt=media&token=e0bac89e-db4b-4368-a1a9-8caaf0039024"
+  },
+  "dm43spcu84": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750514524-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fdm43spcu84%2Fmirrored.jpg?alt=media&token=0d6f2dcc-cea1-447e-bfcc-dbd889d4da05"
+  },
+  "dm431gdu84": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781593083342-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fdm431gdu84%2Fmirrored.jpg?alt=media&token=83efcdc3-7560-4f51-b778-ee02ac888cf5"
+  },
+  "dm43125u84": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/9759064138.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fdm43125u84%2Fmirrored.jpg?alt=media&token=98bd20bc-1a1d-4204-9093-62567909b2a9"
+  },
+  "cnxkljdmmk": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6051143165.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fcnxkljdmmk%2Fmirrored.jpg?alt=media&token=0e33e7e7-3639-46cf-b074-7ce49fa3e033"
+  },
+  "cnxkwermmk": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750705243-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fcnxkwermmk%2Fmirrored.jpg?alt=media&token=60118d2a-9b98-4f90-99b6-7cabedddbcfa"
+  },
+  "cnxkl5ymmk": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/625737197X.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fcnxkl5ymmk%2Fmirrored.jpg?alt=media&token=d503195f-a40e-4fbf-8d86-2670d40a3592"
+  },
+  "cnxklgzmmk": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051711171-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fcnxklgzmmk%2Fmirrored.jpg?alt=media&token=173d4935-0d90-4add-9f55-df7cc712db5b"
+  },
+  "cnxklzpmmk": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780553377880-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fcnxklzpmmk%2Fmirrored.jpg?alt=media&token=f5efa505-78fd-4a90-bfb9-82adb4712bab"
+  },
+  "cnx4vzommk": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754344073-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fcnx4vzommk%2Fmirrored.jpg?alt=media&token=0be1c342-13a7-40b6-9952-1ec06b7bae96"
+  },
+  "cnx4vq5mmk": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786054054206-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fcnx4vq5mmk%2Fmirrored.jpg?alt=media&token=cdd9e11a-f95b-446f-bf1d-6a7ca2bc3fa9"
+  },
+  "cnx4veummk": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786056923975-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fcnx4veummk%2Fmirrored.jpg?alt=media&token=9ac9f7d5-36be-4f02-b0fd-bdebb5220793"
+  },
+  "cnx4fbwmmk": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789756461051-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fcnx4fbwmmk%2Fmirrored.jpg?alt=media&token=48fd2658-866b-43ad-9de4-f4b0ca6e99ee"
+  },
+  "bprnfwlcho": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786055691226-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fbprnfwlcho%2Fmirrored.jpg?alt=media&token=fe94a89d-d58b-4be3-9f9a-298f77b951a9"
+  },
+  "bprnfkrcho": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750527388-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fbprnfkrcho%2Fmirrored.jpg?alt=media&token=06390c5b-2ec6-415a-930c-7738b17e5305"
+  },
+  "bpr4q76cho": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/9756107324.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fbpr4q76cho%2Fmirrored.jpg?alt=media&token=beed867d-11c2-43ce-92a3-d663e8800b56"
+  },
+  "bpr4qz0cho": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789753424615-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fbpr4qz0cho%2Fmirrored.jpg?alt=media&token=35e29802-6beb-45ec-868b-9615d43edee3"
+  },
+  "bpr4iukcho": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786257999632-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fbpr4iukcho%2Fmirrored.jpg?alt=media&token=13dc3ebc-23db-46b3-bef0-c4743068490a"
+  },
+  "bpr4ijfcho": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789759963194-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Fbpr4ijfcho%2Fmirrored.jpg?alt=media&token=6af19b6d-3ce6-4df0-9984-0152e484084d"
+  },
+  "aywx7evpsz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786055159276-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Faywx7evpsz%2Fmirrored.jpg?alt=media&token=8021158b-6fa4-4a11-bd84-a17424e846f0"
+  },
+  "aywx7f5psz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786052996867-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Faywx7f5psz%2Fmirrored.jpg?alt=media&token=71793f57-d97e-470e-a222-bcf93b4d5d7a"
+  },
+  "aywx1ccpsz": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/1471179923.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Faywx1ccpsz%2Fmirrored.jpg?alt=media&token=f0d70344-4e39-4d38-b0a1-401eb234f228"
+  },
+  "aywx752psz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789755707600-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Faywx752psz%2Fmirrored.jpg?alt=media&token=3cc021bd-ef93-4158-875c-52ead668eca1"
+  },
+  "aywx188psz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786056949548-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Faywx188psz%2Fmirrored.jpg?alt=media&token=a9d41cc0-afc8-4ed5-9f0f-edec27721246"
+  },
+  "aywr9sxpsz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781526633620-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Faywr9sxpsz%2Fmirrored.jpg?alt=media&token=f084e478-7e26-43d5-999f-0e4f34330a9c"
+  },
+  "aywr9jmpsz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789757004677-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Faywr9jmpsz%2Fmirrored.jpg?alt=media&token=11f9010a-b8d3-4e38-af91-065d723aa830"
+  },
+  "XbzINoW5USSdlTTvJIW6": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781338680638-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2FXbzINoW5USSdlTTvJIW6%2Fmirrored.jpg?alt=media&token=a64c550a-d183-47f3-8f5c-077ed0ba7a3f"
+  },
+  "aywr2gtpsz": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780553277456-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2Faywr2gtpsz%2Fmirrored.jpg?alt=media&token=fa4fc76a-46d6-4dfb-8b4d-241b07aa8615"
+  },
+  "VaymdDHzHE9MTiUmA0nZ": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053123200-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2FVaymdDHzHE9MTiUmA0nZ%2Fmirrored.jpg?alt=media&token=56072b30-0f18-469a-a195-f2133a1c7b18"
+  },
+  "T6sFC5cWUfav0IMzFxoj": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781338730852-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2FT6sFC5cWUfav0IMzFxoj%2Fmirrored.jpg?alt=media&token=5bfd4a2b-8beb-4f6a-812e-c9d1f924e13f"
+  },
+  "MnJAKax5Bx5MOxuUxKyI": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/1338660454.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2FMnJAKax5Bx5MOxuUxKyI%2Fmirrored.jpg?alt=media&token=eea2a7f3-a257-4415-9b4e-209986e4586c"
+  },
+  "OJ6I43PPBnPUUWUFgIay": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051738406-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2FOJ6I43PPBnPUUWUFgIay%2Fmirrored.jpg?alt=media&token=166d5647-bcd0-4a5b-b688-b62ac663b9bc"
+  },
+  "CooSYMuM9Jt2BPzm9VTa": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/0192787993.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2FCooSYMuM9Jt2BPzm9VTa%2Fmirrored.jpg?alt=media&token=953955cc-5a18-42bc-9861-146916e74f27"
+  },
+  "DoaIGClGn6miKWUaHMAF": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6052657030.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2FDoaIGClGn6miKWUaHMAF%2Fmirrored.jpg?alt=media&token=e1ad566d-d3ac-4622-b219-e9d6016d9b42"
+  },
+  "9dmuwe46rp": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780356510361-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F9dmuwe46rp%2Fmirrored.jpg?alt=media&token=adbc13f4-f37e-4411-9a66-e8927c2f39d5"
+  },
+  "9dmgpq46rp": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786050905441-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F9dmgpq46rp%2Fmirrored.jpg?alt=media&token=59ab9608-476d-47b5-a3e0-d6449333320a"
+  },
+  "9dmuw8w6rp": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754700114-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F9dmuw8w6rp%2Fmirrored.jpg?alt=media&token=09904be5-16f5-4374-9026-0e3968b9b4f9"
+  },
+  "9dmg4ja6rp": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750802942-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F9dmg4ja6rp%2Fmirrored.jpg?alt=media&token=3669df29-95c0-4316-bc8d-dd876d26f5de"
+  },
+  "9dmg4u26rp": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786055794453-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F9dmg4u26rp%2Fmirrored.jpg?alt=media&token=6cadcf6b-ab44-4369-bb85-6bfc7a79b775"
+  },
+  "9dmg4a06rp": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786256774773-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F9dmg4a06rp%2Fmirrored.jpg?alt=media&token=f232f94c-b516-48d7-b933-d918266a8026"
+  },
+  "8gacyznohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786059905558-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gacyznohq%2Fmirrored.jpg?alt=media&token=61042a17-5bee-4dfb-82aa-fae0dad261b2"
+  },
+  "8gacymwohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781447294146-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gacymwohq%2Fmirrored.jpg?alt=media&token=406b3c23-de6c-4621-8897-e6efaad3b1f7"
+  },
+  "8gac4w9ohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789753425285-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gac4w9ohq%2Fmirrored.jpg?alt=media&token=86b5742f-efd4-4ae6-9266-f3dc278b4c0f"
+  },
+  "8gacygsohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786257737036-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gacygsohq%2Fmirrored.jpg?alt=media&token=d72b803a-1cd6-4e7b-8f12-afcc4eb25dbd"
+  },
+  "8gablumohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789751419545-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gablumohq%2Fmirrored.jpg?alt=media&token=c8791802-da63-4654-b518-256dc4ea72d2"
+  },
+  "8gablnrohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786058541498-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gablnrohq%2Fmirrored.jpg?alt=media&token=978453eb-2905-4f66-a7a4-2799e14db204"
+  },
+  "8gabi9dohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053757375-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gabi9dohq%2Fmirrored.jpg?alt=media&token=9b99cc55-6134-40ce-8a0b-1015a690f04f"
+  },
+  "8gabhysohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750527746-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gabhysohq%2Fmirrored.jpg?alt=media&token=318e0066-45a6-41e4-a046-a97b4af106dd"
+  },
+  "8gabhxeohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781860492594-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gabhxeohq%2Fmirrored.jpg?alt=media&token=82821993-e9e3-4298-8109-78af6a06a7f3"
+  },
+  "8gabhp4ohq": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/9750760581.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gabhp4ohq%2Fmirrored.jpg?alt=media&token=3d559f18-4e46-49a4-bf54-d980db3aa0c9"
+  },
+  "8gabhmaohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786052997413-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gabhmaohq%2Fmirrored.jpg?alt=media&token=1c5fae18-8ef2-482c-843f-3f4efafc1fe9"
+  },
+  "8gabhanohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786054729692-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gabhanohq%2Fmirrored.jpg?alt=media&token=83ce5292-f9f8-4724-95b9-6c7c8c43aaa8"
+  },
+  "8gabhkzohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786050207941-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gabhkzohq%2Fmirrored.jpg?alt=media&token=7f7664a2-8ef5-41d3-8153-6afbeaac529f"
+  },
+  "8gabhalohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786059702607-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gabhalohq%2Fmirrored.jpg?alt=media&token=cfa0c4a5-845c-49fd-bd1a-d41dad93ec26"
+  },
+  "8gabh76ohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786057762719-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gabh76ohq%2Fmirrored.jpg?alt=media&token=025b5977-1c52-4750-860a-f9d83bc0852e"
+  },
+  "7fte3jghd6": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/9758733680.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F7fte3jghd6%2Fmirrored.jpg?alt=media&token=da2a0ff8-3e8c-46f6-ba88-4990a7bac049"
+  },
+  "8gabh4yohq": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786059902700-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F8gabh4yohq%2Fmirrored.jpg?alt=media&token=deeaecb7-e2e2-4573-a3cf-693f05e10ec0"
+  },
+  "7ftepp2hd6": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786057762665-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F7ftepp2hd6%2Fmirrored.jpg?alt=media&token=983f8ed8-4a2c-45a7-8e1f-99bcaa5329b0"
+  },
+  "7fte387hd6": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750700453-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F7fte387hd6%2Fmirrored.jpg?alt=media&token=3e52a91c-032b-425f-a905-64533aed4653"
+  },
+  "7fte31nhd6": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789752201699-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F7fte31nhd6%2Fmirrored.jpg?alt=media&token=26cd757d-3993-41b7-b973-b84990529d78"
+  },
+  "7ft50mdhd6": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/1529920868.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F7ft50mdhd6%2Fmirrored.jpg?alt=media&token=fc83994a-4125-4454-98dc-14e09888cc10"
+  },
+  "7ft50slhd6": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789944824644-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F7ft50slhd6%2Fmirrored.jpg?alt=media&token=ec26eb6e-7419-4b9f-9c1b-482a84236b8e"
+  },
+  "6u3gwtv8dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789944888349-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3gwtv8dt%2Fmirrored.jpg?alt=media&token=547a82ac-b8c6-40fe-86ce-16866aac307d"
+  },
+  "7ft50aghd6": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786054927203-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F7ft50aghd6%2Fmirrored.jpg?alt=media&token=5987e410-22cd-4d13-8456-7dc2ac5ca2d1"
+  },
+  "6u3giuo8dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754370096-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3giuo8dt%2Fmirrored.jpg?alt=media&token=f22874c3-4422-40c9-b48b-1f30406c0bb0"
+  },
+  "6u3glpc8dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781853261947-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3glpc8dt%2Fmirrored.jpg?alt=media&token=2352613f-fe77-45b9-ae4f-34355ca244d9"
+  },
+  "6u3giez8dt": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6052654287.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3giez8dt%2Fmirrored.jpg?alt=media&token=63141de9-d217-4815-a578-7f8a8ecb8a95"
+  },
+  "6u3g7yr8dt": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6052651067.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3g7yr8dt%2Fmirrored.jpg?alt=media&token=5ab23048-7ec9-4cce-919d-15681e581ebd"
+  },
+  "6u3gi068dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789751419569-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3gi068dt%2Fmirrored.jpg?alt=media&token=4e8715fb-13e0-4a30-aa56-2f8e318ad31b"
+  },
+  "6u3g7qw8dt": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6057409272.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3g7qw8dt%2Fmirrored.jpg?alt=media&token=b9fb4174-82c9-4282-b3dc-f773c6600aa6"
+  },
+  "6u3bnxh8dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051980973-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bnxh8dt%2Fmirrored.jpg?alt=media&token=ee54f377-bde7-4abe-88f3-1576a5d771a1"
+  },
+  "6u3bnws8dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053600145-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bnws8dt%2Fmirrored.jpg?alt=media&token=28757f8c-19f8-4932-8fd7-c1db85617db9"
+  },
+  "6u3bkzo8dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786056260452-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bkzo8dt%2Fmirrored.jpg?alt=media&token=123f59c1-7d0d-4e26-a261-810fae4d81e6"
+  },
+  "6u3bkxf8dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053754756-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bkxf8dt%2Fmirrored.jpg?alt=media&token=9c240db7-2de4-4a52-aead-ed52fb719095"
+  },
+  "6u3bkri8dt": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6053145904.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bkri8dt%2Fmirrored.jpg?alt=media&token=feb5787b-bf5d-4de9-a13a-44add50a8241"
+  },
+  "6u3bkw18dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789757942450-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bkw18dt%2Fmirrored.jpg?alt=media&token=c4eb57ed-bf12-40d6-af46-c80fa37e9ccf"
+  },
+  "6u3bkgr8dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786055903367-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bkgr8dt%2Fmirrored.jpg?alt=media&token=6621fc60-ddc3-4769-a9a9-19ee7b47866e"
+  },
+  "6u3bkj78dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786257118026-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bkj78dt%2Fmirrored.jpg?alt=media&token=99960f95-8976-4ba0-8147-ff069e886709"
+  },
+  "6u3bkga8dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786055134655-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bkga8dt%2Fmirrored.jpg?alt=media&token=63ab0500-7e25-4e8e-9fc1-a136a5133eb4"
+  },
+  "6u3bkbx8dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786050906387-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bkbx8dt%2Fmirrored.jpg?alt=media&token=ccb63505-f744-4ef7-88bd-eff434882db8"
+  },
+  "6u3bk938dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786057762207-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bk938dt%2Fmirrored.jpg?alt=media&token=aaac63a7-630e-47ad-8729-1748c6dadf4d"
+  },
+  "6u3bk6a8dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750741074-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bk6a8dt%2Fmirrored.jpg?alt=media&token=aa1e652e-f596-487e-bfea-990ce4d18659"
+  },
+  "6u3bk2o8dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786254054761-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bk2o8dt%2Fmirrored.jpg?alt=media&token=170b2580-dd4b-4fcb-8b59-1c9c47aeef71"
+  },
+  "6u3bk158dt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786055443801-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F6u3bk158dt%2Fmirrored.jpg?alt=media&token=819b5a36-5a04-4cb1-b6b3-27ab4c86b968"
+  },
+  "5uphRHYSQK5H0OyAiqtx": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781481476072-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F5uphRHYSQK5H0OyAiqtx%2Fmirrored.jpg?alt=media&token=5432924b-b6cb-4ed9-9a25-51fc6af3c24d"
+  },
+  "56uocr2v9x": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789944198394-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F56uocr2v9x%2Fmirrored.jpg?alt=media&token=8fc3c6f7-3fe9-4bf0-a600-300cd06dd00a"
+  },
+  "56uocnfv9x": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789752896123-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F56uocnfv9x%2Fmirrored.jpg?alt=media&token=a8673d57-8c91-4906-92a3-be862fb97dd0"
+  },
+  "56uoc4ev9x": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780091955106-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F56uoc4ev9x%2Fmirrored.jpg?alt=media&token=6a9eb685-ba32-48b2-80e1-5b0aa47dd592"
+  },
+  "56uo3oyv9x": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786050930979-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F56uo3oyv9x%2Fmirrored.jpg?alt=media&token=e1677a91-d4a9-4892-ae9a-bc131a725c46"
+  },
+  "56uo3l8v9x": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786059908658-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F56uo3l8v9x%2Fmirrored.jpg?alt=media&token=1818a248-8630-4dfb-a2e4-76470efa84f4"
+  },
+  "56uo3nzv9x": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053755890-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F56uo3nzv9x%2Fmirrored.jpg?alt=media&token=842883f0-b229-4ca3-92ab-bbebf49fee1b"
+  },
+  "56uo3fbv9x": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789753900584-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F56uo3fbv9x%2Fmirrored.jpg?alt=media&token=62f4dcf4-c37b-42ac-ae49-28da317b8947"
+  },
+  "56uo34sv9x": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750803314-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F56uo34sv9x%2Fmirrored.jpg?alt=media&token=9753ecd5-d508-4741-bab4-90d35bd722ad"
+  },
+  "4j7wfa1kbx": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6054069977.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F4j7wfa1kbx%2Fmirrored.jpg?alt=media&token=e9a26ccf-2e95-4ebc-8680-a2de3f2aa39b"
+  },
+  "4j7wfpzkbx": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786055162566-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F4j7wfpzkbx%2Fmirrored.jpg?alt=media&token=09698d14-651d-4098-a980-cc009daec19b"
+  },
+  "4j7wf4fkbx": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053326090-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F4j7wf4fkbx%2Fmirrored.jpg?alt=media&token=454fb91f-e046-4cc7-9070-905b57fbc676"
+  },
+  "56u8jmnv9x": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780099478355-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F56u8jmnv9x%2Fmirrored.jpg?alt=media&token=66c69319-1297-4a03-9595-befad462bdc7"
+  },
+  "4j7qohekbx": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/9750754573.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F4j7qohekbx%2Fmirrored.jpg?alt=media&token=b179d929-bb69-4860-9909-164c8739d7bc"
+  },
+  "4j7qozvkbx": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750530326-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F4j7qozvkbx%2Fmirrored.jpg?alt=media&token=24742adb-3a18-488f-b240-f33dc9e7e9c5"
+  },
+  "4j7qo6ukbx": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750803772-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F4j7qo6ukbx%2Fmirrored.jpg?alt=media&token=e0f20b5b-932c-4925-aaaf-ed394ae2656c"
+  },
+  "4j7q6lekbx": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053756231-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F4j7q6lekbx%2Fmirrored.jpg?alt=media&token=baba36b8-9628-4c70-87ef-6de9dc7edd5a"
+  },
+  "4j7q63rkbx": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789755100982-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F4j7q63rkbx%2Fmirrored.jpg?alt=media&token=1461d592-cdee-48eb-968f-3679fa4847c7"
+  },
+  "3kqytvparj": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750805561-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F3kqytvparj%2Fmirrored.jpg?alt=media&token=90298fe8-d687-49c3-8d0d-0fb956ed1712"
+  },
+  "3kqytq6arj": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789751413666-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F3kqytq6arj%2Fmirrored.jpg?alt=media&token=8690c3ab-7c7c-4597-be96-5eb52ef46e10"
+  },
+  "3kqy5msarj": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754700671-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F3kqy5msarj%2Fmirrored.jpg?alt=media&token=f636d39e-ea7e-413f-ad58-abdf9c6bfb25"
+  },
+  "3kqrlsqarj": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786058547117-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F3kqrlsqarj%2Fmirrored.jpg?alt=media&token=4f252295-88ea-4c42-8c3a-9bd8d89c18a9"
+  },
+  "3kqrht7arj": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754030587-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F3kqrht7arj%2Fmirrored.jpg?alt=media&token=119fa20b-b8fe-46c9-aefc-4a1716d84d85"
+  },
+  "3kqrleiarj": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051850788-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F3kqrleiarj%2Fmirrored.jpg?alt=media&token=dc516d00-2cc9-4b5a-ad8c-5e2d13098ff4"
+  },
+  "3kqrhkuarj": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786055029500-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F3kqrhkuarj%2Fmirrored.jpg?alt=media&token=a4102c62-3173-41eb-a331-aea0b138e51e"
+  },
+  "39qV15p59abVeOOKLBHC": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/1524770485.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F39qV15p59abVeOOKLBHC%2Fmirrored.jpg?alt=media&token=83729d09-5329-4651-9c14-7cf887d6e49d"
+  },
+  "3kqrhjmarj": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789755393698-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F3kqrhjmarj%2Fmirrored.jpg?alt=media&token=443476fa-cbda-440e-8702-6f339d31dd2d"
+  },
+  "2ob0xfftqt": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/9754704724.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F2ob0xfftqt%2Fmirrored.jpg?alt=media&token=815933ca-90e1-4a7b-a4a8-2daa92cce617"
+  },
+  "2obdp75tqt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786059841047-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F2obdp75tqt%2Fmirrored.jpg?alt=media&token=eff8c758-9e6f-4ab5-9168-66ec0a9ca7df"
+  },
+  "2ob0wyntqt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786051980560-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F2ob0wyntqt%2Fmirrored.jpg?alt=media&token=7933bc7c-f073-43a5-b3dd-6797dc5dc109"
+  },
+  "2ob0wpmtqt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786056260414-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F2ob0wpmtqt%2Fmirrored.jpg?alt=media&token=8fc2cb3c-c09d-4d1b-9e63-2c2b5e6fdc7b"
+  },
+  "2ob0xeetqt": {
+    "old": "https://covers.openlibrary.org/b/isbn/9780008117498-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F2ob0xeetqt%2Fmirrored.jpg?alt=media&token=20d301da-4fab-4a8b-bf70-71ed17a17a88"
+  },
+  "0cnmzxhdcu": {
+    "old": "https://covers.openlibrary.org/b/isbn/9781846685828-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F0cnmzxhdcu%2Fmirrored.jpg?alt=media&token=3fdb9d90-f954-4fe9-b609-4124c42dbc1e"
+  },
+  "0cnmzwsdcu": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786050830705-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F0cnmzwsdcu%2Fmirrored.jpg?alt=media&token=14675c02-44cf-4d26-8145-2d3907deae26"
+  },
+  "0cnm78adcu": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786053756040-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F0cnm78adcu%2Fmirrored.jpg?alt=media&token=a4493509-de4f-432b-8d1c-1ad8d2c4b3c1"
+  },
+  "0cn3yiudcu": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789750807459-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F0cn3yiudcu%2Fmirrored.jpg?alt=media&token=b276d671-52cd-4164-9392-b5ae3e8b42e3"
+  },
+  "0cn3y7bdcu": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789754030976-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F0cn3y7bdcu%2Fmirrored.jpg?alt=media&token=88f45c06-f782-4acf-8651-1b0b31129275"
+  },
+  "0cn3xzcdcu": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786057950635-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F0cn3xzcdcu%2Fmirrored.jpg?alt=media&token=cb316f41-4135-4d90-9811-4c661df680c6"
+  },
+  "0cn3x9ydcu": {
+    "old": "https://covers.openlibrary.org/b/isbn/9786257442237-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F0cn3x9ydcu%2Fmirrored.jpg?alt=media&token=2616de45-725b-44fc-88fe-ee6a3fb6afc1"
+  },
+  "0cn3xtkdcu": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789755705866-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F0cn3xtkdcu%2Fmirrored.jpg?alt=media&token=96439179-45ed-4a88-b0ba-2231db318241"
+  },
+  "0cn3x6rdcu": {
+    "old": "https://images-na.ssl-images-amazon.com/images/P/6258489737.01._SCLZZZZZZZ_.jpg",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F0cn3x6rdcu%2Fmirrored.jpg?alt=media&token=37efe691-75ba-47a0-8a9d-bb9644ddf9fe"
+  },
+  "0cn3x3zdcu": {
+    "old": "https://covers.openlibrary.org/b/isbn/9789753639156-L.jpg?default=false",
+    "new": "https://firebasestorage.googleapis.com/v0/b/cklibrary-cb9b1.firebasestorage.app/o/covers%2F0cn3x3zdcu%2Fmirrored.jpg?alt=media&token=d5876f7f-a51b-4caa-ad90-da1a4fd46fc3"
   }
 }

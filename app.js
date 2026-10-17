@@ -789,7 +789,7 @@ function bookCard(b) {
 
   const card = el("article", { class: "book book-entry", role: "button", tabindex: "0",
                                "data-book-id": b.id, "aria-label": b.title },
-    coverNode(b, "S"),
+    coverNode(b, "L"),
     el("div", { class: "book-main" },
       // Bayrak başlığın içinde float: yalnızca ilk satırı daraltır, sağ boşluk rezervi gerekmez.
       el("h3", { class: "book-title" }, readFlag, b.title || "(başlıksız)"),
@@ -1380,6 +1380,8 @@ function openForm(bookId = null) {
   formError.hidden = true;
   formDup.hidden = true;
   formDupOk = false;
+  $("lookup-isbn-input").value = "";
+  clearFormNote();
   $("f-title").value = b?.title || "";
   $("f-creators").value = b?.creators || "";
   $("f-publisher").value = b?.publisher || "";
@@ -1388,10 +1390,14 @@ function openForm(bookId = null) {
   $("f-isbn13").value = b?.isbn13 || "";
   $("f-isbn10").value = b?.isbn10 || "";
   $("f-description").value = b?.description || "";
+  setFormCover(b?.cover_url || "");
   formDialog.showModal();
   // Kısa ekranlarda (telefon + açık klavye) otomatik odak klavyeyi
   // dayayıp formu perdeliyor; odaklamayı uzun ekrana sakla.
-  if (matchMedia("(min-height: 500px)").matches) $("f-title").focus();
+  if (matchMedia("(min-height: 500px)").matches) {
+    if (!b) $("lookup-isbn-input").focus();
+    else $("f-title").focus();
+  }
 }
 
 $("add-book").addEventListener("click", () => openForm(null));
@@ -1406,6 +1412,7 @@ bookForm.addEventListener("submit", async (e) => {
   const pagesRaw = $("f-pages").value.trim();
   const pages = pagesRaw ? parseInt(pagesRaw, 10) : null;
 
+  const coverUrlVal = $("f-cover-url").value.trim();
   const fields = {
     title: fixTurkishMojibake(title),
     creators: fixTurkishMojibake($("f-creators").value.trim()),
@@ -1415,6 +1422,7 @@ bookForm.addEventListener("submit", async (e) => {
     isbn10: $("f-isbn10").value.trim().replace(/[^0-9Xx]/g, ""),
     description: fixTurkishMojibake($("f-description").value.trim()),
     pages: Number.isFinite(pages) ? pages : null,
+    ...(coverUrlVal ? { cover_url: coverUrlVal } : {}),
   };
 
   if (!state.editingId && !formDupOk) {
@@ -1439,6 +1447,21 @@ bookForm.addEventListener("submit", async (e) => {
     formSubmit.textContent = state.editingId ? "Değişiklikleri kaydet" : "Kaydet";
   }
 });
+
+function setFormCover(url) {
+  const input = $("f-cover-url");
+  const preview = $("form-cover-preview");
+  const img = $("form-cover-img");
+  const clean = String(url || "").trim();
+  input.value = clean;
+  if (clean) {
+    img.src = clean;
+    preview.hidden = false;
+  } else {
+    img.src = "";
+    preview.hidden = true;
+  }
+}
 
 function showFormError(msg) { formError.textContent = msg; formError.hidden = false; }
 
@@ -1559,6 +1582,19 @@ $("form-dup-ok").addEventListener("click", () => {
 $("form-dup-no").addEventListener("click", () => { formDup.hidden = true; });
 
 scanBtn.addEventListener("click", () => { clearFormNote(); formError.hidden = true; openScanner(); });
+$("lookup-isbn-btn")?.addEventListener("click", () => {
+  const val = $("lookup-isbn-input").value;
+  applyIsbnLookup(val);
+});
+$("lookup-isbn-input")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    applyIsbnLookup(e.target.value);
+  }
+});
+$("form-cover-remove")?.addEventListener("click", () => {
+  setFormCover("");
+});
 scanPhotoBtn?.addEventListener("click", () => scanFile?.click());
 scanFile?.addEventListener("change", handleScanFile);
 $("batch-scan")?.addEventListener("click", openBatchScanner);
@@ -1855,6 +1891,82 @@ async function drIsbnBook(digits) {
   return info;
 }
 
+async function applyIsbnLookup(raw) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  if (digits.length !== 10 && digits.length !== 13) {
+    showFormError("Lütfen geçerli bir 10 veya 13 haneli ISBN girin.");
+    return;
+  }
+  formError.hidden = true;
+  $("lookup-isbn-input").value = digits;
+  if (digits.length === 13) {
+    $("f-isbn13").value = digits;
+    if (!$("f-isbn10").value) $("f-isbn10").value = isbn13to10(digits) || "";
+  } else {
+    $("f-isbn10").value = digits;
+  }
+
+  showFormNote(`${digits} aranıyor, kitap ve kapak bilgileri getiriliyor…`);
+  const btn = $("lookup-isbn-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Aranıyor…"; }
+
+  try {
+    const info = await lookupIsbn(digits);
+    if (!info || !info.title) {
+      showFormNote("Bu ISBN kayıtlarda bulunamadı. Bilgileri elle doldurabilirsin.");
+      return;
+    }
+    $("f-title").value = info.title;
+    $("f-creators").value = info.creators;
+    $("f-publisher").value = info.publisher;
+    $("f-date").value = info.publish_date;
+    $("f-pages").value = info.pages ?? "";
+
+    // Kapak bulma: önce ISBN bazlı doğrudan CDN, sonra diğer kaynaklar
+    showFormNote(`“${info.title}” bulundu. Kapak taranıyor…`);
+    const tempBook = {
+      title: info.title,
+      creators: info.creators,
+      isbn13: digits.length === 13 ? digits : "",
+      isbn10: digits.length === 10 ? digits : (isbn13to10(digits) || "")
+    };
+    let foundCover = null;
+    try {
+      foundCover = await findCoverForBook(tempBook);
+    } catch { foundCover = null; }
+
+    if (foundCover) {
+      setFormCover(foundCover);
+      showFormNote(`“${info.title}” ve kapağı bulundu — kontrol edip Kaydet'e bas.`);
+    } else {
+      showFormNote(`“${info.title}” bulundu (kapak bulunamadı) — kontrol edip Kaydet'e bas.`);
+    }
+  } catch (err) {
+    showFormError("Arama sırasında hata oluştu. Bilgileri elle yazabilirsin.");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "ISBN ile Bul"; }
+  }
+}
+
+async function findCoverForBook(b) {
+  if (b.isbn13) {
+    const olUrl = `https://covers.openlibrary.org/b/isbn/${b.isbn13}-L.jpg`;
+    if (await imageLoads(olUrl)) return olUrl;
+  }
+  const isbn10 = isbn13to10(b.isbn10 || b.isbn13);
+  if (isbn10) {
+    const amzUrl = `https://images-na.ssl-images-amazon.com/images/P/${isbn10}.01._SCLZZZZZZZ_.jpg`;
+    if (await imageLoads(amzUrl)) return amzUrl;
+  }
+  const ol = await olSearchCover(b);
+  if (ol) return ol;
+  const gb = (await gbSearchCovers(b, 1))[0];
+  if (gb && await imageLoads(gb)) return gb;
+  const ap = (await appleSearchCovers(b, 1))[0];
+  if (ap && await imageLoads(ap)) return ap;
+  return null;
+}
+
 async function handleBarcode(raw) {
   const digits = String(raw || "").replace(/\D/g, "");
   if (digits.length !== 10 && digits.length !== 13) {
@@ -1874,23 +1986,7 @@ async function handleBarcode(raw) {
   scanDone = true;
   stopScanner();
   scanDialog.close();
-  if (digits.length === 13) $("f-isbn13").value = digits;
-  else $("f-isbn10").value = digits;
-
-  showFormNote("Kitap bilgileri getiriliyor…");
-  let info = null;
-  try { info = await lookupIsbn(digits); } catch { info = null; }
-  if (!info || !info.title) {
-    formError.hidden = true;
-    showFormNote("Bu ISBN kayıtlarda bulunamadı. Bilgileri elle yazabilirsin.");
-    return;
-  }
-  $("f-title").value = info.title;
-  $("f-creators").value = info.creators;
-  $("f-publisher").value = info.publisher;
-  $("f-date").value = info.publish_date;
-  $("f-pages").value = info.pages ?? "";
-  showFormNote(`“${info.title}” bulundu — kontrol edip Kaydet'e bas.`);
+  await applyIsbnLookup(digits);
 }
 
 // ── Toplu barkod tarama: diyalog açık kalır, her barkod direkt kaydedilir ──
@@ -2100,7 +2196,7 @@ async function olSearchCovers(b, n) {
     for (const d of (data?.docs || [])) {
       if (d.cover_i && !seen.has(d.cover_i)) {
         seen.add(d.cover_i);
-        urls.push(`https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`);
+        urls.push(`https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg`);
         if (urls.length >= n) return urls;
       }
     }
@@ -2602,7 +2698,7 @@ async function findFirstCover(b, onStage = null) {
   const say = (msg) => { try { onStage?.(msg); } catch { /* yoksay */ } };
   if (b.isbn13) {
     say("ISBN kapağı deneniyor (Open Library)…");
-    const olUrl = `https://covers.openlibrary.org/b/isbn/${b.isbn13}-M.jpg`;
+    const olUrl = `https://covers.openlibrary.org/b/isbn/${b.isbn13}-L.jpg`;
     if (await imageLoads(olUrl)) { say("ISBN kapağı bulundu."); return olUrl; }
   }
   const isbn10 = isbn13to10(b.isbn10 || b.isbn13);
@@ -2639,7 +2735,7 @@ async function findFirstCover(b, onStage = null) {
 // cover_url'lu kitapta farklı kapak bulunursa değişiklik önerilir.
 async function proposeCover(b, onStage = null) {
   const current = b.cover_url || null;
-  const isbnUrl = b.isbn13 ? `https://covers.openlibrary.org/b/isbn/${b.isbn13}-M.jpg` : null;
+  const isbnUrl = b.isbn13 ? `https://covers.openlibrary.org/b/isbn/${b.isbn13}-L.jpg` : null;
   const isbnWorks = isbnUrl ? await imageLoads(isbnUrl) : false;
   if (isbnWorks && (!current || current === isbnUrl)) return null;
   const alt = await findFirstCover(b, onStage);

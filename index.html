@@ -25,7 +25,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Taviraj:ital,wght@0,400;0,700;1,400&family=Public+Sans:wght@400;600;700&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261015m" />
+  <link rel="stylesheet" href="styles.css?v=20261016a" />
 </head>
 <body>
   <noscript>
@@ -182,8 +182,22 @@
     <form id="book-form" class="book-form" novalidate>
       <h2 id="form-title" class="sheet-title">Kitap ekle</h2>
 
-      <button type="button" id="scan-btn" class="btn btn-ghost btn-block">Barkod tara</button>
+      <div class="form-lookup-actions">
+        <button type="button" id="scan-btn" class="btn btn-ghost">Barkod tara</button>
+        <div class="isbn-lookup-group">
+          <input type="text" id="lookup-isbn-input" class="isbn-lookup-input" placeholder="ISBN girin (10 veya 13 hane)" autocomplete="off" />
+          <button type="button" id="lookup-isbn-btn" class="btn btn-primary btn-lookup">ISBN ile Bul</button>
+        </div>
+      </div>
       <p id="form-note" class="form-note" role="status" hidden></p>
+      <input type="hidden" id="f-cover-url" name="cover_url" />
+      <div id="form-cover-preview" class="form-cover-preview" hidden>
+        <div class="cover"><img id="form-cover-img" src="" alt="Kapak önizlemesi" /></div>
+        <div class="form-cover-info">
+          <span class="form-cover-label">Bulunan Kapak</span>
+          <button type="button" id="form-cover-remove" class="btn btn-ghost btn-tiny">Kapağı kaldır</button>
+        </div>
+      </div>
 
       <label class="field">
         <span class="field-label">Başlık <em class="req">zorunlu</em></span>
