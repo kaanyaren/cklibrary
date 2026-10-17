@@ -1212,6 +1212,21 @@ function renderDetail(bookId) {
   }
 
   // ── 8. Hareket Geçmişi (Kompakt akış, >3 kayıt varsa katlanır) ──
+  const bookAddedAt = b.created_at || (b.added_at ? `${b.added_at}T00:00:00.000Z` : null);
+  const hasAddActivity = acts.some((a) => a.action === "add");
+  const allActs = [...acts];
+  if (!hasAddActivity && bookAddedAt) {
+    allActs.push({
+      id: `add-${b.id}`,
+      bookId: b.id,
+      name: b.created_by || "kütüphane",
+      action: "add",
+      detail: "",
+      at: bookAddedAt,
+    });
+  }
+  allActs.sort((x, y) => String(y.at || "").localeCompare(String(x.at || "")));
+
   const renderActItem = (a) => el("li", { class: "activity-entry" },
     el("span", { class: "activity-name", text: displayName(a.name) || "?" }),
     el("span", { class: "activity-what" },
@@ -1222,14 +1237,14 @@ function renderDetail(bookId) {
   const actSec = el("section", { class: "section" },
     el("h3", {
       class: "section-title",
-      text: acts.length ? `Hareket geçmişi · ${acts.length}` : "Hareket geçmişi",
+      text: allActs.length ? `Hareket geçmişi · ${allActs.length}` : "Hareket geçmişi",
     }));
 
-  if (!acts.length) {
+  if (!allActs.length) {
     actSec.append(el("p", { class: "prose is-empty", text: "Kayıtlı hareket yok." }));
   } else {
-    const visibleActs = acts.slice(0, 3);
-    const hiddenActs = acts.slice(3);
+    const visibleActs = allActs.slice(0, 3);
+    const hiddenActs = allActs.slice(3);
     actSec.append(el("ul", { class: "activity-list" }, ...visibleActs.map(renderActItem)));
     if (hiddenActs.length) {
       const moreDetails = el("details", { class: "activity-more" },
