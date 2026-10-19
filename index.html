@@ -25,7 +25,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Taviraj:ital,wght@0,400;0,700;1,400&family=Public+Sans:wght@400;600;700&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261017b" />
+  <link rel="stylesheet" href="styles.css?v=20261019a" />
 </head>
 <body>
   <noscript>
@@ -266,9 +266,15 @@
       </div>
       <div class="scan-frame">
         <video id="scan-video" playsinline webkit-playsinline muted autoplay></video>
+        <button type="button" id="scan-torch" class="scan-torch" aria-pressed="false" hidden>Flaş</button>
       </div>
       <p id="scan-status" class="scan-status" role="status">Kamera açılıyor…</p>
       <p id="scan-count" class="scan-status" role="status" hidden></p>
+      <div class="isbn-lookup-group">
+        <input type="text" id="scan-manual-isbn" class="isbn-lookup-input" placeholder="ISBN yaz (10 veya 13 hane), Enter ile ekle"
+               autocomplete="off" inputmode="numeric" aria-label="ISBN ile ekle" />
+        <button type="button" id="scan-manual-add" class="btn btn-primary btn-lookup">Ekle</button>
+      </div>
       <ul id="scan-items" class="note-list"></ul>
       <input id="scan-file" type="file" accept="image/*" capture="environment" hidden />
       <button type="button" id="scan-photo-btn" class="btn btn-ghost btn-block">Fotoğrafla tara (kamera açılmazsa)</button>
@@ -320,6 +326,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="app.js?v=20261017c"></script>
+  <script type="module" src="app.js?v=20261019b"></script>
 </body>
 </html>

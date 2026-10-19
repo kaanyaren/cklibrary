@@ -1882,3 +1882,61 @@ html, body { overflow-x: clip; }
   }
 }
 
+
+/* ── Barkod tarama: flaş ──────────────────────────────── */
+.scan-frame::after { pointer-events: none; }
+.scan-torch {
+  position: absolute;
+  right: .75rem;
+  bottom: .75rem;
+  z-index: 2;
+  min-height: 44px;
+  padding: .5rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, .65);
+  border-radius: 999px;
+  background: rgba(20, 16, 12, .72);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: .85rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.scan-torch[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fbf4e6;
+}
+.scan-torch:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* ── Kitap formu: Kaydet her zaman görünür ────────────── */
+.sheet-form .form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  padding-top: .75rem;
+  padding-bottom: calc(.75rem + env(safe-area-inset-bottom));
+  background: var(--paper-raise);
+  border-top: 1px solid var(--line-soft);
+}
+@media (max-width: 640px) {
+  .sheet-form .form-actions {
+    flex-direction: row;
+    gap: .5rem;
+    margin: 0 -.9rem -1rem;
+    padding-left: .9rem;
+    padding-right: .9rem;
+  }
+  .sheet-form .form-actions .btn {
+    flex: 1 1 0;
+    width: auto;
+  }
+  .sheet-form .form-actions .btn-primary {
+    flex: 2 1 0;
+  }
+}

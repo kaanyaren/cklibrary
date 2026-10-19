@@ -1673,6 +1673,7 @@ const scanVideo = $("scan-video");
 const scanStatus = $("scan-status");
 const scanFile = $("scan-file");
 const scanPhotoBtn = $("scan-photo-btn");
+const scanTorchBtn = $("scan-torch");
 const formNote = $("form-note");
 let scanStream = null, scanTimer = 0, scanReader = null, scanDone = false;
 let scanBatch = false, scanBusy = false, scanAdded = 0, scanSkipped = 0;
@@ -1724,6 +1725,20 @@ $("form-cover-remove")?.addEventListener("click", () => {
 });
 scanPhotoBtn?.addEventListener("click", () => scanFile?.click());
 scanFile?.addEventListener("change", handleScanFile);
+$("scan-manual-add")?.addEventListener("click", () => {
+  const input = $("scan-manual-isbn");
+  const val = input?.value || "";
+  input.value = "";
+  if (val.trim()) handleBarcode(val);
+});
+$("scan-manual-isbn")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    const val = e.target.value || "";
+    e.target.value = "";
+    if (val.trim()) handleBarcode(val);
+  }
+});
 $("batch-scan")?.addEventListener("click", openBatchScanner);
 // Kart menü: seçince, dışarı dokununca, Esc ile kapanır.
 const bulkMenu = $("bulk-menu");
@@ -1741,7 +1756,39 @@ document.querySelectorAll("[data-close-scan]").forEach((b) =>
 function stopStream() {
   if (scanStream) { scanStream.getTracks().forEach((t) => t.stop()); scanStream = null; }
   if (scanVideo.srcObject) scanVideo.srcObject = null;
+  resetTorch();
 }
+
+// Telefon flaşı: yalnızca kamera torch yeteneğini destekliyorsa gösterilir
+// (Chrome/Android). iOS Safari torch'u desteklemez → buton gizli kalır.
+function scanVideoTrack() {
+  return scanStream?.getVideoTracks?.()[0] || null;
+}
+function resetTorch() {
+  if (!scanTorchBtn) return;
+  scanTorchBtn.hidden = true;
+  scanTorchBtn.setAttribute("aria-pressed", "false");
+  scanTorchBtn.textContent = "Flaş";
+}
+function setupTorch() {
+  resetTorch();
+  let caps = null;
+  try { caps = scanVideoTrack()?.getCapabilities?.(); } catch { caps = null; }
+  if (caps?.torch) scanTorchBtn.hidden = false;
+}
+async function toggleTorch() {
+  const track = scanVideoTrack();
+  if (!track) return;
+  const on = scanTorchBtn.getAttribute("aria-pressed") !== "true";
+  try {
+    await track.applyConstraints({ advanced: [{ torch: on }] });
+    scanTorchBtn.setAttribute("aria-pressed", String(on));
+    scanTorchBtn.textContent = on ? "Flaş açık" : "Flaş";
+  } catch {
+    resetTorch();
+  }
+}
+scanTorchBtn?.addEventListener("click", toggleTorch);
 function stopScanner() {
   scanDone = true;
   clearTimeout(scanTimer);
@@ -1759,6 +1806,8 @@ async function openScanner() {
   scanDone = false;
   scanStatus.textContent = "Kamera açılıyor…";
   if (scanFile) scanFile.value = "";
+  const manual = $("scan-manual-isbn");
+  if (manual) manual.value = "";
   if (!scanDialog.open) scanDialog.showModal();
   // iPad mini / eski iOS: mediaDevices hiç olmayabilir (eski Safari, WKWebView).
   if (!navigator.mediaDevices?.getUserMedia) {
@@ -1791,6 +1840,7 @@ async function openScanner() {
   scanVideo.muted = true;
   scanVideo.srcObject = scanStream;
   try { await scanVideo.play(); } catch { /* oynatılamazsa da devam */ }
+  setupTorch();
   scanStatus.textContent = "Barkodu çerçevenin içine tut…";
   if ("BarcodeDetector" in window) startNativeScan();
   else {
@@ -1865,9 +1915,18 @@ async function startNativeScan() {
     if (scanDone || !scanDialog.open) return;
     try {
       const codes = await detector.detect(scanVideo);
-      if (codes.length) return handleBarcode(codes[0].rawValue);
+      if (codes.length) {
+        const raw = codes[0].rawValue;
+        if (scanBatch) {
+          // ponytail: toplu modda döngü ölmez, sıradaki kareye devam eder
+          scanTimer = setTimeout(tick, 800);
+          handleBarcode(raw);
+          return;
+        }
+        return handleBarcode(raw);
+      }
     } catch { /* bir kareyi atla */ }
-    scanTimer = setTimeout(tick, 300);
+    scanTimer = setTimeout(tick, scanBatch ? 800 : 300);
   };
   tick();
 }
@@ -1882,6 +1941,8 @@ async function startZxingScan() {
   const cx = cv.getContext("2d", { willReadFrequently: true });
   const tick = () => {
     if (scanDone || !scanDialog.open) return;
+    // ponytail: toplu modda kayıt sürerken karesi atla, döngüyü öldürme (tek seferlik return yok)
+    if (scanBatch && scanBusy) { scanTimer = setTimeout(tick, 300); return; }
     const vw = scanVideo.videoWidth, vh = scanVideo.videoHeight;
     if (vw && vh) {
       const sw = Math.round(vw * 0.8), sh = Math.round(vh * 0.8);
@@ -1890,10 +1951,17 @@ async function startZxingScan() {
       cx.drawImage(scanVideo, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, dw, dh);
       try {
         const res = scanReader.decodeFromCanvas(cv);
-        if (res) return handleBarcode(res.getText());
+        if (res) {
+          if (scanBatch) {
+            scanTimer = setTimeout(tick, 800);
+            handleBarcode(res.getText());
+            return;
+          }
+          return handleBarcode(res.getText());
+        }
       } catch { /* barkod yok, sonraki kare */ }
     }
-    scanTimer = setTimeout(tick, 100);
+    scanTimer = setTimeout(tick, scanBatch ? 300 : 100);
   };
   tick();
 }
@@ -2127,6 +2195,8 @@ function openBatchScanner() {
   scanLast = { code: "", at: 0 };
   $("scan-title").textContent = "Toplu barkod tara";
   $("scan-items").innerHTML = "";
+  const manual = $("scan-manual-isbn");
+  if (manual) manual.value = "";
   updateScanCount();
   $("scan-count").hidden = false;
   openScannerKeepBatch();
@@ -2173,6 +2243,7 @@ async function openScannerStreamOnly() {
   scanVideo.muted = true;
   scanVideo.srcObject = scanStream;
   try { await scanVideo.play(); } catch { /* oynatılamazsa da devam */ }
+  setupTorch();
   scanStatus.textContent = "Barkodu çerçevenin içine tut, bitince Kapat'a bas…";
   if ("BarcodeDetector" in window) startNativeScan();
   else {
@@ -2196,9 +2267,8 @@ function resumeBatchScan() {
   scanBusy = false;
   if (!scanBatch || !scanDialog.open) return;
   updateScanCount();
-  // ZXing döngüsü kendi devam eder; native tick durduğu için yeniden başlat.
-  if (!scanReader) startNativeScan();
-  else scanStatus.textContent = "Sonrakini tut, bitince Kapat'a bas…";
+  // Döngüler (native/ZXing) artık kendini sürdürüyor; burada yeniden başlatma yok (çift döngü olur).
+  scanStatus.textContent = "Sonrakini tut, bitince Kapat'a bas…";
 }
 
 async function handleBatchBarcode(digits) {
@@ -2207,8 +2277,12 @@ async function handleBatchBarcode(digits) {
   if (scanBusy || (scanLast.code === digits && now - scanLast.at < 4000)) return;
   scanBusy = true;
   scanLast = { code: digits, at: now };
+  const isbn13 = digits.length === 13 ? digits : "";
+  let isbn10 = digits.length === 10 ? digits : "";
+  if (isbn13 && !isbn10) isbn10 = isbn13to10(isbn13) || "";
   const dup = scanSeen.has(digits)
-    || !!findDuplicateBook(digits.length === 13 ? digits : "", digits.length === 10 ? digits : "");
+    || !!(isbn13 && scanSeen.has(isbn13)) || !!(isbn10 && scanSeen.has(isbn10))
+    || !!findDuplicateBook(isbn13, isbn10);
   if (dup) {
     scanSkipped++;
     addScanRow(`${digits} — zaten var, atlandı`);
@@ -2218,21 +2292,30 @@ async function handleBatchBarcode(digits) {
   scanStatus.textContent = `${digits} bulunuyor…`;
   let info = null;
   try { info = await lookupIsbn(digits); } catch { info = null; }
+  let coverUrl = null;
+  try {
+    coverUrl = await findCoverForBook({
+      title: info?.title || "", creators: info?.creators || "", isbn13, isbn10,
+    });
+  } catch { coverUrl = null; }
   try {
     await saveNew({
-      title: info?.title || "",
+      title: info?.title || digits,
       creators: info?.creators || "",
       publisher: info?.publisher || "",
       publish_date: info?.publish_date || "",
-      isbn13: digits.length === 13 ? digits : "",
-      isbn10: digits.length === 10 ? digits : "",
+      isbn13, isbn10,
+      ...(coverUrl ? { cover_url: coverUrl } : {}),
       description: "",
       pages: info?.pages ?? null,
       scanned_at: new Date().toISOString(),
     });
     scanSeen.add(digits);
+    if (isbn13) scanSeen.add(isbn13);
+    if (isbn10) scanSeen.add(isbn10);
     scanAdded++;
-    addScanRow(info?.title ? `“${info.title}” eklendi` : `${digits} eklendi (bilgi bulunamadı)`);
+    if (info?.title) addScanRow(`“${info.title}” eklendi${coverUrl ? " (kapaklı)" : ""}`);
+    else addScanRow(`${digits} eklendi (bilgi bulunamadı — ISBN başlık oldu, sonra düzenle)`);
     renderShelf();
   } catch {
     scanSkipped++;
