@@ -1940,3 +1940,13 @@ html, body { overflow-x: clip; }
     flex: 2 1 0;
   }
 }
+
+/* ── Detay modalı: okuma sütunu modal genişliğine yayılmasın ── */
+/* Fiş içeriği 64ch'lik tek sütunda kalır ve modal içinde ortalanır;
+   yapışkan üst bar tam genişlikte kalır. */
+.detail-hero,
+.detail-doc {
+  width: 100%;
+  max-width: 64ch;
+  margin-inline: auto;
+}
