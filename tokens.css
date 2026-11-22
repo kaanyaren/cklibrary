@@ -42,3 +42,53 @@
   --line-soft:     #3a332b;
   --ok:            #8fc2a4;
 }
+
+/* shadcn/ui aliases — additive, var() refs only (design.md 209-224). */
+:root {
+  --background:         var(--paper);
+  --foreground:         var(--ink);
+  --card:               var(--paper-raise);
+  --card-foreground:    var(--ink);
+  --primary:            var(--accent);
+  --primary-foreground: var(--paper-raise);
+  --muted:              var(--line);
+  --muted-foreground:   var(--ink-soft);
+  --border:             var(--line);
+  --input:              var(--line);
+  --ring:               var(--accent);
+  --radius:             var(--radius-card);
+}
+:root[data-theme="dark"] {
+  --background:         var(--paper);
+  --foreground:         var(--ink);
+  --card:               var(--paper-raise);
+  --card-foreground:    var(--ink);
+  --primary:            var(--accent);
+  --primary-foreground: var(--paper-raise);
+  --muted:              var(--line);
+  --muted-foreground:   var(--ink-soft);
+  --border:             var(--line);
+  --input:              var(--line);
+  --ring:               var(--accent);
+  --radius:             var(--radius-card);
+}
+
+/* shadcn composition aliases — additive, var() refs only. */
+:root {
+  --secondary:              var(--paper);
+  --secondary-foreground:   var(--ink-soft);
+  --destructive:            var(--accent);
+  --destructive-foreground: var(--paper-raise);
+  --accent-foreground:      var(--paper-raise);
+  --popover:                var(--paper-raise);
+  --popover-foreground:     var(--ink);
+}
+:root[data-theme="dark"] {
+  --secondary:              var(--paper);
+  --secondary-foreground:   var(--ink-soft);
+  --destructive:            var(--accent);
+  --destructive-foreground: var(--paper);
+  --accent-foreground:      var(--paper);
+  --popover:                var(--paper-raise);
+  --popover-foreground:     var(--ink);
+}

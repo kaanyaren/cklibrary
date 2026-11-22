@@ -624,6 +624,8 @@ onAuthStateChanged(auth, async (user) => {
   state.user = { uid: user.uid, email: user.email, ...info };
   loginView.hidden = true;
   appView.hidden = false;
+  const userAvatar = $("user-avatar");
+  if (userAvatar) userAvatar.textContent = displayName(state.user.name).charAt(0).toLocaleUpperCase("tr");
   $("welcome").textContent = `Kütüphanene hoş geldin ${displayName(state.user.name)}.`;
   $("user-role").textContent = state.user.role === "editor" ? "düzenleyici" : "ekleyici";
   $("find-covers").hidden = state.user.role !== "editor";
@@ -718,7 +720,7 @@ function loadErrorMessage(err) {
 function renderSkeleton() {
   shelf.innerHTML = "";
   libraryStats.textContent = "Kitaplar yükleniyor…";
-  for (let i = 0; i < 6; i++) shelf.append(el("div", { class: "skeleton" }));
+  for (let i = 0; i < 6; i++) shelf.append(el("div", { class: "skeleton ui-skeleton", "aria-hidden": "true" }));
 }
 
 function visibleBooks() {
@@ -753,13 +755,38 @@ function renderShelf() {
     `${state.books.length} kitap · ${readPartitive(readCount)} okudun · toplam ${totalPages.toLocaleString("tr-TR")} sayfa` +
     (state.query || state.filter !== "all" || state.addedBy !== "all" ? ` · ${list.length} sonuç` : "") +
     (state.addedBy !== "all" ? ` · ekleyen: ${displayName(state.addedBy)}` : "");
+  const fc = $("filters-current");
+  if (fc) {
+    if (state.filter === "all" && state.addedBy === "all") fc.textContent = "";
+    else {
+      const active = filterButtons.find((b) => b.dataset.filter === state.filter);
+      fc.textContent = (active ? active.textContent : "") + (state.addedBy !== "all" ? ` · ${displayName(state.addedBy)}` : "");
+    }
+  }
 
   if (!list.length) {
-    shelf.append(el("div", { class: "shelf-empty" },
-      el("h2", { text: state.books.length ? "Eşleşen kitap yok" : "Kütüphane boş" }),
-      el("p", { text: state.books.length
+    const emptyBox = el("div", { class: "shelf-empty ui-empty" },
+      el("h2", { class: "ui-empty-title", text: state.books.length ? "Eşleşen kitap yok" : "Kütüphane boş" }),
+      el("p", { class: "ui-empty-description", text: state.books.length
         ? "Aramayı veya filtreleri gevşetmeyi dene."
-        : "İlk kitabı eklemek için “Kitap ekle”ye dokun." })));
+        : "İlk kitabı eklemek için “Kitap ekle”ye dokun." }));
+    if (state.books.length) {
+      emptyBox.append(el("button", {
+        class: "ui-button ui-button-ghost ui-button-sm",
+        type: "button",
+        text: "Filtreleri temizle",
+        onclick: () => {
+          state.filter = "all";
+          state.addedBy = "all";
+          state.query = "";
+          searchInput.value = "";
+          filterButtons.forEach((b) => b.classList.toggle("is-active", b.dataset.filter === "all"));
+          document.querySelectorAll(".addedby-select").forEach((s) => { s.value = "all"; });
+          renderShelf();
+        },
+      }));
+    }
+    shelf.append(emptyBox);
     return;
   }
 
@@ -777,7 +804,8 @@ function bookCard(b) {
   const breakdown = el("ul", { class: "breakdown" },
     ...PEOPLE.map((name) => {
       const v = valueForName(b.id, name);
-      return el("li", { class: name === state.user.name ? "is-mine" : "" },
+      const mine = name === state.user.name;
+      return el("li", { class: mine ? "is-mine ui-badge" : "ui-badge ui-badge-secondary" },
         el("span", { class: "who", text: displayName(name) }),
         el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) }));
     }));
@@ -785,32 +813,36 @@ function bookCard(b) {
   const creators = b.creators || "";
   const publine = [b.publisher, b.publish_date].filter(Boolean).join(" · ");
   const addedBy = b.created_by ? displayName(b.created_by) : null;
+  const subline = [publine || null, addedBy ? `Ekleyen: ${addedBy}` : null].filter(Boolean).join(" · ");
 
-  const readFlag = el("span", { class: "read-flag is-" + myReadStatus(b.id),
-                 text: { read: "okudum", reading: "okuyorum", unread: "okumadım" }[myReadStatus(b.id)] });
+  const readStatus = myReadStatus(b.id);
+  const readFlag = el("span", { class: "read-flag is-" + readStatus + (readStatus === "unread" ? " ui-badge ui-badge-outline" : ""),
+                 text: { read: "okudum", reading: "okuyorum", unread: "okumadım" }[readStatus] });
 
   const seriesInfo = detectBookSeries(b);
   const seriesBadge = seriesInfo
-    ? el("span", { class: "series-badge", title: `${seriesInfo.name}${seriesInfo.volume ? ` #${seriesInfo.volume}` : ""}` },
+    ? el("span", { class: "series-badge ui-badge ui-badge-secondary", title: `${seriesInfo.name}${seriesInfo.volume ? ` #${seriesInfo.volume}` : ""}` },
         el("span", { class: "series-badge-icon", "aria-hidden": "true", text: "◈" }),
         "Bir Serinin Parçası")
     : null;
 
-  const card = el("article", { class: "book book-entry", role: "button", tabindex: "0",
+  const card = el("article", { class: "book book-entry ui-card", role: "button", tabindex: "0",
                                "data-book-id": b.id, "aria-label": b.title },
     coverNode(b, "L"),
     el("div", { class: "book-main" },
-      // Bayrak başlığın içinde float: yalnızca ilk satırı daraltır, sağ boşluk rezervi gerekmez.
-      el("h3", { class: "book-title" }, readFlag, b.title || "(başlıksız)"),
+      el("div", { class: "ui-card-header" },
+        el("div", {},
+          el("h3", { class: "book-title ui-card-title" }, b.title || "(başlıksız)"),
+          creators ? el("p", { class: "book-creators ui-card-description", text: creators }) : null),
+        el("div", { class: "ui-card-action" },
+          el("div", { class: "score" },
+            avgNode,
+            el("span", { class: "score-of", text: "/10" }),
+            el("span", { class: "score-count", text: count ? `${count} oy` : "oy yok" })),
+          readFlag)),
       seriesBadge,
-      creators ? el("p", { class: "book-creators", text: creators }) : null,
-      publine ? el("p", { class: "book-pub", text: publine }) : null,
-      addedBy ? el("p", { class: "book-added", text: `Ekleyen: ${addedBy}` }) : null,
-      el("div", { class: "book-foot" },
-        el("div", { class: "score" },
-          avgNode,
-          el("span", { class: "score-of", text: "/10" }),
-          el("span", { class: "score-count", text: count ? `${count} oy` : "oy yok" })),
+      subline ? el("p", { class: "book-sub", text: subline }) : null,
+      el("div", { class: "book-foot ui-card-footer" },
         breakdown)));
 
   return card;
@@ -870,7 +902,7 @@ function renderDetail(bookId) {
   if (isEditor) {
     topActions.append(
       el("button", {
-        class: "btn btn-ghost btn-tiny",
+        class: "btn btn-ghost btn-tiny ui-button ui-button-ghost ui-button-sm",
         type: "button",
         text: "Düzenle",
         "data-focus-key": "top-edit",
@@ -879,7 +911,7 @@ function renderDetail(bookId) {
   }
   topActions.append(
     el("button", {
-      class: "detail-close",
+      class: "detail-close ui-button ui-button-ghost ui-button-sm",
       type: "button",
       text: "Kapat",
       "data-focus-key": "top-close",
@@ -887,7 +919,7 @@ function renderDetail(bookId) {
     }));
 
   detailBody.append(
-    el("div", { class: "detail-top is-sticky" },
+    el("div", { class: "detail-top is-sticky ui-dialog-header" },
       el("div", { class: "detail-top-left" },
         el("span", {
           class: "catalog-no",
@@ -918,11 +950,11 @@ function renderDetail(bookId) {
         : "Otomatik kapak (ISBN) veya harf-kapak gösteriliyor.",
     });
     const covOpts = el("div", { class: "cover-opts" });
-    const searchBtn = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Kapak ara" });
+    const searchBtn = el("button", { class: "btn btn-ghost btn-tiny ui-button ui-button-ghost ui-button-sm", type: "button", text: "Kapak ara" });
     const fileInput = el("input", { type: "file", accept: "image/*", hidden: true });
     const camInput = el("input", { type: "file", accept: "image/*", capture: "environment", hidden: true });
-    const fileBtn = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Dosyadan seç" });
-    const camBtn = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Kamerayla çek" });
+    const fileBtn = el("button", { class: "btn btn-ghost btn-tiny ui-button ui-button-ghost ui-button-sm", type: "button", text: "Dosyadan seç" });
+    const camBtn = el("button", { class: "btn btn-ghost btn-tiny ui-button ui-button-ghost ui-button-sm", type: "button", text: "Kamerayla çek" });
     fileBtn.addEventListener("click", () => fileInput.click());
     camBtn.addEventListener("click", () => camInput.click());
     const onCoverFile = (e) => {
@@ -955,7 +987,7 @@ function renderDetail(bookId) {
     const covBtns = el("div", { class: "cover-detail-btns" }, searchBtn, fileBtn, camBtn, fileInput, camInput);
     if (b.cover_url) {
       const clearBtn = el("button", {
-        class: "btn btn-ghost btn-tiny",
+        class: "btn btn-ghost btn-tiny ui-button ui-button-ghost ui-button-sm",
         type: "button",
         text: "Otomatik kapağa dön",
         onclick: () => clearCover(bookId),
@@ -974,13 +1006,13 @@ function renderDetail(bookId) {
 
   const hero = el("div", { class: "detail-hero" },
     el("div", { class: "detail-titleblock" },
-      el("h2", { id: "detail-title", text: b.title || "(başlıksız)" }),
-      b.creators ? el("p", { class: "detail-creators", text: b.creators }) : null,
+      el("h2", { id: "detail-title", class: "ui-dialog-title", text: b.title || "(başlıksız)" }),
+      b.creators ? el("p", { class: "detail-creators ui-dialog-description", text: b.creators }) : null,
       bylineParts.length
-        ? el("p", { class: "detail-byline", text: bylineParts.join(" · ") })
+        ? el("p", { class: "detail-byline ui-dialog-description", text: bylineParts.join(" · ") })
         : null),
     coverWrap,
-    el("div", { class: "detail-scorecard detail-score-line" },
+    el("div", { class: "detail-scorecard detail-score-line ui-card" },
       el("div", { class: "score-hero" },
         avg === null
           ? el("span", { class: "score-avg is-none", text: "—" })
@@ -994,13 +1026,15 @@ function renderDetail(bookId) {
           const isMe = name === state.user.name;
           const rLabel = isMe ? myStatusLabels[rStat] : readStatusLabels[rStat];
           return el("li", { class: isMe ? "is-mine" : "" },
-            el("div", { class: "member-top" },
+            el("span", { class: "ui-avatar", "aria-hidden": "true" },
+              el("span", { class: "ui-avatar-fallback", text: displayName(name).charAt(0).toLocaleUpperCase("tr") })),
+            el("div", { class: "member-meta" },
               el("span", { class: "who", text: displayName(name) }),
-              el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) })),
-            el("span", {
-              class: `member-read is-${rStat}`,
-              text: rLabel,
-            }));
+              el("span", {
+                class: `member-read is-${rStat}`,
+                text: rLabel,
+              })),
+            el("span", { class: "val" + (v === null ? " is-none" : ""), text: v === null ? "–" : String(v) }));
         }))));
 
   // ── 3. Açıklama (Synopsis): ilk ekranda hemen okunabilir ──
@@ -1017,7 +1051,7 @@ function renderDetail(bookId) {
   if (isEditor) {
     const sumStatus = el("p", { class: "rate-help", role: "status", "aria-live": "polite", text: "" });
     const sumOpts = el("div", {});
-    const sumBtn = el("button", { class: "btn btn-ghost btn-tiny detail-inline-cta", type: "button", text: "Özet bul" });
+    const sumBtn = el("button", { class: "btn btn-ghost btn-tiny ui-button ui-button-ghost ui-button-sm detail-inline-cta", type: "button", text: "Özet bul" });
     sumBtn.addEventListener("click", async () => {
       sumBtn.disabled = true;
       sumBtn.textContent = "Aranıyor…";
@@ -1029,9 +1063,9 @@ function renderDetail(bookId) {
       if (!found.length) { sumStatus.textContent = "Özet bulunamadı."; return; }
       sumStatus.textContent = `${found.length} aday bulundu — tam metni okuyup birini seç, açıklamanın yerine geçer.`;
       for (const s of found) {
-        const apply = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Uygula" });
+        const apply = el("button", { class: "btn btn-ghost btn-tiny ui-button ui-button-ghost ui-button-sm", type: "button", text: "Uygula" });
         apply.addEventListener("click", () => applySummary(bookId, s.text));
-        sumOpts.append(el("div", { class: "sum-row" },
+        sumOpts.append(el("div", { class: "sum-row ui-card" },
           el("div", {},
             el("span", { class: "sum-src", text: `${s.source} · ${s.text.length} karakter` }),
             el("p", { class: "sum-text is-full", text: s.text })),
@@ -1043,14 +1077,14 @@ function renderDetail(bookId) {
   docFlow.append(descSec);
 
   // ── 4. Puan & Okuma Durumu (Katlanabilir / Collapsible eylem şeridi) ──
-  const rateRow = el("div", { class: "rate-row" });
+  const rateRow = el("div", { class: "rate-row ui-btn-group" });
   for (const [rangeLabel, from, to] of [["1–5", 1, 5], ["6–10", 6, 10]]) {
     const group = el("div", { class: "rate-group", role: "group", "aria-label": `${rangeLabel} arası puanlar` });
     group.append(el("span", { class: "rate-range", "aria-hidden": "true", text: rangeLabel }));
     for (let v = from; v <= to; v++) {
       group.append(el("button", {
         type: "button",
-        class: "rate-btn" + (myRating === v ? " is-current" : ""),
+        class: "rate-btn ui-button ui-button-sm" + (myRating === v ? " is-current" : ""),
         text: String(v),
         "data-focus-key": `rate-${v}`,
         "aria-label": myRating === v ? `${v} puan, şu anki puanın` : `${v} puan ver`,
@@ -1093,7 +1127,7 @@ function renderDetail(bookId) {
         rateHelp,
         myRating !== null
           ? el("button", {
-              class: "btn btn-ghost btn-tiny rate-clear",
+              class: "btn btn-ghost btn-tiny ui-button ui-button-ghost ui-button-sm rate-clear",
               type: "button",
               text: "Puanı kaldır",
               "data-focus-key": "rate-clear",
@@ -1103,10 +1137,10 @@ function renderDetail(bookId) {
           : null),
       el("div", { class: "action-card", role: "region", "aria-label": "Okuma durumu" },
         el("h4", { class: "action-subtitle", text: "Okuma durumu" }),
-        el("div", { class: "rate-row", role: "group", "aria-label": "Okuma durumu seç" },
+        el("div", { class: "rate-row ui-btn-group", role: "group", "aria-label": "Okuma durumu seç" },
           ...[["read", "Okudum"], ["reading", "Okuyorum"], ["unread", "Okumadım"]].map(([v, label]) =>
             el("button", {
-              class: "rate-btn read-toggle" + (readStatus === v ? " is-current" : ""),
+              class: "rate-btn read-toggle ui-button ui-button-sm" + (readStatus === v ? " is-current" : ""),
               type: "button",
               text: label,
               "data-focus-key": `read-${v}`,
@@ -1125,7 +1159,7 @@ function renderDetail(bookId) {
       el("div", { class: "detail-series-box" },
         el("div", { class: "detail-series-head" },
           el("div", { class: "detail-series-title-row" },
-            el("span", { class: "series-badge" },
+            el("span", { class: "series-badge ui-badge ui-badge-secondary" },
               el("span", { class: "series-badge-icon", "aria-hidden": "true", text: "◈" }),
               "Seri"),
             el("h4", { class: "detail-series-name", text: `${seriesInfo.name} Serisi` })),
@@ -1138,7 +1172,7 @@ function renderDetail(bookId) {
                   const volTag = sInfo.volume ? `#${sInfo.volume} ` : "";
                   if (isCurrent) {
                     return el("span", {
-                      class: "series-chip is-current",
+                      class: "series-chip is-current ui-chip is-active",
                       "aria-current": "true",
                       title: "Şu an görüntülenen kitap",
                       text: `${volTag}${sb.title || "(başlıksız)"}`,
@@ -1146,7 +1180,7 @@ function renderDetail(bookId) {
                   }
                   return el("button", {
                     type: "button",
-                    class: "series-chip",
+                    class: "series-chip ui-chip",
                     title: `${sb.title} detayına git`,
                     text: `${volTag}${sb.title || "(başlıksız)"}`,
                     onclick: () => {
@@ -1161,13 +1195,14 @@ function renderDetail(bookId) {
 
   // ── 6. Aile Notları (Tek akışta doğrudan görünür) ──
   const noteBox = el("textarea", {
+    class: "ui-textarea",
     rows: "2",
     placeholder: "Bu kitap hakkında bir aile notu bırak…",
     "aria-label": "Not",
     "data-focus-key": "note-input",
   });
   const noteBtn = el("button", {
-    class: "btn btn-primary",
+    class: "btn btn-primary ui-button ui-button-primary",
     type: "button",
     text: "Notu ekle",
     "data-focus-key": "note-submit",
@@ -1266,14 +1301,14 @@ function renderDetail(bookId) {
     docFlow.append(
       el("div", { class: "editor-bar" },
         el("button", {
-          class: "btn btn-ghost",
+          class: "btn btn-ghost ui-button ui-button-ghost",
           type: "button",
           text: "Fişi düzenle",
           "data-focus-key": "bottom-edit",
           onclick: () => openFormFromDetail(bookId),
         }),
         el("button", {
-          class: "btn btn-danger",
+          class: "btn btn-danger ui-button ui-button-danger",
           type: "button",
           text: "Kitabı sil",
           "data-focus-key": "bottom-delete",
@@ -1327,7 +1362,7 @@ function showDetailError(msg, onRetry) {
   const row = el("div", { class: "detail-write-error", role: "alert" },
     el("span", { text: msg }));
   if (onRetry) {
-    const retry = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Tekrar dene" });
+    const retry = el("button", { class: "btn btn-ghost btn-tiny ui-button ui-button-ghost ui-button-sm", type: "button", text: "Tekrar dene" });
     retry.addEventListener("click", () => { row.remove(); onRetry(); });
     row.append(retry);
     retry.focus({ preventScroll: true });
@@ -1339,8 +1374,8 @@ function showDetailError(msg, onRetry) {
 function showConfirmRow(msg, confirmLabel, onConfirm, onCancel) {
   detailBody.querySelector(".detail-write-error")?.remove();
   document.querySelectorAll(".undo-bar").forEach((n) => n.remove());
-  const ok = el("button", { class: "btn btn-danger btn-tiny", type: "button", text: confirmLabel });
-  const no = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Vazgeç" });
+  const ok = el("button", { class: "btn btn-danger btn-tiny ui-button ui-button-danger ui-button-sm", type: "button", text: confirmLabel });
+  const no = el("button", { class: "btn btn-ghost btn-tiny ui-button ui-button-ghost ui-button-sm", type: "button", text: "Vazgeç" });
   const row = el("div", { class: "detail-write-error is-confirm", role: "alert" },
     el("span", { text: msg }), ok, no);
   const done = () => row.remove();
@@ -1355,7 +1390,7 @@ function showUndo(message, onUndo) {
   document.querySelectorAll(".undo-bar").forEach((n) => n.remove());
   detailBody.querySelector(".detail-write-error.is-confirm")?.remove();
   clearTimeout(undoTimer);
-  const btn = el("button", { class: "btn btn-ghost btn-tiny", type: "button", text: "Geri al" });
+  const btn = el("button", { class: "btn btn-ghost btn-tiny ui-button ui-button-ghost ui-button-sm", type: "button", text: "Geri al" });
   const bar = el("div", { class: "undo-bar", role: "status" },
     el("span", { text: message }), btn);
   if (detailDialog.open) {
@@ -3012,7 +3047,7 @@ function renderOffers() {
     const img = el("img", { src: o.url, alt: "", loading: "lazy",
                                 class: "cover-offer-img" });
     img.addEventListener("error", () => { check.checked = false; check.disabled = true; });
-    coversBody.append(el("div", { class: "cover-row" },
+    coversBody.append(el("div", { class: "cover-row ui-card" },
       coverNode(getBook(o.id) || { title: o.title }),
       el("div", { class: "cover" }, img),
       el("div", { class: "cover-info" },
@@ -3251,7 +3286,7 @@ function renderSummaryOffers() {
     const check = el("input", { type: "checkbox", checked: true,
                                 "aria-label": `${o.title || "kitap"} özetini onayla` });
     o._check = check;
-    summariesBody.append(el("div", { class: "sum-row is-bulk" },
+    summariesBody.append(el("div", { class: "sum-row is-bulk ui-card" },
       el("div", {},
         el("p", { class: "cover-title", text: o.title || "(başlıksız)" }),
         o.creators ? el("p", { class: "cover-creators", text: o.creators }) : null,
