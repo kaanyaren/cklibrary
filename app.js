@@ -37,6 +37,7 @@ const state = {
   query: "",
   filter: "all",
   addedBy: "all",
+  sort: "title",
   editingId: null,     // form dialog: null = ekle, id = düzenle
 };
 
@@ -634,8 +635,10 @@ onAuthStateChanged(auth, async (user) => {
   state.query = "";
   state.filter = "all";
   state.addedBy = "all";
+  state.sort = "title";
   filterButtons.forEach((b) => b.classList.toggle("is-active", b.dataset.filter === "all"));
   document.querySelectorAll(".addedby-select").forEach((s) => { s.value = "all"; });
+  document.querySelectorAll(".sort-select").forEach((s) => { s.value = "title"; });
 
   renderSkeleton();
   await loadAll();
@@ -739,7 +742,39 @@ function visibleBooks() {
       const hay = trLower([b.title, b.creators, b.publisher].filter(Boolean).join(" "));
       return hay.includes(q);
     })
-    .sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "tr"));
+    .sort((a, b) => {
+      const titleCmp = String(a.title || "").localeCompare(String(b.title || ""), "tr");
+      switch (state.sort) {
+        case "author": {
+          const sa = surnameOf(a), sb = surnameOf(b);
+          if (!sa && !sb) return titleCmp;
+          if (!sa) return 1;
+          if (!sb) return -1;
+          return sa.localeCompare(sb, "tr") || titleCmp;
+        }
+        case "published-desc":
+        case "published-asc": {
+          const ya = yearOf(a), yb = yearOf(b);
+          if (ya == null && yb == null) return titleCmp;
+          if (ya == null) return 1;
+          if (yb == null) return -1;
+          if (ya !== yb) return state.sort === "published-desc" ? yb - ya : ya - yb;
+          return titleCmp;
+        }
+        case "added-desc":
+        case "added-asc": {
+          const ka = (a.added_at || String(a.created_at || "")).slice(0, 10);
+          const kb = (b.added_at || String(b.created_at || "")).slice(0, 10);
+          if (!ka && !kb) return titleCmp;
+          if (!ka) return 1;
+          if (!kb) return -1;
+          if (ka !== kb) return state.sort === "added-desc" ? (kb < ka ? -1 : 1) : (ka < kb ? -1 : 1);
+          return titleCmp;
+        }
+        default:
+          return titleCmp;
+      }
+    });
 }
 
 function renderShelf() {
@@ -762,6 +797,10 @@ function renderShelf() {
       const active = filterButtons.find((b) => b.dataset.filter === state.filter);
       fc.textContent = (active ? active.textContent : "") + (state.addedBy !== "all" ? ` · ${displayName(state.addedBy)}` : "");
     }
+    if (state.sort !== "title") {
+      const sortLabels = { author: "Yazar A–Z", "published-desc": "Yayın yeni", "published-asc": "Yayın eski", "added-desc": "Eklenen yeni", "added-asc": "Eklenen eski" };
+      if (sortLabels[state.sort]) fc.textContent += ` · ${sortLabels[state.sort]}`;
+    }
   }
 
   if (!list.length) {
@@ -778,10 +817,12 @@ function renderShelf() {
         onclick: () => {
           state.filter = "all";
           state.addedBy = "all";
+          state.sort = "title";
           state.query = "";
           searchInput.value = "";
           filterButtons.forEach((b) => b.classList.toggle("is-active", b.dataset.filter === "all"));
           document.querySelectorAll(".addedby-select").forEach((s) => { s.value = "all"; });
+          document.querySelectorAll(".sort-select").forEach((s) => { s.value = "title"; });
           renderShelf();
         },
       }));
@@ -2408,6 +2449,8 @@ async function fetchJson(url, ms = 15000) {
 function firstAuthorOf(b) {
   return String(b.creators || "").split(",")[0].trim().replace(/\bGreda\b/gi, "Gerda");
 }
+function surnameOf(b){const a=firstAuthorOf(b).replace(/\([^)]*\)/g," ").trim();if(!a)return "";const t=a.split(/\s+/);return t[t.length-1]||""}
+function yearOf(b){const m=String(b.publish_date||"").match(/\d{4}/);return m?parseInt(m[0],10):null}
 
 // Aşama günlüğü: toplu diyaloglardaki yan liste + tekil durum satırı birlikte beslenir.
 function stageLog(listEl, msg, keep = 40) {
@@ -3424,6 +3467,7 @@ document.querySelectorAll(".addedby-select").forEach((sel) => sel.addEventListen
   document.querySelectorAll(".addedby-select").forEach((s) => { if (s !== sel) s.value = sel.value; });
   renderShelf();
 }));
+document.querySelectorAll(".sort-select").forEach((sel)=>sel.addEventListener("change",()=>{state.sort=sel.value;document.querySelectorAll(".sort-select").forEach((s)=>{if(s!==sel)s.value=sel.value});renderShelf()}));
 
 // ── Tema (açık/koyu) ───────────────────────────────────────────
 const themeButtons = [...document.querySelectorAll(".theme-toggle")];
